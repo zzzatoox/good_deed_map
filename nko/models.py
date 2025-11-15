@@ -42,11 +42,15 @@ class Category(models.Model):
 
 class NKO(models.Model):
     name = models.CharField(max_length=200, verbose_name="Название НКО")
-    category = models.ManyToManyField(Category, verbose_name="Направления деятельности")
+    categories = models.ManyToManyField(
+        Category, verbose_name="Направления деятельности"
+    )
     city = models.ForeignKey(City, on_delete=models.CASCADE, verbose_name="Город")
 
     description = models.TextField(verbose_name="Краткое описание деятельности")
-    volunteer_functions = models.TextField(verbose_name="Функционал волонтеров")
+    volunteer_functions = models.TextField(
+        blank=True, verbose_name="Функционал волонтеров"
+    )
 
     phone = models.CharField(
         max_length=20, blank=True, verbose_name="Контактный телефон"
@@ -69,6 +73,9 @@ class NKO(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
     is_approved = models.BooleanField(default=False, verbose_name="Прошло модерацию")
+    has_pending_changes = models.BooleanField(
+        default=False, verbose_name="Есть ожидающие изменения"
+    )
     is_active = models.BooleanField(default=True, verbose_name="Активно")
 
     class Meta:
@@ -87,13 +94,13 @@ class NKO(models.Model):
         return self.city.region
 
     def get_categories_list(self):
-        """Возвращает список категорий для удобного отображения"""
         return ", ".join([category.name for category in self.categories.all()])
+
+    def get_pending_version(self):
+        return self.versions.filter(is_approved=False).first()
 
 
 class NKOVersion(models.Model):
-    """Модель для хранения версий НКО (ожидающих модерации)"""
-
     nko = models.ForeignKey(
         NKO, on_delete=models.CASCADE, related_name="versions", verbose_name="НКО"
     )
@@ -103,7 +110,9 @@ class NKOVersion(models.Model):
         Category, verbose_name="Направления деятельности"
     )
     description = models.TextField(verbose_name="Краткое описание деятельности")
-    volunteer_functions = models.TextField(verbose_name="Функционал волонтеров")
+    volunteer_functions = models.TextField(
+        blank=True, verbose_name="Функционал волонтеров"
+    )
     phone = models.CharField(
         max_length=20, blank=True, verbose_name="Контактный телефон"
     )
@@ -146,7 +155,6 @@ class NKOVersion(models.Model):
         return f"Версия {self.nko.name} от {self.created_at}"
 
     def apply_changes(self):
-        """Применяет изменения из этой версии к основному НКО"""
         if not self.is_approved:
             return False
 

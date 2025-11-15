@@ -25,8 +25,6 @@ class NKOForm(forms.ModelForm):
             "vk_link",
             "telegram_link",
             "other_social",
-            "latitude",
-            "longitude",
         ]
         widgets = {
             "description": forms.Textarea(
@@ -36,8 +34,6 @@ class NKOForm(forms.ModelForm):
                 attrs={"rows": 3, "placeholder": "Чем могут помочь волонтеры?"}
             ),
             "address": forms.Textarea(attrs={"rows": 2}),
-            "latitude": forms.NumberInput(attrs={"step": "0.000001"}),
-            "longitude": forms.NumberInput(attrs={"step": "0.000001"}),
         }
 
 
@@ -71,8 +67,6 @@ class NKOEditForm(forms.ModelForm):
             "vk_link",
             "telegram_link",
             "other_social",
-            "latitude",
-            "longitude",
             "change_description",
         ]
         widgets = {

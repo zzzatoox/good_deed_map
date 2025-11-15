@@ -44,6 +44,18 @@ def nko_list_api(request):
 
 @login_required
 def add_nko(request):
+    existing = NKO.objects.filter(owner=request.user).first()
+    if existing:
+        if existing.has_pending_changes or not existing.is_approved:
+            messages.warning(
+                request,
+                "У вас уже есть НКО, которое находится на модерации — создание новой НКО невозможно.",
+            )
+            return redirect("index")
+
+        messages.info(request, "У вас уже есть НКО. Вы можете отредактировать его.")
+        return redirect("edit_nko", pk=existing.pk)
+
     if request.method == "POST":
         form = NKOForm(request.POST, request.FILES)
         if form.is_valid():
@@ -97,8 +109,6 @@ def edit_nko(request, pk):
             "volunteer_functions": nko.volunteer_functions,
             "phone": nko.phone,
             "address": nko.address,
-            "latitude": nko.latitude,
-            "longitude": nko.longitude,
             "website": nko.website,
             "vk_link": nko.vk_link,
             "telegram_link": nko.telegram_link,
@@ -113,6 +123,13 @@ def edit_nko(request, pk):
 @login_required
 def transfer_ownership(request, pk):
     nko = get_object_or_404(NKO, pk=pk, owner=request.user)
+
+    if nko.get_pending_version() or nko.has_pending_changes:
+        messages.warning(
+            request,
+            "Нельзя передать права: у НКО есть ожидающая модерации версия или незавершённые изменения.",
+        )
+        return redirect("index")
 
     if request.method == "POST":
         form = TransferOwnershipForm(request.POST)
@@ -138,14 +155,12 @@ def transfer_ownership(request, pk):
                 volunteer_functions=nko.volunteer_functions,
                 phone=nko.phone,
                 address=nko.address,
-                latitude=nko.latitude,
-                longitude=nko.longitude,
                 website=nko.website,
                 vk_link=nko.vk_link,
                 telegram_link=nko.telegram_link,
                 other_social=nko.other_social,
             )
-            version.categories.set(nko.categories.all())
+            version.category.set(nko.category.all())
 
             nko.has_pending_changes = True
             nko.save()
