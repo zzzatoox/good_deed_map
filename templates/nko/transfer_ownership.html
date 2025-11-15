@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Передача прав - {{ nko.name }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Передача прав на НКО "{{ nko.name }}"</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label">Текущий владелец</label>
+                    <input type="text" class="form-control" value="{{ nko.owner.get_full_name|default:nko.owner.username }}" readonly>
+                </div>
+                
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% if field.errors %}
+                            <div class="text-danger">
+                                {% for error in field.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <div class="alert alert-warning">
+                    <strong>Внимание!</strong> После передачи прав вы больше не сможете редактировать эту НКО.
+                    Запрос будет отправлен на модерацию администраторам.
+                </div>
+                
+                <button type="submit" class="btn btn-warning">Отправить запрос на передачу</button>
+                <a href="{% url 'index' %}" class="btn btn-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

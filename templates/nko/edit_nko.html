@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактировать {{ nko.name }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Редактировать НКО "{{ nko.name }}"</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% if field.errors %}
+                            <div class="text-danger">
+                                {% for error in field.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <div class="alert alert-warning">
+                    <strong>Внимание!</strong> Изменения будут отправлены на модерацию администраторам.
+                    Пока изменения не одобрены, на карте будет отображаться старая информация.
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Отправить на модерацию</button>
+                    <a href="{% url 'index' %}" class="btn btn-secondary">Отмена</a>
+                    <a href="{% url 'transfer_ownership' nko.pk %}" class="btn btn-warning ms-auto">Передать права</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
