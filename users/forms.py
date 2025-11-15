@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from .models import Profile
 
@@ -24,6 +24,44 @@ class UserRegisterForm(UserCreationForm):
             "password2",
         ]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        common_classes = (
+            "w-full p-3 rounded-xl border-2 border-white bg-white bg-opacity-90 "
+            "text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 "
+            "focus:ring-[#4495D1] transition duration-200 shadow-md text-base "
+            "dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+        )
+
+        for name, field in self.fields.items():
+            field.widget.attrs.update({"class": common_classes})
+
+        # Field-specific attributes and placeholders
+        if "email" in self.fields:
+            self.fields["email"].widget.attrs.update(
+                {
+                    "placeholder": "Электронная почта",
+                    "type": "email",
+                    "autocomplete": "email",
+                }
+            )
+        if "first_name" in self.fields:
+            self.fields["first_name"].widget.attrs.update({"placeholder": "Имя"})
+        if "last_name" in self.fields:
+            self.fields["last_name"].widget.attrs.update({"placeholder": "Фамилия"})
+        if "patronymic" in self.fields:
+            self.fields["patronymic"].widget.attrs.update(
+                {"placeholder": "Отчество (опционально)"}
+            )
+        if "password1" in self.fields:
+            self.fields["password1"].widget.attrs.update(
+                {"placeholder": "Пароль", "autocomplete": "new-password"}
+            )
+        if "password2" in self.fields:
+            self.fields["password2"].widget.attrs.update(
+                {"placeholder": "Подтвердите пароль", "autocomplete": "new-password"}
+            )
+
     def clean_email(self):
         email = self.cleaned_data.get("email")
         if User.objects.filter(email__iexact=email).exists():
@@ -45,3 +83,33 @@ class UserRegisterForm(UserCreationForm):
             profile.save()
 
         return user
+
+
+class CustomAuthenticationForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        common_classes = (
+            "w-full p-3 rounded-xl border-2 border-white bg-white bg-opacity-90 "
+            "text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 "
+            "focus:ring-[#4495D1] transition duration-200 shadow-md text-base "
+            "dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+        )
+
+        if "username" in self.fields:
+            self.fields["username"].widget.attrs.update(
+                {
+                    "class": common_classes,
+                    "placeholder": "Электронная почта",
+                    "type": "email",
+                    "autocomplete": "email",
+                }
+            )
+
+        if "password" in self.fields:
+            self.fields["password"].widget.attrs.update(
+                {
+                    "class": common_classes,
+                    "placeholder": "Пароль",
+                    "autocomplete": "current-password",
+                }
+            )

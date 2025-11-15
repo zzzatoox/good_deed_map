@@ -1,0 +1,164 @@
+/* Базовые стили для обеспечения адаптивности */
+* {
+  box-sizing: border-box;
+}
+
+/* Стили для кастомных чекбоксов */
+.checkbox-container input[type="checkbox"] {
+  display: none;
+}
+
+.checkbox-container .checkmark {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border: 2px solid #025ea1;
+  border-radius: 4px;
+  margin-right: 10px;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark {
+  background-color: #025ea1;
+  border-color: #025ea1;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark::after {
+  content: "✓";
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.checkbox-container:hover .checkmark {
+  border-color: #025ea1;
+  box-shadow: 0 0 0 2px rgba(2, 94, 161, 0.2);
+}
+
+.checkbox-label {
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  word-break: break-word;
+  width: 100%;
+}
+
+.checkbox-label:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Адаптивные стили для чекбоксов */
+@media (max-width: 480px) {
+  .checkbox-label {
+    padding: 6px 8px;
+    font-size: 0.9rem;
+  }
+
+  .checkbox-container .checkmark {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+  }
+}
+
+/* Стили для автодополнения */
+.autocomplete {
+  position: relative;
+  width: 100%;
+}
+
+.autocomplete-items {
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-bottom: none;
+  border-top: none;
+  z-index: 99;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-items div {
+  padding: 10px;
+  cursor: pointer;
+  background-color: #fff;
+  border-bottom: 1px solid #d4d4d4;
+  word-break: break-word;
+}
+
+.autocomplete-items div:hover {
+  background-color: #e9e9e9;
+}
+
+.autocomplete-active {
+  background-color: #025ea1 !important;
+  color: white;
+}
+
+.dark .autocomplete-items {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.dark .autocomplete-items div {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: white;
+}
+
+.dark .autocomplete-items div:hover {
+  background-color: #4b5563;
+}
+
+/* Стили для валидации файлов */
+.file-validation-message {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: none;
+  word-break: break-word;
+}
+
+.file-validation-error {
+  color: #ef4444;
+}
+
+.file-validation-success {
+  color: #10b981;
+}
+
+/* Улучшаем отображение полей ввода на мобильных */
+input,
+textarea,
+select {
+  max-width: 100%;
+}
+
+/* Предотвращаем масштабирование на iOS */
+input,
+textarea,
+select {
+  font-size: 16px; /* Предотвращает зум на iOS */
+}
+
+@media (max-width: 480px) {
+  input,
+  textarea,
+  select {
+    font-size: 14px; /* Чуть меньший размер для мобильных */
+  }
+}

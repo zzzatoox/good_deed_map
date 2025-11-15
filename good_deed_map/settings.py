@@ -14,6 +14,15 @@ import os
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
 
+# Load .env file when present
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+except Exception:
+    # python-dotenv not installed or .env missing — ignore
+    pass
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -73,6 +82,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "users.context_processors.user_nko",
+                "good_deed_map.context_processors.public_settings",
             ],
         },
     },
@@ -172,3 +182,6 @@ else:
     # Yandex supports SSL on 465
     EMAIL_USE_SSL = True
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Client-side API keys (safe to expose) — loaded from environment
+YANDEX_MAPS_API_KEY = os.environ.get("YANDEX_MAPS_API_KEY", "")

@@ -34,7 +34,17 @@
           <span class="navbar-text me-3">
             Привет, {{ user.get_full_name|default:user.username }}!
           </span>
-          <a class="nav-link" href="{% url 'add_nko' %}">Добавить НКО</a>
+          {% comment %} Show Add / Edit / disabled state depending on user's NKO and moderation status {% endcomment %}
+          {% if user_nko %}
+            {% comment %} Block editing only when there is an actual pending version or the NKO itself isn't approved yet. This matches `edit_nko` view logic and avoids stale `has_pending_changes` flags blocking users. {% endcomment %}
+            {% if user_nko.get_pending_version or not user_nko.is_approved %}
+              <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true" title="Нельзя редактировать — изменения ожидают модерации">Информация НКО (ожидает модерации)</a>
+            {% else %}
+              <a class="nav-link" href="{% url 'edit_nko' user_nko.pk %}">Редактировать НКО</a>
+            {% endif %}
+          {% else %}
+            <a class="nav-link" href="{% url 'add_nko' %}">Добавить НКО</a>
+          {% endif %}
           <a class="nav-link" href="{% url 'logout' %}">Выйти</a>
           {% else %}
           <a class="nav-link" href="{% url 'login' %}">Войти</a>

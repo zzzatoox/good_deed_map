@@ -1,0 +1,21 @@
+{# App-local copy of the custom option template for CheckboxSelectMultiple #}
+<li>
+  <label class="flex items-center gap-3">
+    <input
+      type="checkbox"
+      name="{{ widget.name }}"
+      value="{{ option.value }}"
+      id="id_{{ widget.name }}_{{ option.index }}"
+      {% if option.selected %}checked{% endif %}
+      class="peer sr-only"
+    />
+
+    <span class="w-5 h-5 rounded-md border-2 border-white bg-white bg-opacity-90 flex items-center justify-center transition-colors peer-checked:bg-[#4495D1] peer-checked:border-[#4495D1]">
+      <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 10l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </span>
+
+    <span class="text-gray-800 dark:text-white">{{ option.label }}</span>
+  </label>
+</li>

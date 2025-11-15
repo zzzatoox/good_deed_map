@@ -1,0 +1,50 @@
+/* Moved from templates/index.html */
+
+/* Кастомный скроллбар для контейнера категорий */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(209, 213, 219);
+  border-radius: 3px;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(75, 85, 99);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(156, 163, 175);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(107, 114, 128);
+}
+
+/* Фиксируем высоту основного контейнера */
+.main-container {
+  height: calc(100vh - 64px); /* Высота экрана минус высота хедера */
+}
+
+/* Уменьшаем ширину левой панели */
+@media (min-width: 768px) {
+  .left-panel {
+    width: 380px; /* Уменьшено с 50% */
+    min-width: 380px; /* Минимальная ширина */
+  }
+
+  .map-container {
+    flex: 1; /* Карта занимает оставшееся пространство */
+  }
+}
+
+/* minor tweaks used by JS */
+.point-item.selected {
+  background-color: rgba(59, 130, 246, 0.12); /* blue-500/20 */
+}

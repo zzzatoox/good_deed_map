@@ -1,116 +1,630 @@
-{% extends 'base.html' %} {% block content %}
-<div class="container mt-4">
-  <h1 class="text-center mb-4">Карта добрых дел</h1>
-
-  <!-- Фильтры -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-4">
-          <label class="form-label">Город</label>
-          <select class="form-select" id="cityFilter">
-            <option value="">Все города</option>
-            {% for city in cities %}
-            <option value="{{ city.id }}">
-              {{ city.name }}, {{ city.region.name }}
-            </option>
-            {% endfor %}
-          </select>
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Карта добрых дел</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Tailwind тёмная тема
+      tailwind.config = {
+        darkMode: "class",
+        theme: { extend: { fontFamily: { inter: ["Inter", "sans-serif"] } } },
+      };
+    </script>
+    <link href="{% static 'css/index.css' %}" rel="stylesheet" />
+  </head>
+  <body
+    class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-inter overflow-hidden"
+  >
+    <!-- Header -->
+    <header
+      class="bg-white shadow-sm py-3 px-5 flex items-center justify-between z-50 sticky top-0 dark:bg-gray-800"
+    >
+      <div class="flex items-center gap-8 md:gap-12">
+        <div class="flex items-center gap-2">
+          <a href="#" class="flex">
+            <img
+              src="{% static 'images/LOGO_ROSATOM_eng_VERT_COLOR_PNG.png' %}"
+              alt="Recyclemap Logo"
+              class="h-6 md:h-7"
+            />
+          </a>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Категория</label>
-          <select class="form-select" id="categoryFilter">
-            <option value="">Все категории</option>
-            {% for category in categories %}
-            <option value="{{ category.id }}">{{ category.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Поиск</label>
-          <input
-            type="text"
-            class="form-control"
-            id="searchInput"
-            placeholder="Название НКО..."
-          />
-        </div>
+        <nav class="hidden md:block">
+          <ul class="flex items-center gap-2">
+            <li>
+              <a
+                href="#"
+                class="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-[#025EA1] hover:underline p-2"
+                >Карта добрых дел</a
+              >
+            </li>
+          </ul>
+        </nav>
       </div>
-    </div>
-  </div>
+      <nav class="flex items-center gap-4">
+        <!-- Кнопка смнеы темы -->
+        <button
+          id="theme-toggle"
+          class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-yellow-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 block dark:hidden"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"
+            />
+          </svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 hidden dark:block"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </button>
+        {% if user.is_authenticated %}
+        <a
+          href="{% url 'add_nko' %}"
+          class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
+        >
+          Добавить НКО
+        </a>
+        <a
+          href="{% url 'logout' %}"
+          class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors"
+        >
+          Выйти
+        </a>
+        {% else %}
+        <a
+          href="{% url 'login' %}"
+          class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
+        >
+          Войти
+        </a>
+        {% endif %}
+        <!-- Кнопка войти -->
+      </nav>
+    </header>
 
-  <!-- Карта -->
-  <div class="card">
-    <div class="card-body">
-      <div id="map" class="map-container">
-        <div class="d-flex justify-content-center align-items-center h-100">
-          <div class="text-center">
-            <h4>Карта загружается...</h4>
-            <p>Здесь будет интерактивная карта с метками НКО</p>
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Загрузка...</span>
+    <!-- главная часть -->
+    <main class="main-container flex flex-col md:flex-row">
+      <!-- Левая панель -->
+      <div
+        class="left-panel flex flex-col min-h-0 bg-gradient-to-r from-[#15256D] to-[#4495D1] dark:from-gray-800 dark:to-gray-700"
+      >
+        <div class="p-5 flex flex-col gap-5 h-full overflow-hidden">
+          <!-- Поиск -->
+          <div class="relative flex-none">
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Искать по адресу или названию НКО"
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:border-[#025EA1] text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition duration-150 ease-in-out"
+            />
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <svg
+                class="h-5 w-5 text-gray-400 dark:text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+            </div>
+            <button
+              id="search-button"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <svg
+                class="h-5 w-5 text-gray-400 dark:text-gray-500 hover:text-[#025EA1] transition-colors"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Выбор города -->
+          <div
+            class="w-full bg-white dark:bg-gray-700 rounded-lg shadow-md p-6 flex-none"
+          >
+            <div class="border-b border-gray-200 dark:border-gray-600 pb-5">
+              <h3
+                class="text-base font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Город
+              </h3>
+              <div class="relative">
+                <select
+                  id="city-select"
+                  class="w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:border-[#025EA1] text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition duration-150 ease-in-out appearance-none"
+                >
+                  <option value="all">Все города</option>
+                  <option value="moscow">Москва</option>
+                  <option value="saint-petersburg">Санкт-Петербург</option>
+                  <option value="novosibirsk">Новосибирск</option>
+                  <option value="ekaterinburg">Екатеринбург</option>
+                  <option value="nizhny-novgorod">Нижний Новгород</option>
+                  <option value="kazan">Казань</option>
+                  <option value="chelyabinsk">Челябинск</option>
+                  <option value="omsk">Омск</option>
+                  <option value="samara">Самара</option>
+                  <option value="rostov">Ростов-на-Дону</option>
+                  <option value="ufa">Уфа</option>
+                  <option value="krasnoyarsk">Красноярск</option>
+                  <option value="voronezh">Воронеж</option>
+                  <option value="perm">Пермь</option>
+                  <option value="volgograd">Волгоград</option>
+                </select>
+                <div
+                  class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300"
+                >
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Категории -->
+          <div
+            class="w-full bg-white dark:bg-gray-700 rounded-lg shadow-md p-6 flex-none"
+          >
+            <div class="border-b border-gray-200 dark:border-gray-600 pb-5">
+              <h3
+                class="text-base font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                >
+                  <path
+                    d="M19.5 21a3 3 0 003-3v-4.5a3 3 0 00-3-3h-15a3 3 0 00-3 3V18a3 3 0 003 3h15zM1.5 10.146V6a3 3 0 013-3h5.379a2.25 2.25 0 011.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 013 3v1.146A4.483 4.483 0 0019.5 9h-15a4.483 4.483 0 00-3 1.146z"
+                  />
+                </svg>
+                Категории
+              </h3>
+              <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                <!-- Экология (Ecology) - with Leaf icon -->
+                <div
+                  class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+                  data-category="ecology"
+                >
+                  <div
+                    class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-green-100 dark:group-hover:bg-green-800"
+                  >
+                    <div
+                      class="h-10 w-10 bg-[#56C02B] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+                    >
+                      🍃️
+                    </div>
+                  </div>
+                  <span
+                    class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#56C02B]"
+                    >Экология</span
+                  >
+                </div>
+                <!-- Территория (Territory) -->
+                <div
+                  class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+                  data-category="territory"
+                >
+                  <div
+                    class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-blue-100 dark:group-hover:bg-blue-800"
+                  >
+                    <div
+                      class="h-10 w-10 bg-[#FCC30B] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+                    >
+                      🏕️
+                    </div>
+                  </div>
+                  <span
+                    class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#FCC30B]"
+                    >Территория</span
+                  >
+                </div>
+                <!-- Животные (Animals) -->
+                <div
+                  class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+                  data-category="animals"
+                >
+                  <div
+                    class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-yellow-100 dark:group-hover:bg-yellow-800"
+                  >
+                    <div
+                      class="h-10 w-10 bg-[#259789] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+                    >
+                      🐶️
+                    </div>
+                  </div>
+                  <span
+                    class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#259789]"
+                    >Животные</span
+                  >
+                </div>
+                <!-- Спорт (Sport) - with Dumbbell icon -->
+                <div
+                  class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+                  data-category="sport"
+                >
+                  <div
+                    class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-red-100 dark:group-hover:bg-red-800"
+                  >
+                    <div
+                      class="h-10 w-10 bg-[#E20072] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+                    >
+                      🏋️
+                    </div>
+                  </div>
+                  <span
+                    class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#E20072]"
+                    >Спорт</span
+                  >
+                </div>
+                <!-- Социальная защита (Social Protection) -->
+                <div
+                  class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+                  data-category="social"
+                >
+                  <div
+                    class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-purple-100 dark:group-hover:bg-purple-800"
+                  >
+                    <div
+                      class="h-10 w-10 bg-[#1D293D] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+                    >
+                      🛡️
+                    </div>
+                  </div>
+                  <span
+                    class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 text-center transition-colors duration-200 group-hover:text-[#1D293D]"
+                    >Соц. защита</span
+                  >
+                </div>
+                <!-- Другое (Other) -->
+                <div
+                  class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+                  data-category="other"
+                >
+                  <div
+                    class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-800"
+                  >
+                    <div
+                      class="h-10 w-10 bg-[#6CACE4] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+                    >
+                      🎸️
+                    </div>
+                  </div>
+                  <span
+                    class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#6CACE4]"
+                    >Другое</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Filters Section -->
+          <div id="active-filters" class="hidden">
+            <div class="flex flex-wrap gap-2 mb-3">
+              <!-- Active filters will be added here dynamically -->
+            </div>
+          </div>
+
+          <!-- Filter Bottom & Total -->
+          <div class="flex justify-between items-center pb-2 flex-none">
+            <span
+              id="points-count"
+              class="text-sm font-medium text-white dark:text-gray-300 ml-4"
+            >
+              Найдено 4 точки НКО
+            </span>
+            <button
+              id="clear-filters"
+              class="text-sm font-medium text-white dark:text-gray-300 hover:underline hidden"
+            >
+              Сбросить фильтры
+            </button>
+          </div>
+
+          <!-- Список точек -->
+          <div
+            id="points-list"
+            class="flex-1 overflow-y-auto pr-2 rounded-lg py-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
+          >
+            <!-- Point Item 1 - Экология -->
+            <div
+              class="py-5 cursor-pointer hover:bg-white/20 transition-colors point-item rounded-l-lg"
+              data-coords="[58.631194, 59.859275]"
+              data-title="Эко-субботник 'Приберись у моего дома'"
+              data-address="ул. Машиностроителей, 8"
+              data-categories="ecology"
+              data-city="moscow"
+            >
+              <div class="flex justify-between items-start mb-1 pl-4">
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    class="bg-[#56C02B] text-white text-xs font-medium px-2 py-1 rounded-md"
+                    >Экология</span
+                  >
+                </div>
+              </div>
+              <h4
+                class="text-base font-semibold mb-2 text-white dark:text-gray-100 pl-4"
+              >
+                Эко-субботник "Приберись у моего дома"
+              </h4>
+              <p class="text-sm text-white/80 dark:text-gray-300 mb-3 pl-4">
+                ул. Машиностроителей, 8
+              </p>
+              <div
+                class="flex justify-between items-center text-xs text-white/80 dark:text-gray-300 pl-4"
+              >
+                <span class="text-[#ffcccb] font-medium">Закрыто</span>
+              </div>
+            </div>
+
+            <div
+              class="py-5 cursor-pointer hover:bg-white/20 transition-colors point-item rounded-l-lg"
+              data-coords="[58.630552, 59.859967]"
+              data-title="Центр помощи 'Никитос'"
+              data-address="ул. Машиностроителей, 12"
+              data-categories="social,other"
+              data-city="moscow"
+            >
+              <div class="flex justify-between items-start mb-1 pl-4">
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    class="bg-[#1D293D] text-white text-xs font-medium px-2 py-1 rounded-md"
+                    >Соц. защита</span
+                  >
+                  <span
+                    class="bg-[#6CACE4] text-white text-xs font-medium px-2 py-1 rounded-md"
+                    >Другое</span
+                  >
+                </div>
+              </div>
+              <h4
+                class="text-base font-semibold mb-2 text-white dark:text-gray-100 pl-4"
+              >
+                Центр помощи "Никитос"
+              </h4>
+              <p class="text-sm text-white/80 dark:text-gray-300 mb-3 pl-4">
+                ул. Машиностроителей, 12
+              </p>
+              <div
+                class="flex justify-between items-center text-xs text-white/80 dark:text-gray-300 pl-4"
+              >
+                <span class="text-[#90EE90] font-medium">Круглосуточно</span>
+              </div>
+            </div>
+
+            <div
+              class="py-5 cursor-pointer hover:bg-white/20 transition-colors point-item rounded-l-lg"
+              data-coords="[58.625094, 59.853148]"
+              data-title="Парк 'Зелёный оазис'"
+              data-address="ул. Ильича 2А"
+              data-categories="territory,animals"
+              data-city="saint-petersburg"
+            >
+              <div class="flex justify-between items-start mb-1 pl-4">
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    class="bg-[#FCC30B] text-white text-xs font-medium px-2 py-1 rounded-md"
+                    >Территория</span
+                  >
+                  <span
+                    class="bg-[#259789] text-white text-xs font-medium px-2 py-1 rounded-md"
+                    >Животные</span
+                  >
+                </div>
+              </div>
+              <h4
+                class="text-base font-semibold mb-2 text-white dark:text-gray-100 pl-4"
+              >
+                Парк "Зелёный оазис"
+              </h4>
+              <p class="text-sm text-white/80 dark:text-gray-300 mb-3 pl-4">
+                ул. Ильича 2А
+              </p>
+              <div
+                class="flex justify-between items-center text-xs text-white/80 dark:text-gray-300 pl-4"
+              >
+                <span class="text-[#ffcccb] font-medium">Закрыто</span>
+              </div>
+            </div>
+
+            <div
+              class="py-5 cursor-pointer hover:bg-white/20 transition-colors point-item rounded-l-lg"
+              data-coords="[58.626364, 59.861287]"
+              data-title="Спортивный комплекс 'Энергия'"
+              data-address="ул. Спортивная, 25"
+              data-categories="sport"
+              data-city="novosibirsk"
+            >
+              <div class="flex justify-between items-start mb-1 pl-4">
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    class="bg-[#E20072] text-white text-xs font-medium px-2 py-1 rounded-md"
+                    >Спорт</span
+                  >
+                </div>
+              </div>
+              <h4
+                class="text-base font-semibold mb-2 text-white dark:text-gray-100 pl-4"
+              >
+                Спортивный комплекс "Энергия"
+              </h4>
+              <p class="text-sm text-white/80 dark:text-gray-300 mb-3 pl-4">
+                ул. Спортивная, 25
+              </p>
+              <div
+                class="flex justify-between items-center text-xs text-white/80 dark:text-gray-300 pl-4"
+              >
+                <span class="text-[#90EE90] font-medium">Открыто до 22:00</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Список НКО (для тестирования) -->
-  <div class="mt-4">
-    <h3>Список НКО (для тестирования)</h3>
-    <div id="nkoList" class="row">
-      <!-- Список будет заполняться через JavaScript -->
-    </div>
-  </div>
-</div>
-{% endblock %} {% block scripts %}
-<script>
-  // Заглушка для тестирования - будет заменена на реальную карту
-  document.addEventListener("DOMContentLoaded", function () {
-    // Загрузка данных НКО через API
-    fetch("/nko/api/nko-list/")
-      .then((response) => response.json())
-      .then((data) => {
-        const nkoList = document.getElementById("nkoList");
-        if (data.length === 0) {
-          nkoList.innerHTML =
-            '<p>НКО не найдены. <a href="{% url "add_nko" %}">Добавьте первую!</a></p>';
-          return;
+      <!-- Map Container (Right Column) -->
+      <div
+        id="map"
+        class="map-container min-h-[400px] md:min-h-0 bg-gray-200 dark:bg-gray-900 relative"
+      >
+        <!-- Map will be initialized here -->
+      </div>
+    </main>
+
+    <!-- Подключение Яндекс Карт API -->
+    <script
+      src="https://api-maps.yandex.ru/2.1/?apikey={{ YANDEX_MAPS_API_KEY }}&lang=ru_RU"
+      type="text/javascript"
+    ></script>
+    <script type="module">
+      import { initMapAndUI } from '{% static "js/main.js" %}';
+
+      // Prepare pointsData: in future this should be fetched via `/nko/api/nko-list/`.
+      const pointsData = [
+        {
+          id: 1,
+          coords: [58.631194, 59.859275],
+          properties: {
+            hintContent: "Федот",
+            balloonContent: "ул. Машиностроителей, 8<br>Экология",
+            category: "ecology",
+          },
+          title: "Федот",
+          address: "ул. Машиностроителей, 8",
+          city: "moscow",
+        },
+        {
+          id: 2,
+          coords: [58.630552, 59.859967],
+          properties: {
+            hintContent: "Никитос",
+            balloonContent: "ул. Машиностроителей 12<br>Социальная защита",
+            category: "social",
+          },
+          title: "Никитос",
+          address: "ул. Машиностроителей 12",
+          city: "moscow",
+        },
+        {
+          id: 3,
+          coords: [58.625094, 59.853148],
+          properties: {
+            hintContent: "Парк 'Зелёный оазис'",
+            balloonContent: "ул. Ильича 2А<br>Территория, Животные",
+            category: "territory",
+          },
+          title: "Парк 'Зелёный оазис'",
+          address: "ул. Лесная, 15",
+          city: "saint-petersburg",
+        },
+        {
+          id: 4,
+          coords: [58.626364, 59.861287],
+          properties: {
+            hintContent: "Спортивный комплекс 'Энергия'",
+            balloonContent: "ул. Спортивная, 25<br>Спорт",
+            category: "sport",
+          },
+          title: "Спортивный комплекс 'Энергия'",
+          address: "ул. Спортивная, 25",
+          city: "novosibirsk",
+        },
+      ];
+
+      // Wait a bit for ymaps script to load, then initialize
+      function tryInit() {
+        if (typeof ymaps !== "undefined") {
+          initMapAndUI(pointsData);
+        } else {
+          setTimeout(tryInit, 200);
         }
+      }
+      tryInit();
 
-        let html = "";
-        data.forEach((nko) => {
-          html += `
-                    <div class="col-md-6 mb-3">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">${nko.name}</h5>
-                                <p class="card-text">${nko.description}</p>
-                                <p><strong>Город:</strong> ${nko.city}</p>
-                                <p><strong>Категории:</strong> ${nko.categories.join(
-                                  ", "
-                                )}</p>
-                                <p><strong>Телефон:</strong> ${
-                                  nko.phone || "не указан"
-                                }</p>
-                                ${
-                                  nko.has_pending_changes
-                                    ? '<span class="badge bg-warning">Ожидает модерации изменений</span>'
-                                    : ""
-                                }
-                            </div>
-                        </div>
-                    </div>
-                `;
-        });
-        nkoList.innerHTML = html;
-      })
-      .catch((error) => {
-        console.error("Error loading NKO data:", error);
-        document.getElementById("nkoList").innerHTML =
-          "<p>Ошибка загрузки данных</p>";
+      // Theme toggle logic (kept small)
+      const themeToggleBtn = document.getElementById("theme-toggle");
+      const htmlElement = document.documentElement;
+      if (
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      )
+        htmlElement.classList.add("dark");
+      else htmlElement.classList.remove("dark");
+      themeToggleBtn.addEventListener("click", () => {
+        if (htmlElement.classList.contains("dark")) {
+          htmlElement.classList.remove("dark");
+          localStorage.theme = "light";
+        } else {
+          htmlElement.classList.add("dark");
+          localStorage.theme = "dark";
+        }
       });
-  });
-</script>
-{% endblock %}
+    </script>
+  </body>
+</html>
