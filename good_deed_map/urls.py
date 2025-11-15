@@ -28,6 +28,8 @@ urlpatterns = [
     path("", nko_views.index, name="index"),
     path("nko/", include("nko.urls")),
     path("users/", include("users.urls")),
+    path("accounts/login/", users_views.login_view, name="login"),
+    path("accounts/register/", users_views.register, name="register"),
     path("accounts/logout/", users_views.logout_view, name="logout"),
     path("accounts/", include("django.contrib.auth.urls")),
 ]

@@ -42,6 +42,11 @@ def nko_list_api(request):
     return JsonResponse(data, safe=False)
 
 
+def categories_api(request):
+    cats = Category.objects.all().values("id", "name")
+    return JsonResponse(list(cats), safe=False)
+
+
 @login_required
 def add_nko(request):
     existing = NKO.objects.filter(owner=request.user).first()

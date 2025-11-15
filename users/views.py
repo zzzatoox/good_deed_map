@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate, logout, views as auth_views
 from django.contrib import messages
 from django.conf import settings
 from django.http import HttpResponseNotAllowed
-from .forms import UserRegisterForm
+from .forms import UserRegisterForm, CustomAuthenticationForm
 
 
 def register(request):
@@ -13,10 +13,10 @@ def register(request):
             user = form.save()
 
             raw_password = form.cleaned_data.get("password1")
-            # Authenticate using the project's authentication backends (email-only)
-            auth_user = authenticate(request, username=user.email, password=raw_password)
+            auth_user = authenticate(
+                request, username=user.email, password=raw_password
+            )
             if auth_user is None:
-                # Fallback: set backend dynamically from settings to avoid hardcoding
                 from django.conf import settings
 
                 backend_path = settings.AUTHENTICATION_BACKENDS[0]
@@ -39,10 +39,17 @@ def register(request):
     return render(request, "registration/register.html", {"form": form})
 
 
+def login_view(request, *args, **kwargs):
+    view = auth_views.LoginView.as_view(
+        template_name="registration/login.html",
+        authentication_form=CustomAuthenticationForm,
+    )
+    return view(request, *args, **kwargs)
+
+
 def logout_view(request):
     if request.method not in ("GET", "POST"):
         return HttpResponseNotAllowed(["GET", "POST"])
 
     logout(request)
-    messages.info(request, "Вы вышли из системы.")
     return redirect(getattr(settings, "LOGOUT_REDIRECT_URL", "/"))
