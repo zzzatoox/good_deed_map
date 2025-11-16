@@ -164,6 +164,10 @@
           </svg>
         </button>
         {% if user.is_authenticated %}
+        <span
+          class="hidden sm:inline-block text-sm text-gray-700 dark:text-gray-200 mr-3"
+          >Привет, {{ user.first_name|default:user.username }}!</span
+        >
         <a
           href="{% url 'logout' %}"
           class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors logout-btn"
@@ -215,7 +219,10 @@
                   class="block text-white text-sm font-medium mb-2 dark:text-gray-200"
                   >{{ field.label }}</label
                 >
-                {% if field.name == 'new_owner_email' %} {{ field }} {{field.errors }} {% elif field.name == 'change_description' %} {{ field }} {{ field.errors }} {% else %} {{ field }} {{field.errors }} {% endif %} {% if field.help_text %}
+                {% if field.name == 'new_owner_email' %} {{ field }}
+                {{field.errors }} {% elif field.name == 'change_description' %}
+                {{ field }} {{ field.errors }} {% else %} {{ field }}
+                {{field.errors }} {% endif %} {% if field.help_text %}
                 <p class="text-xs text-white/80 mt-1">{{ field.help_text }}</p>
                 {% endif %}
               </div>
@@ -232,10 +239,10 @@
                 </button>
 
                 <a
-                    href="{% url 'index' %}"
-                    class="block text-center text-center py-2 bg-white/20 text-white rounded-xl hover:opacity-90"
-                    >Отмена</a
-                  >
+                  href="{% url 'index' %}"
+                  class="block text-center py-2 bg-white/20 text-white rounded-xl hover:opacity-90"
+                  >Отмена</a
+                >
               </div>
 
               <div

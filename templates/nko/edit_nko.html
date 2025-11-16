@@ -164,19 +164,21 @@
           </svg>
         </button>
         {% if user.is_authenticated %}
+        <span
+          class="hidden sm:inline-block text-sm text-gray-700 dark:text-gray-200 mr-3"
+          >Привет, {{ user.first_name|default:user.username }}!</span
+        >
         <a
           href="{% url 'logout' %}"
           class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors logout-btn"
+          >Выйти</a
         >
-          Выйти
-        </a>
         {% else %}
         <a
           href="{% url 'login' %}"
           class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors logout-btn"
+          >Войти</a
         >
-          Войти
-        </a>
         {% endif %}
       </nav>
     </header>

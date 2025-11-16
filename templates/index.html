@@ -156,6 +156,7 @@
           </svg>
         </button>
         {% if user.is_authenticated %}
+        <span class="hidden sm:inline-block text-sm text-gray-700 dark:text-gray-200 mr-3">Привет, {{ user.first_name|default:user.username }}!</span>
         <a
           href="{% url 'add_nko' %}"
           class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
