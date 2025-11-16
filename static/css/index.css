@@ -66,19 +66,30 @@
 }
 
 /* Theme-specific logo switching */
-.logo-light {
-  display: block;
+.logo-light,
+.logo-dark {
+  display: inline-block;
+  height: 32px;
+  width: auto;
+  vertical-align: middle;
 }
+
 .logo-dark {
   display: none;
 }
 
-/* When `dark` class is present, show the dark logo and hide the light one */
 .dark .logo-light {
   display: none;
 }
 .dark .logo-dark {
-  display: block;
+  display: inline-block;
   transition: filter 160ms ease-in-out;
   filter: invert(1) saturate(0) brightness(200%);
+}
+
+@media (min-width: 768px) {
+  .logo-light,
+  .logo-dark {
+    height: 40px;
+  }
 }
