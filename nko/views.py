@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.contrib import messages
 from django.utils.text import slugify
 from .models import City, Category, NKO, NKOVersion
 from .forms import NKOForm, NKOEditForm, TransferOwnershipForm
@@ -77,13 +76,8 @@ def add_nko(request):
     existing = NKO.objects.filter(owner=request.user).first()
     if existing:
         if existing.has_pending_changes or not existing.is_approved:
-            messages.warning(
-                request,
-                "У вас уже есть НКО, которое находится на модерации — создание новой НКО невозможно.",
-            )
             return redirect("index")
 
-        messages.info(request, "У вас уже есть НКО. Вы можете отредактировать его.")
         return redirect("edit_nko", pk=existing.pk)
 
     if request.method == "POST":
@@ -94,8 +88,6 @@ def add_nko(request):
             nko.is_approved = False
             nko.save()
             form.save_m2m()
-
-            messages.success(request, "НКО успешно добавлена и ожидает модерации.")
             return redirect("index")
     else:
         form = NKOForm()
@@ -109,10 +101,6 @@ def edit_nko(request, pk):
 
     pending_version = nko.get_pending_version()
     if pending_version:
-        messages.warning(
-            request,
-            "Уже есть ожидающая модерации версия этой НКО. Дождитесь ее рассмотрения.",
-        )
         return redirect("index")
 
     if request.method == "POST":
@@ -126,11 +114,6 @@ def edit_nko(request, pk):
 
             nko.has_pending_changes = True
             nko.save()
-
-            messages.success(
-                request,
-                "Изменения отправлены на модерацию! Текущая информация продолжает отображаться.",
-            )
             return redirect("index")
     else:
         initial_data = {
@@ -155,10 +138,6 @@ def transfer_ownership(request, pk):
     nko = get_object_or_404(NKO, pk=pk, owner=request.user)
 
     if nko.get_pending_version() or nko.has_pending_changes:
-        messages.warning(
-            request,
-            "Нельзя передать права: у НКО есть ожидающая модерации версия или незавершённые изменения.",
-        )
         return redirect("index")
 
     if request.method == "POST":
@@ -167,10 +146,6 @@ def transfer_ownership(request, pk):
             new_owner = form.cleaned_data["new_owner_email"]
 
             if NKO.objects.filter(owner=new_owner).exists():
-                messages.error(
-                    request,
-                    "У этого пользователя уже есть НКО. Один пользователь может управлять только одной НКО.",
-                )
                 return render(
                     request, "nko/transfer_ownership.html", {"form": form, "nko": nko}
                 )
@@ -195,7 +170,6 @@ def transfer_ownership(request, pk):
             nko.has_pending_changes = True
             nko.save()
 
-            messages.success(request, "Запрос на передачу прав отправлен на модерацию!")
             return redirect("index")
     else:
         form = TransferOwnershipForm()

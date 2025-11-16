@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout, views as auth_views
-from django.contrib import messages
 from django.conf import settings
 from django.http import HttpResponseNotAllowed
 from .forms import UserRegisterForm, CustomAuthenticationForm
@@ -24,15 +23,9 @@ def register(request):
                 auth_user = user
 
             login(request, auth_user)
-
-            messages.success(
-                request,
-                f"Аккаунт для {user.get_full_name()} успешно создан! "
-                f"Теперь вы можете добавить свою НКО на карту.",
-            )
             return redirect("index")
         else:
-            messages.error(request, "Пожалуйста, исправьте ошибки в форме.")
+            pass
     else:
         form = UserRegisterForm()
 
