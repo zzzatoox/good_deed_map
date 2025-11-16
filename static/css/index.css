@@ -1,0 +1,95 @@
+/* Moved from templates/index.html */
+
+/* Кастомный скроллбар для контейнера категорий */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(209, 213, 219);
+  border-radius: 3px;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(75, 85, 99);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(156, 163, 175);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(107, 114, 128);
+}
+
+/* Фиксируем высоту основного контейнера */
+.main-container {
+  height: calc(100vh - 64px); /* Высота экрана минус высота хедера */
+}
+
+/* Уменьшаем ширину левой панели */
+@media (min-width: 768px) {
+  .left-panel {
+    width: 380px; /* Уменьшено с 50% */
+    min-width: 380px; /* Минимальная ширина */
+  }
+
+  .map-container {
+    flex: 1; /* Карта занимает оставшееся пространство */
+  }
+}
+
+.point-item.selected {
+  background-color: rgba(59, 130, 246, 0.12); /* blue-500/20 */
+}
+
+.ymaps-2-1-79-searchbox,
+.ymaps-2-1-searchbox,
+.ymaps-searchbox,
+.ymaps-2-1-79-controls__control_toolbar .ymaps-2-1-79-searchbox {
+  display: none !important;
+}
+
+/* Logo color handling: invert to white in dark theme */
+.site-logo {
+  display: block;
+  transition: filter 160ms ease-in-out;
+  filter: none;
+}
+.dark .site-logo {
+  filter: invert(1) saturate(0) brightness(200%);
+}
+
+/* Theme-specific logo switching */
+.logo-light,
+.logo-dark {
+  display: inline-block;
+  height: 32px;
+  width: auto;
+  vertical-align: middle;
+}
+
+.logo-dark {
+  display: none;
+}
+
+.dark .logo-light {
+  display: none;
+}
+.dark .logo-dark {
+  display: inline-block;
+  transition: filter 160ms ease-in-out;
+  filter: invert(1) saturate(0) brightness(200%);
+}
+
+@media (min-width: 768px) {
+  .logo-light,
+  .logo-dark {
+    height: 40px;
+  }
+}

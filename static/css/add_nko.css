@@ -1,0 +1,333 @@
+/* Базовые стили для обеспечения адаптивности */
+* {
+  box-sizing: border-box;
+}
+
+/* Стили для кастомных чекбоксов */
+.checkbox-container input[type="checkbox"] {
+  display: none;
+}
+
+.checkbox-container .checkmark {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border: 2px solid #025ea1;
+  border-radius: 4px;
+  margin-right: 10px;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark {
+  background-color: #025ea1;
+  border-color: #025ea1;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark::after {
+  content: "✓";
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.checkbox-container:hover .checkmark {
+  border-color: #025ea1;
+  box-shadow: 0 0 0 2px rgba(2, 94, 161, 0.2);
+}
+
+.checkbox-label {
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  word-break: break-word;
+  width: 100%;
+}
+
+.checkbox-label:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Адаптивные стили для чекбоксов */
+@media (max-width: 480px) {
+  .checkbox-label {
+    padding: 6px 8px;
+    font-size: 0.9rem;
+  }
+
+  .checkbox-container .checkmark {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+  }
+}
+
+/* Стили для автодополнения */
+.autocomplete {
+  position: relative;
+  width: 100%;
+}
+
+.autocomplete-items {
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-bottom: none;
+  border-top: none;
+  z-index: 99;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-items div {
+  padding: 10px;
+  cursor: pointer;
+  background-color: #fff;
+  border-bottom: 1px solid #d4d4d4;
+  word-break: break-word;
+}
+
+.autocomplete-items div:hover {
+  background-color: #e9e9e9;
+}
+
+.autocomplete-active {
+  background-color: #025ea1 !important;
+  color: white;
+}
+
+.dark .autocomplete-items {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.dark .autocomplete-items div {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: white;
+}
+
+.dark .autocomplete-items div:hover {
+  background-color: #4b5563;
+}
+
+/* Стили для валидации файлов */
+.file-validation-message {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: none;
+  word-break: break-word;
+}
+
+.file-validation-error {
+  color: #ef4444;
+}
+
+.file-validation-success {
+  color: #10b981;
+}
+
+/* Улучшаем отображение полей ввода на мобильных */
+input,
+textarea,
+select {
+  max-width: 100%;
+}
+
+/* Предотвращаем масштабирование на iOS */
+input,
+textarea,
+select {
+  font-size: 16px; /* Предотвращает зум на iOS */
+}
+
+@media (max-width: 480px) {
+  input,
+  textarea,
+  select {
+    font-size: 14px; /* Чуть меньший размер для мобильных */
+  }
+}
+
+/* File input: make container background show through and style the selector button
+   so it respects dark mode. We target both modern ::file-selector-button and
+   vendor-prefixed pseudo-elements for broader support. Use !important to override
+   utility classes like `bg-white` applied via Tailwind. */
+.file-input-container input[type="file"] {
+  background: transparent !important;
+  color: inherit;
+  width: 100%;
+  border: none;
+  padding: 6px 8px;
+  outline: none;
+}
+
+/* Modern pseudo-element */
+.file-input-container input[type="file"]::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background-color: #4495d1;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* WebKit / Blink */
+.file-input-container input[type="file"]::-webkit-file-upload-button {
+  margin-right: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background-color: #4495d1;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* IE/Edge older */
+.file-input-container input[type="file"]::-ms-browse {
+  margin-right: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background-color: #4495d1;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Dark mode overrides: make input area and button match dark container */
+.dark .file-input-container {
+  background-color: #374151 !important; /* dark gray-700 */
+}
+
+.dark .file-input-container input[type="file"] {
+  color: #e5e7eb; /* gray-200 */
+}
+
+.dark .file-input-container input[type="file"]::file-selector-button {
+  background-color: #4b5563; /* gray-600 */
+  color: #fff;
+}
+
+.dark .file-input-container input[type="file"]::-webkit-file-upload-button {
+  background-color: #4b5563;
+  color: #fff;
+}
+
+.dark .file-input-container input[type="file"]::-ms-browse {
+  background-color: #4b5563;
+  color: #fff;
+}
+
+/* If the input has an id (e.g. id_logo) and Tailwind classes set bg-white, override them */
+#id_logo,
+#logo {
+  background: transparent !important;
+}
+
+#id_logo::file-selector-button,
+#logo::file-selector-button {
+  background-color: #4495d1;
+  color: #fff;
+}
+
+.dark #id_logo::file-selector-button,
+.dark #logo::file-selector-button {
+  background-color: #4b5563;
+  color: #fff;
+}
+
+/* Ensure file input inherits container colors and fits layout */
+.file-input-container input[type="file"] {
+  background: transparent;
+  color: inherit;
+  width: 100%;
+  border: none;
+  padding: 6px 8px;
+}
+
+.dark .file-input-container input[type="file"] {
+  color: white;
+}
+
+/* --- Header / logo / header-links fixes to match index page --- */
+/* Ensure logo sizing + dark mode switching like on index.css */
+.logo-light,
+.logo-dark {
+  display: inline-block;
+  height: 32px;
+  width: auto;
+  vertical-align: middle;
+}
+
+.logo-dark {
+  display: none;
+}
+
+.dark .logo-light {
+  display: none;
+}
+
+.dark .logo-dark {
+  display: inline-block;
+}
+
+@media (min-width: 768px) {
+  .logo-light,
+  .logo-dark {
+    height: 40px;
+  }
+}
+
+/* Link for "Карта добрых дел" - ensure font-size, padding and hover color */
+.nav-home-link {
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500;
+  padding: 0.5rem; /* p-2 */
+  color: #1f2937; /* text-gray-800 */
+  text-decoration: none;
+}
+.nav-home-link:hover {
+  color: #025ea1; /* match index hover */
+  text-decoration: underline;
+}
+.dark .nav-home-link {
+  color: #e5e7eb; /* dark:text-gray-200 */
+}
+
+/* Logout / Login button visual fallback in case utilities aren't applied */
+.logout-btn {
+  background: #ffffff;
+  color: #15256d;
+  padding: 0.5rem 1rem; /* py-2 px-4 */
+  border-radius: 0.375rem; /* rounded-md */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: inline-block;
+  font-weight: 500;
+}
+.logout-btn:hover {
+  opacity: 0.95;
+}
+
+/* Small helper to align with index.css theme inversion if needed */
+.dark .logout-btn {
+  background: #374151; /* dark gray-700 */
+  color: #fff;
+}

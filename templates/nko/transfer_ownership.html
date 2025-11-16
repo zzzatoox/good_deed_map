@@ -1,10 +1,10 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Авторизация</title>
+    <title>Передача прав - {{ nko.name }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,17 +12,69 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-
-    <!-- Добавляем конфигурацию Tailwind для темной темы -->
     <script>
       tailwind.config = {
         darkMode: "class",
       };
     </script>
+    <link href="{% static 'css/add_nko.css' %}" rel="stylesheet" />
     <link href="{% static 'css/index.css' %}" rel="stylesheet" />
+    <style>
+      html,
+      body {
+        overflow-x: hidden;
+        max-width: 100vw;
+      }
+      .nko-card {
+        width: 100%;
+        max-width: min(980px, 96vw);
+        margin: 0 auto;
+      }
+      .nko-card input,
+      .nko-card textarea,
+      .nko-card select {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      .form-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      @media (min-width: 768px) {
+        .form-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 1.5rem;
+          align-items: start;
+        }
+      }
+      @media (max-width: 480px) {
+        .nko-card {
+          border-radius: 1rem;
+          padding: 1rem;
+        }
+        header {
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+        header img {
+          max-width: 140px;
+        }
+      }
+      .categories-container {
+        max-height: 40vh;
+        overflow-y: auto;
+      }
+      @media (min-width: 768px) {
+        .categories-container {
+          max-height: 30vh;
+        }
+      }
+    </style>
   </head>
   <body class="bg-gray-100 font-sans dark:bg-gray-900">
-    <!-- Карусель фоновых изображений (фон страницы, под всеми элементами) -->
     <div class="fixed inset-0 z-0">
       <div id="background-carousel" class="relative w-full h-full">
         <div
@@ -52,18 +104,16 @@
     </div>
 
     <header
-      class="bg-white shadow-sm py-3 px-5 flex items-center justify-between z-50 sticky top-0 dark:bg-gray-800"
+      class="bg-white shadow-sm py-3 px-4 sm:px-6 flex items-center justify-between z-50 sticky top-0 dark:bg-gray-800"
     >
-      <div class="flex items-center gap-8 md:gap-12">
+      <div class="flex items-center gap-6 md:gap-12">
         <div class="flex items-center gap-2">
           <a href="#" class="flex">
-            <!-- Light theme logo -->
             <img
               src="{% static 'images/LOGO_ROSATOM.svg' %}"
               alt="Rosatom Logo"
               class="logo-light h-6 md:h-7"
             />
-            <!-- Dark theme logo -->
             <img
               src="{% static 'images/rosatom-logo.svg' %}"
               alt="Rosatom Logo White"
@@ -88,7 +138,6 @@
           id="theme-toggle"
           class="p-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-yellow-300 dark:hover:bg-gray-600"
         >
-          <!-- Moon Icon for Dark Mode -->
           <svg
             id="moon-icon"
             xmlns="http://www.w3.org/2000/svg"
@@ -100,7 +149,6 @@
               d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"
             />
           </svg>
-          <!-- Sun Icon for Light Mode -->
           <svg
             id="sun-icon"
             xmlns="http://www.w3.org/2000/svg"
@@ -115,81 +163,102 @@
             />
           </svg>
         </button>
+        {% if user.is_authenticated %}
+        <span
+          class="hidden sm:inline-block text-sm text-gray-700 dark:text-gray-200 mr-3"
+          >Привет, {{ user.first_name|default:user.username }}!</span
+        >
+        <a
+          href="{% url 'logout' %}"
+          class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors logout-btn"
+          >Выйти</a
+        >
+        {% else %}
+        <a
+          href="{% url 'login' %}"
+          class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors logout-btn"
+          >Войти</a
+        >
+        {% endif %}
       </nav>
     </header>
 
-    <!-- Main content area with reduced padding to eliminate scroll -->
     <main
-      class="flex items-center justify-center min-h-[calc(100vh-80px)] py-4"
+      class="relative z-10 flex items-center justify-center min-h-[calc(100vh-80px)] py-4 px-3 sm:px-4"
     >
-      <!-- Main authorization window container -->
       <div
-        class="relative w-[450px] p-6 pt-[80px] pb-8 bg-gradient-to-r from-[#15256D] to-[#4495D1] rounded-3xl shadow-xl overflow-visible flex flex-col items-center dark:from-gray-800 dark:to-gray-700"
+        class="nko-card bg-gradient-to-r from-[#15256D] to-[#4495D1] rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 lg:p-8 dark:from-gray-800 dark:to-gray-700"
       >
-        <!-- Icon (250x250 pixels) positioned absolutely to stick out from the top and be centered. -->
-        <div
-          class="absolute -top-[125px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center"
-        >
-          <img
-            src="{% static 'images/rosatom_icon.png' %}"
-            alt="Login Icon"
-            class="w-[250px] h-[250px] rounded-full object-cover"
-          />
-        </div>
-
-        <!-- Content within the card, positioned below the icon's visual space -->
         <h2
-          class="text-3xl font-extrabold text-white mb-6 text-center drop-shadow-lg dark:text-gray-100"
+          class="text-xl sm:text-2xl font-extrabold text-white mb-4 sm:mb-6 text-center drop-shadow-lg dark:text-gray-100"
         >
-          Вход
+          Передача прав на НКО "{{ nko.name }}"
         </h2>
 
-        <form method="post" class="w-full space-y-4">
-          {% csrf_token %} {% if messages %}
-          <div class="space-y-2">
-            {% for message in messages %}
-            <div
-              class="px-3 py-2 rounded text-sm {% if message.tags %}text-{{ message.tags }}{% endif %}"
-            >
-              {{ message }}
+        <form method="post" class="w-full">
+          {% csrf_token %}
+
+          <div class="form-grid">
+            <div class="space-y-4 min-w-0">
+              <div>
+                <label
+                  class="block text-white text-sm font-medium mb-2 dark:text-gray-200"
+                  >Текущий владелец</label
+                >
+                <input
+                  type="text"
+                  readonly
+                  class="w-full rounded-lg p-2 bg-white/20 text-white"
+                  value="{{ nko.owner.get_full_name|default:nko.owner.username }}"
+                />
+              </div>
+
+              {% for field in form %}
+              <div>
+                <label
+                  class="block text-white text-sm font-medium mb-2 dark:text-gray-200"
+                  >{{ field.label }}</label
+                >
+                {% if field.name == 'new_owner_email' %} {{ field }}
+                {{field.errors }} {% elif field.name == 'change_description' %}
+                {{ field }} {{ field.errors }} {% else %} {{ field }}
+                {{field.errors }} {% endif %} {% if field.help_text %}
+                <p class="text-xs text-white/80 mt-1">{{ field.help_text }}</p>
+                {% endif %}
+              </div>
+              {% endfor %}
             </div>
-            {% endfor %}
-          </div>
-          {% endif %} {% if form.non_field_errors %}
-          <div class="text-red-500 text-sm">{{ form.non_field_errors }}</div>
-          {% endif %}
 
-          <div>{{ form.username.errors }} {{ form.username }}</div>
+            <aside class="space-y-4 min-w-0">
+              <div class="space-y-3">
+                <button
+                  type="submit"
+                  class="w-full py-3 bg-white text-[#15256D] font-bold text-base sm:text-lg rounded-xl transition-all duration-300 shadow-lg dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 hover:shadow-xl active:scale-95"
+                >
+                  Отправить запрос на передачу
+                </button>
 
-          <div>{{ form.password.errors }} {{ form.password }}</div>
+                <a
+                  href="{% url 'index' %}"
+                  class="block text-center py-2 bg-white/20 text-white rounded-xl hover:opacity-90"
+                  >Отмена</a
+                >
+              </div>
 
-          <div class="flex justify-end">
-            <a
-              href="{% url 'password_reset' %}"
-              class="text-white text-sm mt-2 mb-6 self-end opacity-90 hover:opacity-100 hover:underline transition duration-200 dark:text-gray-200"
-              >Забыли пароль?</a
-            >
-          </div>
-
-          <button
-            type="submit"
-            class="w-full py-3 bg-white text-[#15256D] font-bold text-xl rounded-xl transition-all duration-300 shadow-lg mt-6 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 hover:scale-105 hover:shadow-xl active:scale-95"
-          >
-            Войти
-          </button>
-
-          <div class="text-center">
-            <a
-              href="{% url 'register' %}"
-              class="text-white text-base mt-4 opacity-90 hover:opacity-100 hover:underline transition duration-200 text-center dark:text-gray-200"
-              >Ещё нет аккаунта?</a
-            >
+              <div
+                class="mt-4 rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 dark:text-yellow-800"
+              >
+                <strong>Внимание!</strong> После передачи прав вы больше не
+                сможете редактировать эту НКО. Запрос будет отправлен на
+                модерацию администраторам.
+              </div>
+            </aside>
           </div>
         </form>
       </div>
     </main>
+
     <script>
-      // Background carousel rotation (matches register.html behavior)
       (function () {
         let currentBackground = 0;
         const backgrounds = document.querySelectorAll(
@@ -205,55 +274,7 @@
         }
         setInterval(changeBackground, 5000);
       })();
-
-      const themeToggle = document.getElementById("theme-toggle");
-      const moonIcon = document.getElementById("moon-icon");
-      const sunIcon = document.getElementById("sun-icon");
-      const htmlElement = document.documentElement;
-
-      // Initialize theme
-      function initializeTheme() {
-        if (
-          localStorage.theme === "dark" ||
-          (!("theme" in localStorage) &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches)
-        ) {
-          enableDarkTheme();
-        } else {
-          enableLightTheme();
-        }
-      }
-
-      function enableDarkTheme() {
-        htmlElement.classList.add("dark");
-        localStorage.setItem("theme", "dark");
-        // Show sun icon, hide moon
-        if (moonIcon) moonIcon.classList.add("hidden");
-        if (sunIcon) sunIcon.classList.remove("hidden");
-      }
-
-      function enableLightTheme() {
-        htmlElement.classList.remove("dark");
-        localStorage.setItem("theme", "light");
-        // Show moon icon, hide sun
-        if (moonIcon) moonIcon.classList.remove("hidden");
-        if (sunIcon) sunIcon.classList.add("hidden");
-      }
-
-      // Toggle theme function
-      function toggleTheme() {
-        if (htmlElement.classList.contains("dark")) {
-          enableLightTheme();
-        } else {
-          enableDarkTheme();
-        }
-      }
-
-      // Initialize theme on page load
-      initializeTheme();
-
-      // Add event listener to theme toggle button
-      if (themeToggle) themeToggle.addEventListener("click", toggleTheme);
     </script>
+    <script type="module" src="{% static 'js/add_nko.js' %}"></script>
   </body>
 </html>
