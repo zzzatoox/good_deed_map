@@ -22,8 +22,24 @@ def nko_list_api(request):
     for nko in nko_list:
         category_list = [category.name for category in nko.categories.all()]
         category_ids = [category.id for category in nko.categories.all()]
+
+        def map_category_to_key(name):
+            s = (name or "").lower()
+            if "живот" in s:
+                return "animals"
+            if "эколог" in s or "устойчив" in s:
+                return "ecology"
+            if "спорт" in s or "здоровье" in s:
+                return "sport"
+            if "социал" in s or "помощ" in s:
+                return "social"
+            if "территор" in s or "местн" in s:
+                return "territory"
+            return "other"
+
+        category_keys = [map_category_to_key(c) for c in category_list]
         category_slugs = [slugify(c) for c in category_list]
-        primary_category = category_slugs[0] if category_slugs else "other"
+        primary_category = category_keys[0] if category_keys else "other"
         data.append(
             {
                 "id": nko.id,
@@ -31,6 +47,7 @@ def nko_list_api(request):
                 "categories": category_list,
                 "category_ids": category_ids,
                 "category_slugs": category_slugs,
+                "category_keys": category_keys,
                 "primary_category": primary_category,
                 "city": nko.city.name,
                 "city_id": nko.city.id,
