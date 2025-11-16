@@ -15,8 +15,8 @@ function initMapAndUI(pointsData) {
 
   ymaps.ready(() => {
     map = new ymaps.Map("map", {
-      center: [58.631194, 59.859275],
-      zoom: 12,
+      center: [61.524, 105.3188],
+      zoom: 3,
     });
 
     map.controls.remove("geolocationControl");
