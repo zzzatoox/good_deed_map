@@ -155,26 +155,43 @@
             />
           </svg>
         </button>
-        {% if user.is_authenticated %}
-        <span class="hidden sm:inline-block text-sm text-gray-700 dark:text-gray-200 mr-3">Привет, {{ user.first_name|default:user.username }}!</span>
-        <a
-          href="{% url 'add_nko' %}"
-          class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
-        >
-          Добавить НКО
-        </a>
-        <a
-          href="{% url 'logout' %}"
-          class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors"
-        >
-          Выйти
-        </a>
-        {% else %}
+        {% if not user.is_authenticated %}
         <a
           href="{% url 'login' %}"
           class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
         >
           Войти
+        </a>
+        {% else %}
+        <span
+          class="hidden sm:inline-block text-sm text-gray-700 dark:text-gray-200 mr-3"
+          >Привет, {{ user.first_name|default:user.username }}!</span
+        >
+        {% if not user_nko %}
+        <a
+          href="{% url 'add_nko' %}"
+          class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
+        >
+          Добавьте первую!
+        </a>
+        {% else %} {% if user_nko.get_pending_version or not user_nko.is_approved %}
+        <span
+          class="inline-block py-2 px-4 rounded-md text-sm font-medium text-white bg-yellow-600"
+          >У вас есть НКО, ожидающее модерации</span
+        >
+        {% else %}
+        <a
+          href="{% url 'edit_nko' user_nko.pk %}"
+          class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
+        >
+          Редактировать своё НКО
+        </a>
+        {% endif %} {% endif %}
+        <a
+          href="{% url 'logout' %}"
+          class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors"
+        >
+          Выйти
         </a>
         {% endif %}
         <!-- Кнопка войти -->
