@@ -162,3 +162,107 @@ select {
     font-size: 14px; /* Чуть меньший размер для мобильных */
   }
 }
+
+/* File input: make container background show through and style the selector button
+   so it respects dark mode. We target both modern ::file-selector-button and
+   vendor-prefixed pseudo-elements for broader support. Use !important to override
+   utility classes like `bg-white` applied via Tailwind. */
+.file-input-container input[type="file"] {
+  background: transparent !important;
+  color: inherit;
+  width: 100%;
+  border: none;
+  padding: 6px 8px;
+  outline: none;
+}
+
+/* Modern pseudo-element */
+.file-input-container input[type="file"]::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background-color: #4495d1;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* WebKit / Blink */
+.file-input-container input[type="file"]::-webkit-file-upload-button {
+  margin-right: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background-color: #4495d1;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* IE/Edge older */
+.file-input-container input[type="file"]::-ms-browse {
+  margin-right: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background-color: #4495d1;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Dark mode overrides: make input area and button match dark container */
+.dark .file-input-container {
+  background-color: #374151 !important; /* dark gray-700 */
+}
+
+.dark .file-input-container input[type="file"] {
+  color: #e5e7eb; /* gray-200 */
+}
+
+.dark .file-input-container input[type="file"]::file-selector-button {
+  background-color: #4b5563; /* gray-600 */
+  color: #fff;
+}
+
+.dark .file-input-container input[type="file"]::-webkit-file-upload-button {
+  background-color: #4b5563;
+  color: #fff;
+}
+
+.dark .file-input-container input[type="file"]::-ms-browse {
+  background-color: #4b5563;
+  color: #fff;
+}
+
+/* If the input has an id (e.g. id_logo) and Tailwind classes set bg-white, override them */
+#id_logo,
+#logo {
+  background: transparent !important;
+}
+
+#id_logo::file-selector-button,
+#logo::file-selector-button {
+  background-color: #4495d1;
+  color: #fff;
+}
+
+.dark #id_logo::file-selector-button,
+.dark #logo::file-selector-button {
+  background-color: #4b5563;
+  color: #fff;
+}
+
+/* Ensure file input inherits container colors and fits layout */
+.file-input-container input[type="file"] {
+  background: transparent;
+  color: inherit;
+  width: 100%;
+  border: none;
+  padding: 6px 8px;
+}
+
+.dark .file-input-container input[type="file"] {
+  color: white;
+}
