@@ -8,6 +8,7 @@ let placemarks = [];
 let searchControl;
 let activeCategories = [];
 let selectedCity = "all";
+let rawNkoList = [];
 
 function initMapAndUI(pointsData) {
   if (typeof ymaps === "undefined") {
@@ -54,6 +55,14 @@ function initMapAndUI(pointsData) {
         iconLayout: iconLayouts[point.properties.category] || iconLayouts.other,
         iconShape: { type: "Circle", coordinates: [0, 0], radius: 20 },
       });
+      // open modal when placemark clicked
+      placemark.events.add("click", function () {
+        try {
+          showNkoModal(point.id);
+        } catch (e) {
+          console.error("Error opening modal from placemark", e);
+        }
+      });
       map.geoObjects.add(placemark);
       placemarks.push({
         placemark,
@@ -62,6 +71,7 @@ function initMapAndUI(pointsData) {
         categories: point.properties.category,
         coords: point.coords,
         city: point.city,
+        id: point.id,
       });
     });
 
@@ -76,6 +86,7 @@ async function fetchAndInit() {
     const resp = await fetch("/nko/api/nko-list/");
     if (!resp.ok) throw new Error("Failed to fetch NKO list");
     const list = await resp.json();
+    rawNkoList = list;
     const pointsData = list
       .filter((nko) => nko.latitude && nko.longitude)
       .map((nko) => ({
@@ -152,6 +163,7 @@ function renderPointsList(pointsData, rawList) {
     const item = document.createElement("div");
     item.className =
       "py-5 cursor-pointer hover:bg-white/20 transition-colors point-item rounded-l-lg";
+    item.setAttribute("data-id", p.id);
     item.setAttribute("data-coords", JSON.stringify(p.coords));
     item.setAttribute("data-title", p.title || "");
     item.setAttribute("data-address", addr);
@@ -214,21 +226,17 @@ function attachUIHandlers(pointsData) {
   document.querySelectorAll(".point-item").forEach((item) => {
     item.addEventListener("click", function () {
       const coords = JSON.parse(this.getAttribute("data-coords"));
-      map.setCenter(coords, 16, { duration: 500 });
+      try {
+        if (map) map.setCenter(coords, 14, { duration: 500 });
+      } catch (e) {}
       document
         .querySelectorAll(".point-item")
         .forEach((el) =>
           el.classList.remove("bg-blue-500/20", "dark:bg-blue-900")
         );
       this.classList.add("bg-blue-500/20", "dark:bg-blue-900");
-      placemarks.forEach((placemarkItem) => {
-        if (
-          placemarkItem.coords[0] === coords[0] &&
-          placemarkItem.coords[1] === coords[1]
-        ) {
-          placemarkItem.placemark.balloon.open();
-        }
-      });
+      const id = this.getAttribute("data-id");
+      if (id) showNkoModal(Number(id));
     });
   });
 
@@ -456,6 +464,99 @@ function getPointsWord(count) {
     return "точки НКО";
   else return "точек НКО";
 }
+
+// Modal logic for NKO details
+function showNkoModal(id) {
+  const overlay = document.getElementById("nko-modal-overlay");
+  const modal = document.getElementById("nko-modal");
+  if (!modal || !overlay) return;
+
+  const nko = rawNkoList.find((i) => i.id === id);
+  if (!nko) return;
+
+  const logoEl = document.getElementById("nko-modal-logo");
+  const titleEl = document.getElementById("nko-modal-title");
+  const badgesEl = document.getElementById("nko-modal-badges");
+  const descEl = document.getElementById("nko-modal-description");
+  const addrEl = document.getElementById("nko-modal-address");
+  const phoneEl = document.getElementById("nko-modal-phone");
+  const websiteEl = document.getElementById("nko-modal-website");
+  const moreEl = document.getElementById("nko-modal-more");
+
+  if (logoEl) {
+    // Use NKO logo if available, otherwise fallback to the project's header logo
+    const headerLogo = document.querySelector(".logo-light");
+    const defaultLogo =
+      (headerLogo && headerLogo.src) || "/static/images/LOGO_ROSATOM.svg";
+    logoEl.src = nko.logo_url || defaultLogo;
+    logoEl.classList.remove("hidden");
+  }
+  if (titleEl) titleEl.textContent = nko.name || "";
+  if (descEl) descEl.textContent = nko.description || "";
+  if (addrEl) addrEl.textContent = nko.address || "";
+  if (phoneEl) {
+    phoneEl.textContent = nko.phone || "";
+    phoneEl.href = nko.phone ? `tel:${nko.phone}` : "#";
+  }
+  if (websiteEl) {
+    websiteEl.textContent = nko.website || "";
+    websiteEl.href = nko.website || "#";
+  }
+
+  // badges
+  if (badgesEl) {
+    badgesEl.innerHTML = "";
+    const keys = nko.category_keys || [];
+    const categoryNames = {
+      ecology: "Экология",
+      territory: "Территория",
+      animals: "Животные",
+      sport: "Спорт",
+      social: "Соц. защита",
+      other: "Другое",
+    };
+    const badgeColors = {
+      ecology: "bg-[#56C02B]",
+      territory: "bg-[#FCC30B]",
+      animals: "bg-[#259789]",
+      sport: "bg-[#E20072]",
+      social: "bg-[#1D293D]",
+      other: "bg-[#6CACE4]",
+    };
+    (keys.length ? keys : ["other"]).forEach((k) => {
+      const span = document.createElement("span");
+      span.className = `${
+        badgeColors[k] || badgeColors.other
+      } text-white text-xs font-medium px-2 py-1 rounded-md`;
+      span.textContent = categoryNames[k] || k;
+      badgesEl.appendChild(span);
+    });
+  }
+
+  if (moreEl) {
+    moreEl.href = nko.id ? `/nko/${nko.id}/` : "#";
+  }
+
+  overlay.classList.remove("hidden");
+  modal.classList.remove("hidden");
+}
+
+function hideNkoModal() {
+  const overlay = document.getElementById("nko-modal-overlay");
+  const modal = document.getElementById("nko-modal");
+  if (!modal || !overlay) return;
+  overlay.classList.add("hidden");
+  modal.classList.add("hidden");
+}
+
+document.addEventListener("click", function (e) {
+  if (!e.target) return;
+  if (e.target.id === "nko-modal-close") hideNkoModal();
+  if (e.target.id === "nko-modal-overlay") hideNkoModal();
+});
+
+// expose for inline balloon links or external usage
+window.showNkoModal = showNkoModal;
 
 // Expose init function for template to call after ymaps script loaded
 export { initMapAndUI, fetchAndInit };
