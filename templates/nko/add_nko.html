@@ -202,7 +202,7 @@
 
     <!-- Main content area -->
     <main
-      class="flex items-center justify-center min-h-[calc(100vh-80px)] py-4 px-3 sm:px-4"
+      class="relative z-10 flex items-center justify-center min-h-[calc(100vh-80px)] py-4 px-3 sm:px-4"
     >
       <!-- Main form container -->
       <div
@@ -254,8 +254,7 @@
                   class="block text-white text-sm font-medium mb-2 dark:text-gray-200"
                   >Функционал волонтеров (опционально)</label
                 >
-                {{ form.volunteer_functions }} {{
-                form.volunteer_functions.errors }}
+                {{ form.volunteer_functions }} {{ form.volunteer_functions.errors }}
               </div>
 
               <div>
