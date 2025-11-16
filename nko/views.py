@@ -190,7 +190,7 @@ def transfer_ownership(request, pk):
                 telegram_link=nko.telegram_link,
                 other_social=nko.other_social,
             )
-            version.category.set(nko.category.all())
+            version.categories.set(nko.categories.all())
 
             nko.has_pending_changes = True
             nko.save()
