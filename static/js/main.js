@@ -92,8 +92,10 @@ async function fetchAndInit() {
         title: nko.name,
         address: nko.address,
         city:
-          nko.city_slug ||
-          (nko.city || "").toString().toLowerCase().replace(/\s+/g, "-"),
+          nko.city_id !== undefined && nko.city_id !== null
+            ? String(nko.city_id)
+            : nko.city_slug ||
+              (nko.city || "").toString().toLowerCase().replace(/\s+/g, "-"),
       }));
 
     renderPointsList(pointsData, list);
@@ -362,24 +364,14 @@ function updateActiveFiltersDisplay() {
       const cityFilterChip = document.createElement("div");
       cityFilterChip.className =
         "flex items-center gap-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-xs font-medium";
-      const cityNames = {
-        moscow: "Москва",
-        "saint-petersburg": "Санкт-Петербург",
-        novosibirsk: "Новосибирск",
-        ekaterinburg: "Екатеринбург",
-        "nizhny-novgorod": "Нижний Новгород",
-        kazan: "Казань",
-        chelyabinsk: "Челябинск",
-        omsk: "Омск",
-        samara: "Самара",
-        rostov: "Ростов-на-Дону",
-        ufa: "Уфа",
-        krasnoyarsk: "Красноярск",
-        voronezh: "Воронеж",
-        perm: "Пермь",
-        volgograd: "Волгоград",
-      };
-      cityFilterChip.innerHTML = `<span>${cityNames[selectedCity]}</span><button class="text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100" data-filter-type="city"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>`;
+
+      const citySelect = document.getElementById("city-select");
+      let cityDisplay = selectedCity;
+      if (citySelect) {
+        const opt = citySelect.querySelector(`option[value="${selectedCity}"]`);
+        if (opt) cityDisplay = opt.textContent.trim();
+      }
+      cityFilterChip.innerHTML = `<span>${cityDisplay}</span><button class="text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100" data-filter-type="city"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>`;
       filtersList.appendChild(cityFilterChip);
     }
     activeCategories.forEach((category) => {

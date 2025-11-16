@@ -186,21 +186,9 @@
                   class="w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:border-[#025EA1] text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition duration-150 ease-in-out appearance-none"
                 >
                   <option value="all">Все города</option>
-                  <option value="moscow">Москва</option>
-                  <option value="saint-petersburg">Санкт-Петербург</option>
-                  <option value="novosibirsk">Новосибирск</option>
-                  <option value="ekaterinburg">Екатеринбург</option>
-                  <option value="nizhny-novgorod">Нижний Новгород</option>
-                  <option value="kazan">Казань</option>
-                  <option value="chelyabinsk">Челябинск</option>
-                  <option value="omsk">Омск</option>
-                  <option value="samara">Самара</option>
-                  <option value="rostov">Ростов-на-Дону</option>
-                  <option value="ufa">Уфа</option>
-                  <option value="krasnoyarsk">Красноярск</option>
-                  <option value="voronezh">Воронеж</option>
-                  <option value="perm">Пермь</option>
-                  <option value="volgograd">Волгоград</option>
+                  {% for city in cities %}
+                  <option value="{{ city.id }}">{{ city.name }}</option>
+                  {% endfor %}
                 </select>
                 <div
                   class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300"
