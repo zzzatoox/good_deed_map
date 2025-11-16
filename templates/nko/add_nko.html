@@ -146,6 +146,21 @@
             />
           </svg>
         </button>
+        {% if user.is_authenticated %}
+        <a
+          href="{% url 'logout' %}"
+          class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors"
+        >
+          Выйти
+        </a>
+        {% else %}
+        <a
+          href="{% url 'login' %}"
+          class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors"
+        >
+          Войти
+        </a>
+        {% endif %}
       </nav>
     </header>
 
