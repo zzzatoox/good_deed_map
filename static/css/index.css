@@ -54,3 +54,31 @@
 .ymaps-2-1-79-controls__control_toolbar .ymaps-2-1-79-searchbox {
   display: none !important;
 }
+
+/* Logo color handling: invert to white in dark theme */
+.site-logo {
+  display: block;
+  transition: filter 160ms ease-in-out;
+  filter: none;
+}
+.dark .site-logo {
+  filter: invert(1) saturate(0) brightness(200%);
+}
+
+/* Theme-specific logo switching */
+.logo-light {
+  display: block;
+}
+.logo-dark {
+  display: none;
+}
+
+/* When `dark` class is present, show the dark logo and hide the light one */
+.dark .logo-light {
+  display: none;
+}
+.dark .logo-dark {
+  display: block;
+  transition: filter 160ms ease-in-out;
+  filter: invert(1) saturate(0) brightness(200%);
+}
