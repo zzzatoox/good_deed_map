@@ -202,3 +202,22 @@ class TransferOwnershipForm(forms.ModelForm):
         except User.DoesNotExist:
             raise forms.ValidationError("Пользователь с таким email не найден.")
         return user
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        common_classes = (
+            "w-full p-3 rounded-xl border-2 border-white bg-white bg-opacity-90 "
+            "text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 "
+            "focus:ring-[#4495D1] transition duration-200 shadow-md text-base "
+            "dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+        )
+
+        if "new_owner_email" in self.fields:
+            self.fields["new_owner_email"].widget.attrs.update(
+                {"class": common_classes}
+            )
+
+        if "change_description" in self.fields:
+            self.fields["change_description"].widget.attrs.update(
+                {"class": common_classes}
+            )
