@@ -96,10 +96,81 @@ async function fetchAndInit() {
           (nko.city || "").toString().toLowerCase().replace(/\s+/g, "-"),
       }));
 
+    renderPointsList(pointsData, list);
+
     initMapAndUI(pointsData);
   } catch (err) {
     console.error("Error initializing map from API:", err);
   }
+}
+
+function renderPointsList(pointsData, rawList) {
+  const container = document.getElementById("points-list");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const categoryNames = {
+    ecology: "Экология",
+    territory: "Территория",
+    animals: "Животные",
+    sport: "Спорт",
+    social: "Соц. защита",
+    other: "Другое",
+  };
+
+  const badgeColors = {
+    ecology: "bg-[#56C02B]",
+    territory: "bg-[#FCC30B]",
+    animals: "bg-[#259789]",
+    sport: "bg-[#E20072]",
+    social: "bg-[#1D293D]",
+    other: "bg-[#6CACE4]",
+  };
+
+  pointsData.forEach((p) => {
+    const raw = rawList.find((r) => r.id === p.id) || {};
+    const keys =
+      raw.category_keys ||
+      (p.properties.category ? [p.properties.category] : ["other"]);
+    const addr = p.address || "";
+
+    const badgesHtml = keys
+      .map(
+        (k) =>
+          `<span class="${
+            badgeColors[k] || badgeColors.other
+          } text-white text-xs font-medium px-2 py-1 rounded-md">${
+            categoryNames[k] || k
+          }</span>`
+      )
+      .join(" ");
+
+    const item = document.createElement("div");
+    item.className =
+      "py-5 cursor-pointer hover:bg-white/20 transition-colors point-item rounded-l-lg";
+    item.setAttribute("data-coords", JSON.stringify(p.coords));
+    item.setAttribute("data-title", p.title || "");
+    item.setAttribute("data-address", addr);
+    item.setAttribute("data-categories", keys.join(","));
+    item.setAttribute("data-city", p.city || "");
+
+    item.innerHTML = `
+      <div class="flex justify-between items-start mb-1 pl-4">
+        <div class="flex flex-wrap gap-1">
+          ${badgesHtml}
+        </div>
+      </div>
+      <h4 class="text-base font-semibold mb-2 text-white dark:text-gray-100 pl-4">${
+        p.title || ""
+      }</h4>
+      <p class="text-sm text-white/80 dark:text-gray-300 mb-3 pl-4">${addr}</p>
+      <div class="flex justify-between items-center text-xs text-white/80 dark:text-gray-300 pl-4">
+        <span class="text-[#90EE90] font-medium">Открыто</span>
+      </div>
+    `;
+
+    container.appendChild(item);
+  });
 }
 
 function attachUIHandlers(pointsData) {
