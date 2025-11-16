@@ -542,64 +542,12 @@
       type="text/javascript"
     ></script>
     <script type="module">
-      import { initMapAndUI } from '{% static "js/main.js" %}';
+      import { fetchAndInit } from '{% static "js/main.js" %}';
 
-      // Prepare pointsData: in future this should be fetched via `/nko/api/nko-list/`.
-      const pointsData = [
-        {
-          id: 1,
-          coords: [58.631194, 59.859275],
-          properties: {
-            hintContent: "Федот",
-            balloonContent: "ул. Машиностроителей, 8<br>Экология",
-            category: "ecology",
-          },
-          title: "Федот",
-          address: "ул. Машиностроителей, 8",
-          city: "moscow",
-        },
-        {
-          id: 2,
-          coords: [58.630552, 59.859967],
-          properties: {
-            hintContent: "Никитос",
-            balloonContent: "ул. Машиностроителей 12<br>Социальная защита",
-            category: "social",
-          },
-          title: "Никитос",
-          address: "ул. Машиностроителей 12",
-          city: "moscow",
-        },
-        {
-          id: 3,
-          coords: [58.625094, 59.853148],
-          properties: {
-            hintContent: "Парк 'Зелёный оазис'",
-            balloonContent: "ул. Ильича 2А<br>Территория, Животные",
-            category: "territory",
-          },
-          title: "Парк 'Зелёный оазис'",
-          address: "ул. Лесная, 15",
-          city: "saint-petersburg",
-        },
-        {
-          id: 4,
-          coords: [58.626364, 59.861287],
-          properties: {
-            hintContent: "Спортивный комплекс 'Энергия'",
-            balloonContent: "ул. Спортивная, 25<br>Спорт",
-            category: "sport",
-          },
-          title: "Спортивный комплекс 'Энергия'",
-          address: "ул. Спортивная, 25",
-          city: "novosibirsk",
-        },
-      ];
-
-      // Wait a bit for ymaps script to load, then initialize
+      // Wait for ymaps then fetch data from backend API and initialize
       function tryInit() {
         if (typeof ymaps !== "undefined") {
-          initMapAndUI(pointsData);
+          fetchAndInit();
         } else {
           setTimeout(tryInit, 200);
         }

@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
+from django.utils.text import slugify
 from .models import City, Category, NKO, NKOVersion
 from .forms import NKOForm, NKOEditForm, TransferOwnershipForm
 
@@ -19,14 +20,21 @@ def nko_list_api(request):
     )
     data = []
     for nko in nko_list:
+        category_list = [category.name for category in nko.categories.all()]
+        category_ids = [category.id for category in nko.categories.all()]
+        category_slugs = [slugify(c) for c in category_list]
+        primary_category = category_slugs[0] if category_slugs else "other"
         data.append(
             {
                 "id": nko.id,
                 "name": nko.name,
-                "categories": [category.name for category in nko.categories.all()],
-                "category_ids": [category.id for category in nko.categories.all()],
+                "categories": category_list,
+                "category_ids": category_ids,
+                "category_slugs": category_slugs,
+                "primary_category": primary_category,
                 "city": nko.city.name,
                 "city_id": nko.city.id,
+                "city_slug": slugify(nko.city.name),
                 "region": nko.region.name,
                 "latitude": nko.latitude,
                 "longitude": nko.longitude,

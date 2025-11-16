@@ -68,6 +68,40 @@ function initMapAndUI(pointsData) {
   });
 }
 
+// Fetch NKO list from API and initialize the map with real data
+async function fetchAndInit() {
+  try {
+    const resp = await fetch("/nko/api/nko-list/");
+    if (!resp.ok) throw new Error("Failed to fetch NKO list");
+    const list = await resp.json();
+    const pointsData = list
+      .filter((nko) => nko.latitude && nko.longitude)
+      .map((nko) => ({
+        id: nko.id,
+        coords: [parseFloat(nko.latitude), parseFloat(nko.longitude)],
+        properties: {
+          hintContent: nko.name,
+          balloonContent: `${nko.address || ""}<br>${(
+            nko.categories || []
+          ).join(", ")}`,
+          category:
+            nko.primary_category ||
+            (nko.category_slugs && nko.category_slugs[0]) ||
+            "other",
+        },
+        title: nko.name,
+        address: nko.address,
+        city:
+          nko.city_slug ||
+          (nko.city || "").toString().toLowerCase().replace(/\s+/g, "-"),
+      }));
+
+    initMapAndUI(pointsData);
+  } catch (err) {
+    console.error("Error initializing map from API:", err);
+  }
+}
+
 function attachUIHandlers(pointsData) {
   // category filters
   document.querySelectorAll(".category-filter").forEach((category) => {
@@ -351,4 +385,4 @@ function getPointsWord(count) {
 }
 
 // Expose init function for template to call after ymaps script loaded
-export { initMapAndUI };
+export { initMapAndUI, fetchAndInit };

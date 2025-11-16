@@ -20,7 +20,6 @@ try:
 
     load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 except Exception:
-    # python-dotenv not installed or .env missing — ignore
     pass
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -183,5 +182,4 @@ else:
     EMAIL_USE_SSL = True
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-# Client-side API keys (safe to expose) — loaded from environment
 YANDEX_MAPS_API_KEY = os.environ.get("YANDEX_MAPS_API_KEY", "")
