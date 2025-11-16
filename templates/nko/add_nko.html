@@ -18,6 +18,7 @@
       };
     </script>
     <link href="{% static 'css/add_nko.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/index.css' %}" rel="stylesheet" />
     <style>
       /* Убираем горизонтальную прокрутку */
       html,
@@ -95,10 +96,17 @@
       <div class="flex items-center gap-6 md:gap-12">
         <div class="flex items-center gap-2">
           <a href="#" class="flex">
+            <!-- Light theme logo -->
             <img
-              src="{% static 'images/LOGO_ROSATOM_eng_VERT_COLOR_PNG.png' %}"
-              alt="Recyclemap Logo"
-              class="h-6 md:h-7 object-cover max-w-[140px] md:max-w-none"
+              src="{% static 'images/LOGO_ROSATOM.svg' %}"
+              alt="Rosatom Logo"
+              class="logo-light h-6 md:h-7"
+            />
+            <!-- Dark theme logo -->
+            <img
+              src="{% static 'images/rosatom-logo.svg' %}"
+              alt="Rosatom Logo White"
+              class="logo-dark h-6 md:h-7"
             />
           </a>
         </div>
@@ -107,7 +115,7 @@
             <li>
               <a
                 href="{% url 'index' %}"
-                class="text-sm font-medium text-gray-800 hover:text-[#68b114] hover:underline p-2 dark:text-gray-200 dark:hover:text-[#68b114]"
+                class="text-sm font-medium text-gray-800 hover:text-[#68b114] hover:underline p-2 dark:text-gray-200 dark:hover:text-[#68b114] nav-home-link"
                 >Карта добрых дел</a
               >
             </li>
@@ -149,14 +157,14 @@
         {% if user.is_authenticated %}
         <a
           href="{% url 'logout' %}"
-          class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors"
+          class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors logout-btn"
         >
           Выйти
         </a>
         {% else %}
         <a
           href="{% url 'login' %}"
-          class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors"
+          class="ml-3 inline-block py-2 px-4 bg-white text-[#15256D] font-medium rounded-md shadow-sm hover:opacity-95 transition-colors logout-btn"
         >
           Войти
         </a>
