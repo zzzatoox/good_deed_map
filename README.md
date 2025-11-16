@@ -63,6 +63,7 @@ pip install -r requirements.txt
 4. Выполните миграции:
 
 ```powershell
+python manage.py makemigrations users nko
 python manage.py migrate
 ```
 
@@ -78,13 +79,50 @@ python manage.py createsuperuser
 python manage.py load_initial_data
 ```
 
-7. Запустите сервер разработки:
+7. Создайте файл `.env` в корне проекта со следующими переменными:
+
+```text
+YANDEX_MAPS_API_KEY=
+
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+
+EMAIL_HOST=smtp.yandex.ru
+EMAIL_PORT=465
+EMAIL_USE_SSL=True
+EMAIL_USE_TLS=False
+
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
+
+DEFAULT_FROM_EMAIL=
+
+DEBUG=
+SECRET_KEY=
+ALLOWED_HOSTS=
+```
+
+8. Запустите сервер разработки:
 
 ```powershell
 python manage.py runserver
 ```
 
 Откройте в браузере `http://127.0.0.1:8000/` и `http://127.0.0.1:8000/admin/`.
+
+**Пояснения к переменным в `.env`:**
+
+- `YANDEX_MAPS_API_KEY`: API-ключ Яндекс.Карт. Нужен для отображения карты и геокодирования адресов.
+- `EMAIL_BACKEND`: Бекенд для отправки почты в Django. Оставьте `django.core.mail.backends.smtp.EmailBackend` для SMTP.
+- `EMAIL_HOST`: SMTP-сервер — для Яндекса используйте `smtp.yandex.ru`.
+- `EMAIL_PORT`: Порт SMTP — `465` для SSL, `587` для STARTTLS.
+- `EMAIL_USE_SSL`: `True` если используете SSL (порт 465). Для STARTTLS используйте `False` и включайте `EMAIL_USE_TLS=True`.
+- `EMAIL_USE_TLS`: `True` для STARTTLS (обычно с портом 587). При `EMAIL_USE_SSL=True` оставьте `False`.
+- `EMAIL_HOST_USER`: Логин почтового ящика (обычно полный email), от имени которого будут отправляться письма.
+- `EMAIL_HOST_PASSWORD`: Пароль/пароль приложения для почтового ящика.
+- `DEFAULT_FROM_EMAIL`: Адрес отправителя по умолчанию, например `no-reply@example.com`.
+- `DEBUG`: `True` или `False`. Для разработки `True`, для продакшена обязательно `False`.
+- `SECRET_KEY`: Секретный ключ Django. Должен быть уникальным и держаться в секрете (можно сгенерить на любом сайте).
+- `ALLOWED_HOSTS`: Список разрешённых хостов. Для локальной разработки `ALLOWED_HOSTS=127.0.0.1,localhost`.
 
 **Статические файлы и медиа**
 
@@ -100,7 +138,7 @@ python manage.py collectstatic
 
 - Код приложения в `nko/` и `users/`.
 - Шаблоны находятся в `templates/`, статика в `static/`.
-- Локальная база — `db.sqlite3`. Для чистой установки удалите файл и выполните `migrate` + `load_initial_data`.
+- Локальная база — `db.sqlite3`.
 
 **Лицензия**
 MIT
