@@ -162,6 +162,8 @@ def transfer_ownership(request, pk):
                 name=nko.name,
                 description=nko.description,
                 volunteer_functions=nko.volunteer_functions,
+                latitude=nko.latitude,
+                longitude=nko.longitude,
                 phone=nko.phone,
                 address=nko.address,
                 website=nko.website,
