@@ -25,24 +25,6 @@ function initMapAndUI(pointsData) {
     map.controls.remove("fullscreenControl");
     map.controls.remove("rulerControl");
     map.controls.remove("searchControl");
-
-    searchControl = new ymaps.control.SearchControl({
-      options: {
-        float: "right",
-        floatIndex: 100,
-        noPlacemark: true,
-        provider: "yandex#search",
-      },
-    });
-    map.controls.add(searchControl);
-
-    searchControl.events.add("resultselect", function (e) {
-      const selectedResult = searchControl.getResultsArray()[e.get("index")];
-      map.setCenter(selectedResult.geometry.getCoordinates(), 14, {
-        duration: 500,
-      });
-    });
-
     const iconLayouts = {
       ecology: ymaps.templateLayoutFactory.createClass(
         '<div class="rounded-full w-10 h-10 flex items-center justify-center text-white text-xl font-bold shadow-md" style="background-color: #56C02B;">🍃</div>'

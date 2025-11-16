@@ -44,7 +44,13 @@
   }
 }
 
-/* minor tweaks used by JS */
 .point-item.selected {
   background-color: rgba(59, 130, 246, 0.12); /* blue-500/20 */
+}
+
+.ymaps-2-1-79-searchbox,
+.ymaps-2-1-searchbox,
+.ymaps-searchbox,
+.ymaps-2-1-79-controls__control_toolbar .ymaps-2-1-79-searchbox {
+  display: none !important;
 }
