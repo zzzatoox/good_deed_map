@@ -109,6 +109,10 @@ def edit_nko(request, pk):
             version = form.save(commit=False)
             version.nko = nko
             version.created_by = request.user
+            if version.latitude is None:
+                version.latitude = nko.latitude
+            if version.longitude is None:
+                version.longitude = nko.longitude
             version.save()
             form.save_m2m()
 
