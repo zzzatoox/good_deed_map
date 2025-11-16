@@ -2,6 +2,8 @@
 // It was moved from inline <script> in templates/index.html
 
 let map;
+const INITIAL_MAP_CENTER = [61.524, 105.3188];
+const INITIAL_MAP_ZOOM = 3;
 let placemarks = [];
 let searchControl;
 let activeCategories = [];
@@ -15,8 +17,8 @@ function initMapAndUI(pointsData) {
 
   ymaps.ready(() => {
     map = new ymaps.Map("map", {
-      center: [61.524, 105.3188],
-      zoom: 3,
+      center: INITIAL_MAP_CENTER,
+      zoom: INITIAL_MAP_ZOOM,
     });
 
     map.controls.remove("geolocationControl");
@@ -348,6 +350,14 @@ function filterPointsByCategoriesAndCity(categories, city) {
     clearFiltersBtn.classList.remove("hidden");
   else clearFiltersBtn.classList.add("hidden");
   updateActiveFiltersDisplay();
+  // If user selected "Все города", reset to the initial Russian Federation view
+  if (city === "all") {
+    if (typeof map !== "undefined" && map) {
+      map.setCenter(INITIAL_MAP_CENTER, INITIAL_MAP_ZOOM, { duration: 200 });
+    }
+    return;
+  }
+
   if (visibleCount > 0) {
     const bounds = ymaps.util.bounds.fromPoints(visibleCoords);
     if (bounds) map.setBounds(bounds, { checkZoomRange: true, duration: 200 });
