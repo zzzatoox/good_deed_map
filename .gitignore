@@ -4,3 +4,4 @@ migrations
 .env
 staticfiles
 media
+*.sqlite3
