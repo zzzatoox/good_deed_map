@@ -1,8 +1,20 @@
-/* Moved from templates/index.html */
+/**
+ * Стили для главной страницы - Карта добрых дел
+ * 
+ * Содержит:
+ * - Кастомные скроллбары
+ * - Layouts для карты и фильтров
+ * - Стили для темной темы
+ * - Адаптивность
+ */
 
-/* Кастомный скроллбар для контейнера категорий */
+/* ========================================
+   Кастомные скроллбары
+   ======================================== */
+
 .scrollbar-thin::-webkit-scrollbar {
   height: 6px;
+  width: 6px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
@@ -11,32 +23,45 @@
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: rgb(209, 213, 219);
+  background-color: rgb(209, 213, 219); /* gray-300 */
   border-radius: 3px;
+  transition: background-color 0.2s;
 }
 
 .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: rgb(75, 85, 99);
+  background-color: rgb(75, 85, 99); /* gray-600 */
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(156, 163, 175);
+  background-color: rgb(156, 163, 175); /* gray-400 */
 }
 
 .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(107, 114, 128);
+  background-color: rgb(107, 114, 128); /* gray-500 */
 }
 
-/* Фиксируем высоту основного контейнера */
+/* ========================================
+   Layouts - Главная страница
+   ======================================== */
+
+/**
+ * Главный контейнер с картой и фильтрами
+ * Фиксированная высота = 100vh минус высота хедера
+ */
 .main-container {
-  height: calc(100vh - 64px); /* Высота экрана минус высота хедера */
+  height: calc(100vh - 64px);
+  overflow: hidden;
 }
 
-/* Уменьшаем ширину левой панели */
+/**
+ * Левая панель с фильтрами
+ * На десктопе фиксированная ширина 380px
+ */
 @media (min-width: 768px) {
   .left-panel {
-    width: 380px; /* Уменьшено с 50% */
-    min-width: 380px; /* Минимальная ширина */
+    width: 380px;
+    min-width: 380px;
+    max-width: 380px;
   }
 
   .map-container {
@@ -44,52 +69,89 @@
   }
 }
 
-.point-item.selected {
-  background-color: rgba(59, 130, 246, 0.12); /* blue-500/20 */
+/* ========================================
+   Стили элементов
+   ======================================== */
+
+/**
+ * Выбранная карточка НКО в списке
+ */
+.point-item {
+  border-left: 3px solid transparent;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
+.point-item.selected {
+  background-color: rgba(59, 130, 246, 0.12); /* blue-500 с прозрачностью */
+  border-left-color: rgb(59, 130, 246); /* blue-500 */
+}
+
+.point-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/**
+ * Активная категория фильтра
+ */
+.category-filter.active {
+  opacity: 1;
+}
+
+.category-filter:not(.active) {
+  opacity: 0.5;
+}
+
+/* ========================================
+   Яндекс Карты - Скрытие элементов
+   ======================================== */
+
+/**
+ * Скрываем стандартный поисковый бокс Яндекс.Карт
+ * Используем свой кастомный поиск в левой панели
+ */
 .ymaps-2-1-79-searchbox,
 .ymaps-2-1-searchbox,
 .ymaps-searchbox,
-.ymaps-2-1-79-controls__control_toolbar .ymaps-2-1-79-searchbox {
+.ymaps-2-1-79-controls__control_toolbar .ymaps-2-1-79-searchbox,
+.ymaps-2-1-79-controls__control {
   display: none !important;
 }
 
-/* Logo color handling: invert to white in dark theme */
-.site-logo {
-  display: block;
-  transition: filter 160ms ease-in-out;
-  filter: none;
-}
-.dark .site-logo {
-  filter: invert(1) saturate(0) brightness(200%);
-}
+/* ========================================
+   Логотипы - Переключение тем
+   ======================================== */
 
-/* Theme-specific logo switching */
+/**
+ * Базовые стили для логотипов
+ * Логотип автоматически меняется в зависимости от темы
+ */
 .logo-light,
 .logo-dark {
   display: inline-block;
-  height: 32px;
+  height: 1.5rem; /* 24px */
   width: auto;
   vertical-align: middle;
+  transition: all 0.2s ease-in-out;
 }
 
+/* Светлая тема - показываем темный логотип */
 .logo-dark {
   display: none;
 }
 
+/* Темная тема - показываем светлый логотип */
 .dark .logo-light {
   display: none;
 }
+
 .dark .logo-dark {
   display: inline-block;
-  transition: filter 160ms ease-in-out;
-  filter: invert(1) saturate(0) brightness(200%);
 }
 
+/* Увеличиваем размер на больших экранах */
 @media (min-width: 768px) {
   .logo-light,
   .logo-dark {
-    height: 40px;
+    height: 1.75rem; /* 28px */
   }
 }

@@ -1,25 +1,20 @@
-{% extends 'base.html' %} 
-{% load static %} {# Заголовок страницы #} 
-{% block title %}Карта добрых дел{% endblock %} {# Дополнительные стили #} 
-{% block extra_css %}
-<link href="{% static 'css/index.css' %}" rel="stylesheet" />
-{% endblock %} {# Специальный класс для body - фиксированная высота для карты #}
-{% block body_class %}overflow-hidden{% endblock %} 
-{# Класс для main - убираем отступы #} 
-{% block main_class %}{% endblock %} 
-{# Переопределяем хедер - используем кастомный для главной страницы #} 
-{% block header %}
+{% load static %} 
+{# Компонент: Навигационный хедер Используется на всех страницах сайта. Отображает: - Логотип - Навигационное меню - Кнопку переключения темы (если включена) - Информацию о пользователе и действия (вход/выход, добавление/редактирование НКО) #}
+
 <header class="bg-white dark:bg-gray-800 shadow-sm py-3 px-5 sticky top-0 z-50">
   <div class="flex items-center justify-between">
+    {# Левая часть - логотип и навигация #}
     <div class="flex items-center gap-8 md:gap-12">
       {# Логотип #}
       <div class="flex items-center gap-2">
         <a href="{% url 'index' %}" class="flex">
+          {# Светлая тема #}
           <img
             src="{% static 'images/LOGO_ROSATOM.svg' %}"
             alt="Rosatom Logo"
             class="logo-light h-6 md:h-7"
           />
+          {# Тёмная тема #}
           <img
             src="{% static 'images/rosatom-logo.svg' %}"
             alt="Rosatom Logo White"
@@ -28,7 +23,7 @@
         </a>
       </div>
 
-      {# Навигация #}
+      {# Основная навигация #}
       <nav class="hidden md:block">
         <ul class="flex items-center gap-2">
           <li>
@@ -43,13 +38,15 @@
       </nav>
     </div>
 
-    {# Правая часть - кнопки и пользователь #}
+    {# Правая часть - кнопки и меню пользователя #}
     <nav class="flex items-center gap-4">
-      {# Кнопка переключения темы #}
+      {# Кнопка переключения темы #} {% block theme_toggle %}
       <button
         id="theme-toggle"
         class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-yellow-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        aria-label="Переключить тему"
       >
+        {# Иконка луны (светлая тема) #}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="h-5 w-5 block dark:hidden"
@@ -60,6 +57,7 @@
             d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"
           />
         </svg>
+        {# Иконка солнца (тёмная тема) #}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="h-5 w-5 hidden dark:block"
@@ -73,44 +71,46 @@
           />
         </svg>
       </button>
-
-      {% if not user.is_authenticated %}
+      {% endblock %} {# Меню пользователя #} {% if not user.is_authenticated %}
+      {# Неавторизованный пользователь #}
       <a
         href="{% url 'login' %}"
         class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
       >
         Войти
       </a>
-      {% else %}
+      {% else %} {# Авторизованный пользователь #}
       <span
         class="hidden sm:inline-block text-sm text-gray-700 dark:text-gray-200 mr-3"
       >
         Привет, {{ user.first_name|default:user.username }}!
       </span>
 
-      {% if not user_nko %}
+      {# Проверка наличия НКО у пользователя #} {% if not user_nko %} {#
+      Пользователь без НКО - показываем кнопку добавления #}
       <a
         href="{% url 'add_nko' %}"
         class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
       >
         Добавить НКО
       </a>
-      {% else %} 
-      {% if user_nko.get_pending_version or not user_nko.is_approved %}
+      {% else %} {# Пользователь с НКО - проверяем статус модерации #} {% if
+      user_nko.get_pending_version or not user_nko.is_approved %} {# НКО на
+      модерации - показываем статус #}
       <span
         class="inline-block py-2 px-4 rounded-md text-sm font-medium text-white bg-yellow-600"
+        title="Изменения ожидают модерации"
       >
         НКО на модерации
       </span>
-      {% else %}
+      {% else %} {# НКО утверждено - можно редактировать #}
       <a
         href="{% url 'edit_nko' user_nko.pk %}"
         class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
       >
         Редактировать НКО
       </a>
-      {% endif %} {% endif %}
-
+      {% endif %} {% endif %} {# Кнопка выхода #}
       <a
         href="{% url 'logout' %}"
         class="ml-3 inline-block py-2 px-4 bg-white dark:bg-gray-700 text-[#15256D] dark:text-gray-200 font-medium rounded-md shadow-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
@@ -121,68 +121,23 @@
     </nav>
   </div>
 </header>
-{% endblock %} {# Отключаем футер на главной странице #} 
-{% block footer %} {% endblock %} {# Основной контент #} {% block content %} {# Модальное окно НКО #}
-{% include 'partials/nko_modal.html' %} 
-{# Главный контейнер с картой и фильтрами #}
-<main class="main-container flex flex-col md:flex-row">
-  {# Левая панель с фильтрами #} {% include 'partials/filter_panel.html' %} 
-  {# Контейнер с картой (правая часть) #}
-  <div
-    id="map"
-    class="map-container min-h-[400px] md:min-h-0 bg-gray-200 dark:bg-gray-900 relative"
-  >
-    {# Карта инициализируется через JavaScript #}
-  </div>
-</main>
 
-{% endblock %} {# JavaScript #} {% block scripts %} 
-{# Подключение Яндекс Карт API #}
-<script
-  src="https://api-maps.yandex.ru/2.1/?apikey={{ YANDEX_MAPS_API_KEY }}&lang=ru_RU"
-  type="text/javascript"
-></script>
-
-{# Основной скрипт инициализации карты и UI #}
-<script type="module">
-  import { fetchAndInit } from '{% static "js/main.js" %}';
-
-  // Ожидаем загрузки Яндекс Карт, затем инициализируем
-  function tryInit() {
-    if (typeof ymaps !== "undefined") {
-      fetchAndInit();
-    } else {
-      setTimeout(tryInit, 200);
-    }
-  }
-  tryInit();
-</script>
-{% endblock %} {# Скрипт переключения темы #} {% block theme_script %}
+{# Скрипт переключения темы #}
 <script>
-  // Инициализация темной темы
-  const themeToggleBtn = document.getElementById("theme-toggle");
-  const htmlElement = document.documentElement;
+  document.addEventListener("DOMContentLoaded", function () {
+    const themeToggleBtn = document.getElementById("theme-toggle");
+    const htmlElement = document.documentElement;
 
-  if (
-    localStorage.theme === "dark" ||
-    (!("theme" in localStorage) &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches)
-  ) {
-    htmlElement.classList.add("dark");
-  } else {
-    htmlElement.classList.remove("dark");
-  }
-
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener("click", () => {
-      if (htmlElement.classList.contains("dark")) {
-        htmlElement.classList.remove("dark");
-        localStorage.theme = "light";
-      } else {
-        htmlElement.classList.add("dark");
-        localStorage.theme = "dark";
-      }
-    });
-  }
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener("click", () => {
+        if (htmlElement.classList.contains("dark")) {
+          htmlElement.classList.remove("dark");
+          localStorage.theme = "light";
+        } else {
+          htmlElement.classList.add("dark");
+          localStorage.theme = "dark";
+        }
+      });
+    }
+  });
 </script>
-{% endblock %}

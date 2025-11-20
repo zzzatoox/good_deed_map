@@ -1,15 +1,44 @@
-// Entry point for the index page. This file initializes the map and UI.
-// It was moved from inline <script> in templates/index.html
+/**
+ * main.js - Главный скрипт для страницы с картой НКО
+ *
+ * Отвечает за:
+ * - Инициализацию Яндекс.Карт
+ * - Загрузку данных об НКО через API
+ * - Отображение меток на карте
+ * - Фильтрацию по категориям и городам
+ * - Поиск НКО
+ * - Взаимодействие с модальным окном
+ *
+ * Основные функции:
+ * - fetchAndInit() - загружает данные и инициализирует карту
+ * - initMapAndUI() - создает карту и добавляет метки
+ * - attachUIHandlers() - подключает обработчики событий UI
+ * - filterPoints() - фильтрует НКО по выбранным критериям
+ * - showNkoModal() - отображает модальное окно с информацией об НКО
+ */
 
-let map;
-const INITIAL_MAP_CENTER = [61.524, 105.3188];
-const INITIAL_MAP_ZOOM = 3;
-let placemarks = [];
-let searchControl;
-let activeCategories = [];
-let selectedCity = "all";
-let rawNkoList = [];
+// ========================================
+// Глобальные переменные
+// ========================================
 
+let map; // Экземпляр Яндекс.Карты
+const INITIAL_MAP_CENTER = [61.524, 105.3188]; // Центр России
+const INITIAL_MAP_ZOOM = 3; // Начальный зум
+
+let placemarks = []; // Массив всех меток на карте
+let searchControl; // Контрол поиска
+let activeCategories = []; // Активные фильтры категорий
+let selectedCity = "all"; // Выбранный город
+let rawNkoList = []; // Исходный список НКО с сервера
+
+// ========================================
+// Инициализация карты
+// ========================================
+
+/**
+ * Инициализирует Яндекс.Карту и UI элементы
+ * @param {Array} pointsData - Массив данных о точках НКО
+ */
 function initMapAndUI(pointsData) {
   if (typeof ymaps === "undefined") {
     console.error("Yandex Maps API not loaded");
@@ -17,17 +46,21 @@ function initMapAndUI(pointsData) {
   }
 
   ymaps.ready(() => {
+    // Создаем экземпляр карты
     map = new ymaps.Map("map", {
       center: INITIAL_MAP_CENTER,
       zoom: INITIAL_MAP_ZOOM,
     });
 
+    // Удаляем ненужные контролы
     map.controls.remove("geolocationControl");
     map.controls.remove("trafficControl");
     map.controls.remove("typeSelector");
     map.controls.remove("fullscreenControl");
     map.controls.remove("rulerControl");
     map.controls.remove("searchControl");
+
+    // Определяем иконки для разных категорий
     const iconLayouts = {
       ecology: ymaps.templateLayoutFactory.createClass(
         '<div class="rounded-full w-10 h-10 flex items-center justify-center text-white text-xl font-bold shadow-md" style="background-color: #56C02B;">🍃</div>'
@@ -49,13 +82,14 @@ function initMapAndUI(pointsData) {
       ),
     };
 
-    // Add placemarks
+    // Добавляем метки на карту
     pointsData.forEach((point) => {
       const placemark = new ymaps.Placemark(point.coords, point.properties, {
         iconLayout: iconLayouts[point.properties.category] || iconLayouts.other,
         iconShape: { type: "Circle", coordinates: [0, 0], radius: 20 },
       });
-      // open modal when placemark clicked
+
+      // Обработчик клика по метке - открываем модальное окно
       placemark.events.add("click", function () {
         try {
           showNkoModal(point.id);
@@ -63,6 +97,7 @@ function initMapAndUI(pointsData) {
           console.error("Error opening modal from placemark", e);
         }
       });
+
       map.geoObjects.add(placemark);
       placemarks.push({
         placemark,
@@ -75,18 +110,26 @@ function initMapAndUI(pointsData) {
       });
     });
 
-    // attach UI handlers that rely on map & placemarks
+    // Подключаем обработчики UI элементов
     attachUIHandlers(pointsData);
   });
 }
 
-// Fetch NKO list from API and initialize the map with real data
+// ========================================
+// Загрузка данных
+// ========================================
+
+/**
+ * Загружает список НКО из API и инициализирует карту
+ */
 async function fetchAndInit() {
   try {
     const resp = await fetch("/nko/api/nko-list/");
     if (!resp.ok) throw new Error("Failed to fetch NKO list");
     const list = await resp.json();
     rawNkoList = list;
+
+    // Преобразуем данные в формат для карты
     const pointsData = list
       .filter((nko) => nko.latitude && nko.longitude)
       .map((nko) => ({
@@ -187,6 +230,9 @@ function renderPointsList(pointsData, rawList) {
 
     container.appendChild(item);
   });
+
+  // Обновляем счётчик сразу после рендеринга
+  updatePointsCount(pointsData.length);
 }
 
 function attachUIHandlers(pointsData) {
@@ -286,9 +332,7 @@ function attachUIHandlers(pointsData) {
         });
       }
     });
-    document.getElementById(
-      "points-count"
-    ).textContent = `Найдено ${foundCount} ${getPointsWord(foundCount)}`;
+    updatePointsCount(foundCount);
     if (foundCount === 1) map.setCenter(foundCoords[0], 14, { duration: 200 });
     else if (foundCount > 1) {
       const bounds = ymaps.util.bounds.fromPoints(foundCoords);
@@ -309,10 +353,8 @@ function attachUIHandlers(pointsData) {
     .getElementById("search-button")
     .addEventListener("click", performSearch);
 
-  // initial count
-  document.getElementById("points-count").textContent = `Найдено ${
-    pointsData.length
-  } ${getPointsWord(pointsData.length)}`;
+  // Обновляем начальный счётчик
+  updatePointsCount(pointsData.length);
 }
 
 function filterPointsByCategoriesAndCity(categories, city) {
@@ -350,9 +392,7 @@ function filterPointsByCategoriesAndCity(categories, city) {
       });
     }
   });
-  document.getElementById(
-    "points-count"
-  ).textContent = `Найдено ${visibleCount} ${getPointsWord(visibleCount)}`;
+  updatePointsCount(visibleCount);
   const clearFiltersBtn = document.getElementById("clear-filters");
   if (categories.length > 0 || city !== "all")
     clearFiltersBtn.classList.remove("hidden");
@@ -453,6 +493,17 @@ function updateCategoryVisualState() {
       category.classList.add(ringColors[categoryType]);
     }
   });
+}
+
+/**
+ * Обновляет счётчик найденных точек НКО
+ * @param {number} count - Количество точек
+ */
+function updatePointsCount(count) {
+  const pointsCountEl = document.getElementById("points-count");
+  if (pointsCountEl) {
+    pointsCountEl.textContent = `Найдено ${count} ${getPointsWord(count)}`;
+  }
 }
 
 function getPointsWord(count) {

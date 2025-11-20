@@ -1,0 +1,135 @@
+{# Компонент: Модальное окно с информацией об НКО Отображает детальную информацию о выбранной НКО: - Логотип - Название - Категории (badges) - Описание - Контактная информация (адрес, телефон, сайт) #} {# Оверлей затемнения #}
+<div
+  id="nko-modal-overlay"
+  class="hidden fixed inset-0 bg-black/40 z-50"
+  aria-hidden="true"
+></div>
+
+{# Модальное окно #}
+<div
+  id="nko-modal"
+  class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+  aria-hidden="true"
+  role="dialog"
+  aria-labelledby="nko-modal-title"
+>
+  <div
+    class="max-w-xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden"
+  >
+    {# Заголовок модального окна #}
+    <div
+      class="flex items-start justify-between p-4 border-b border-gray-200 dark:border-gray-700"
+    >
+      <div class="flex items-center gap-4">
+        {# Логотип НКО #}
+        <img
+          id="nko-modal-logo"
+          src=""
+          alt="Логотип НКО"
+          class="w-14 h-14 rounded-md object-cover bg-gray-100 dark:bg-gray-700"
+        />
+
+        {# Название и категории #}
+        <div>
+          <h3
+            id="nko-modal-title"
+            class="text-lg font-semibold text-gray-900 dark:text-gray-100"
+          ></h3>
+          <div id="nko-modal-badges" class="mt-1 flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+
+      {# Кнопка закрытия #}
+      <button
+        id="nko-modal-close"
+        class="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 text-2xl leading-none"
+        aria-label="Закрыть"
+      >
+        ✕
+      </button>
+    </div>
+
+    {# Контент модального окна #}
+    <div class="px-4 pb-4 pt-3">
+      {# Описание #}
+      <p
+        id="nko-modal-description"
+        class="text-sm text-gray-700 dark:text-gray-300 mb-4"
+      ></p>
+
+      {# Контактная информация #}
+      <div class="text-sm text-gray-700 dark:text-gray-300 space-y-2">
+        {# Адрес #}
+        <div class="flex items-start gap-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <div>
+            <strong class="font-medium">Адрес:</strong>
+            <span id="nko-modal-address"></span>
+          </div>
+        </div>
+
+        {# Телефон #}
+        <div class="flex items-start gap-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M2 3.5A1.5 1.5 0 013.5 2h1.148a1.5 1.5 0 011.465 1.175l.716 3.223a1.5 1.5 0 01-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 006.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 011.767-1.052l3.223.716A1.5 1.5 0 0118 15.352V16.5a1.5 1.5 0 01-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 012.43 8.326 13.019 13.019 0 012 5V3.5z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <div>
+            <strong class="font-medium">Телефон:</strong>
+            <a
+              id="nko-modal-phone"
+              href="#"
+              class="text-blue-600 dark:text-blue-400 hover:underline"
+            ></a>
+          </div>
+        </div>
+
+        {# Сайт #}
+        <div class="flex items-start gap-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5"
+          >
+            <path
+              d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z"
+            />
+            <path
+              d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z"
+            />
+          </svg>
+          <div>
+            <strong class="font-medium">Сайт:</strong>
+            <a
+              id="nko-modal-website"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-blue-600 dark:text-blue-400 hover:underline"
+            ></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

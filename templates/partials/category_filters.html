@@ -1,0 +1,169 @@
+{# Компонент: Фильтры категорий НКО Отображает иконки категорий для фильтрации:- Экология 🍃 - Территория 🏕️ - Животные 🐶 - Спорт 🏋️ - Социальная защита 🛡️ - Другое 🎸 #}
+
+<div
+  class="w-full bg-white dark:bg-gray-700 rounded-lg shadow-md p-6 flex-none"
+>
+  <div class="border-b border-gray-200 dark:border-gray-600 pb-5">
+    <h3
+      class="text-base font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        class="w-5 h-5 text-gray-500 dark:text-gray-400"
+      >
+        <path
+          d="M19.5 21a3 3 0 003-3v-4.5a3 3 0 00-3-3h-15a3 3 0 00-3 3V18a3 3 0 003 3h15zM1.5 10.146V6a3 3 0 013-3h5.379a2.25 2.25 0 011.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 013 3v1.146A4.483 4.483 0 0019.5 9h-15a4.483 4.483 0 00-3 1.146z"
+        />
+      </svg>
+      Категории
+    </h3>
+
+    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+      {# Экология #}
+      <div
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        data-category="ecology"
+        role="button"
+        tabindex="0"
+        aria-label="Фильтр: Экология"
+      >
+        <div
+          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-green-100 dark:group-hover:bg-green-800"
+        >
+          <div
+            class="h-10 w-10 bg-[#56C02B] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+          >
+            🍃️
+          </div>
+        </div>
+        <span
+          class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#56C02B]"
+        >
+          Экология
+        </span>
+      </div>
+
+      {# Территория #}
+      <div
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        data-category="territory"
+        role="button"
+        tabindex="0"
+        aria-label="Фильтр: Территория"
+      >
+        <div
+          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-yellow-100 dark:group-hover:bg-yellow-800"
+        >
+          <div
+            class="h-10 w-10 bg-[#FCC30B] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+          >
+            🏕️
+          </div>
+        </div>
+        <span
+          class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#FCC30B]"
+        >
+          Территория
+        </span>
+      </div>
+
+      {# Животные #}
+      <div
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        data-category="animals"
+        role="button"
+        tabindex="0"
+        aria-label="Фильтр: Животные"
+      >
+        <div
+          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-teal-100 dark:group-hover:bg-teal-800"
+        >
+          <div
+            class="h-10 w-10 bg-[#259789] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+          >
+            🐶️
+          </div>
+        </div>
+        <span
+          class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#259789]"
+        >
+          Животные
+        </span>
+      </div>
+
+      {# Спорт #}
+      <div
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        data-category="sport"
+        role="button"
+        tabindex="0"
+        aria-label="Фильтр: Спорт"
+      >
+        <div
+          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-pink-100 dark:group-hover:bg-pink-800"
+        >
+          <div
+            class="h-10 w-10 bg-[#E20072] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+          >
+            🏋️
+          </div>
+        </div>
+        <span
+          class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#E20072]"
+        >
+          Спорт
+        </span>
+      </div>
+
+      {# Социальная защита #}
+      <div
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        data-category="social"
+        role="button"
+        tabindex="0"
+        aria-label="Фильтр: Социальная защита"
+      >
+        <div
+          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-slate-100 dark:group-hover:bg-slate-800"
+        >
+          <div
+            class="h-10 w-10 bg-[#1D293D] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+          >
+            🛡️
+          </div>
+        </div>
+        <span
+          class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 text-center transition-colors duration-200 group-hover:text-[#1D293D]"
+        >
+          Соц. защита
+        </span>
+      </div>
+
+      {# Другое #}
+      <div
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        data-category="other"
+        role="button"
+        tabindex="0"
+        aria-label="Фильтр: Другое"
+      >
+        <div
+          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-sky-100 dark:group-hover:bg-sky-800"
+        >
+          <div
+            class="h-10 w-10 bg-[#6CACE4] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
+          >
+            🎸️
+          </div>
+        </div>
+        <span
+          class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#6CACE4]"
+        >
+          Другое
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
