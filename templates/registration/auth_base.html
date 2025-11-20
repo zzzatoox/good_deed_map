@@ -1,5 +1,4 @@
-{% extends 'base.html' %} {% load static %} 
-{% block extra_css %}
+{% extends 'base.html' %} {% load static %} {% block extra_css %}
 <style>
   /* Убираем горизонтальную прокрутку */
   html,
@@ -10,7 +9,8 @@
 </style>
 {% endblock %} {# Фон страницы - серый как на формах #} 
 {% block body_class%}bg-gray-100 dark:bg-gray-900{% endblock %} 
-{% block header %}
+{% block header %} 
+{# Упрощенный хедер для страниц авторизации (без кнопок пользователя) #}
 <header
   class="bg-white dark:bg-gray-800 shadow-sm py-3 px-5 flex items-center justify-between z-50 sticky top-0"
 >
@@ -21,12 +21,7 @@
         <img
           src="{% static 'images/LOGO_ROSATOM.svg' %}"
           alt="Rosatom Logo"
-          class="logo-light h-6 md:h-7"
-        />
-        <img
-          src="{% static 'images/rosatom-logo.svg' %}"
-          alt="Rosatom Logo White"
-          class="logo-dark h-6 md:h-7 hidden dark:block"
+          class="h-8 md:h-9 dark:brightness-0 dark:invert transition-all"
         />
       </a>
     </div>
