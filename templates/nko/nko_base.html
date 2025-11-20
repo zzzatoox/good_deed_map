@@ -72,8 +72,8 @@
   }
 </style>
 {% endblock %} 
-{% block body_class %}bg-gray-100 font-sans dark:bg-gray-900 {% endblock %} {# Переопределяем хедер #} 
-{% block header %} {% include 'partials/nko_form_header.html' %} {% endblock %} {# Отключаем футер #} 
+{% block body_class %}bg-gray-100 font-sans dark:bg-gray-900{%endblock %} {# Используем общий header как на главной странице #} 
+{# header block наследуется из base.html - не переопределяем #} {# Отключаем футер #} 
 {% block footer %}{% endblock %} {% block content %} {# Фоновая карусель #} 
 {% include 'partials/background_carousel.html' %} {# Основной контент формы #}
 <main

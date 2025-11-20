@@ -86,17 +86,17 @@
         Привет, {{ user.first_name|default:user.username }}!
       </span>
 
-      {# Проверка наличия НКО у пользователя #} {% if not user_nko %} {#
-      Пользователь без НКО - показываем кнопку добавления #}
+      {# Проверка наличия НКО у пользователя #} {% if not user_nko %} 
+      {# Пользователь без НКО - показываем кнопку добавления #}
       <a
         href="{% url 'add_nko' %}"
         class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
       >
         Добавить НКО
       </a>
-      {% else %} {# Пользователь с НКО - проверяем статус модерации #} {% if
-      user_nko.get_pending_version or not user_nko.is_approved %} {# НКО на
-      модерации - показываем статус #}
+      {% else %} {# Пользователь с НКО - проверяем статус модерации #} 
+      {% if user_nko.get_pending_version or not user_nko.is_approved %} 
+      {# НКО на модерации - показываем статус #}
       <span
         class="inline-block py-2 px-4 rounded-md text-sm font-medium text-white bg-yellow-600"
         title="Изменения ожидают модерации"
