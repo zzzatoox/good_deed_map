@@ -1,5 +1,5 @@
 {% extends 'base.html' %} {% load static %} 
-{# Базовый шаблон для страниц с формами НКО Используется для: - Добавления НКО (add_nko.html) - Редактирования НКО (edit_nko.html) - Передачи прав (transfer_ownership.html) Включает: - Фоновую карусель изображений - Адаптивную сетку для форм - Темную тему #} 
+{# Базовый шаблон для страниц с формами НКО Используется для: - Добавления НКО (add_nko.html) - Редактирования НКО (edit_nko.html) - Передачи прав (transfer_ownership.html) Включает: - Фоновую карусель изображений - Адаптивную сетку для форм - Темную тему #}\
 {% block extra_css %}
 <link href="{% static 'css/add_nko.css' %}" rel="stylesheet" />
 <style>
@@ -71,8 +71,9 @@
     }
   }
 </style>
-{% endblock %} 
-{% block body_class %}bg-gray-100 font-sans dark:bg-gray-900{%endblock %} {# Используем общий header как на главной странице #} 
+{% endblock %} {# Используем bg-gray-100 вместо bg-gray-50 из base.html #} 
+{% block body_class %}bg-gray-100 dark:bg-gray-900{% endblock %} 
+{# Используем общий header как на главной странице #} 
 {# header block наследуется из base.html - не переопределяем #} {# Отключаем футер #} 
 {% block footer %}{% endblock %} {% block content %} {# Фоновая карусель #} 
 {% include 'partials/background_carousel.html' %} {# Основной контент формы #}

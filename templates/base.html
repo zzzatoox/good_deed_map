@@ -31,6 +31,41 @@
       };
     </script>
 
+    {# Общие стили для всех страниц #}
+    <style>
+      /* Стили логотипа для темной темы */
+      .logo-light,
+      .logo-dark {
+        display: inline-block;
+        height: 1.5rem; /* 24px */
+        width: auto;
+        vertical-align: middle;
+        transition: all 0.2s ease-in-out;
+      }
+
+      /* Светлая тема - показываем темный логотип */
+      .logo-dark {
+        display: none;
+      }
+
+      /* Темная тема - показываем светлый логотип */
+      .dark .logo-light {
+        display: none;
+      }
+
+      .dark .logo-dark {
+        display: inline-block;
+      }
+
+      /* Увеличиваем размер на больших экранах */
+      @media (min-width: 768px) {
+        .logo-light,
+        .logo-dark {
+          height: 1.75rem; /* 28px */
+        }
+      }
+    </style>
+
     {# Дополнительные стили страницы #} {% block extra_css %}{% endblock %}
   </head>
 
@@ -64,10 +99,11 @@
         <p>&copy; 2024 Карта добрых дел. Все права защищены.</p>
       </div>
     </footer>
-    {% endblock %} {# JavaScript #} {% block scripts %}{% endblock %} 
-    {# Theme Toggle Script (если нужен на всех страницах) #} {% block theme_script %}
+    {% endblock %}
+    {# JavaScript #} {% block scripts %}{% endblock %} 
+    {# Theme Toggle Script - работает на всех страницах #} {% block theme_script %}
     <script>
-      // Инициализация темной темы
+      // Инициализация темной темы при загрузке страницы
       const htmlElement = document.documentElement;
       if (
         localStorage.theme === "dark" ||
@@ -78,6 +114,23 @@
       } else {
         htmlElement.classList.remove("dark");
       }
+
+      // Обработчик переключения темы
+      document.addEventListener("DOMContentLoaded", function () {
+        const themeToggleBtn = document.getElementById("theme-toggle");
+
+        if (themeToggleBtn) {
+          themeToggleBtn.addEventListener("click", () => {
+            if (htmlElement.classList.contains("dark")) {
+              htmlElement.classList.remove("dark");
+              localStorage.theme = "light";
+            } else {
+              htmlElement.classList.add("dark");
+              localStorage.theme = "dark";
+            }
+          });
+        }
+      });
     </script>
     {% endblock %}
   </body>

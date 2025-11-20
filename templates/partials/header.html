@@ -121,23 +121,3 @@
     </nav>
   </div>
 </header>
-
-{# Скрипт переключения темы #}
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const themeToggleBtn = document.getElementById("theme-toggle");
-    const htmlElement = document.documentElement;
-
-    if (themeToggleBtn) {
-      themeToggleBtn.addEventListener("click", () => {
-        if (htmlElement.classList.contains("dark")) {
-          htmlElement.classList.remove("dark");
-          localStorage.theme = "light";
-        } else {
-          htmlElement.classList.add("dark");
-          localStorage.theme = "dark";
-        }
-      });
-    }
-  });
-</script>

@@ -122,36 +122,5 @@
    ======================================== */
 
 /**
- * Базовые стили для логотипов
- * Логотип автоматически меняется в зависимости от темы
+ * Стили логотипа перенесены в base.html для использования на всех страницах
  */
-.logo-light,
-.logo-dark {
-  display: inline-block;
-  height: 1.5rem; /* 24px */
-  width: auto;
-  vertical-align: middle;
-  transition: all 0.2s ease-in-out;
-}
-
-/* Светлая тема - показываем темный логотип */
-.logo-dark {
-  display: none;
-}
-
-/* Темная тема - показываем светлый логотип */
-.dark .logo-light {
-  display: none;
-}
-
-.dark .logo-dark {
-  display: inline-block;
-}
-
-/* Увеличиваем размер на больших экранах */
-@media (min-width: 768px) {
-  .logo-light,
-  .logo-dark {
-    height: 1.75rem; /* 28px */
-  }
-}
