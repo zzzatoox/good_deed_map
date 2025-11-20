@@ -1,5 +1,4 @@
-{% load static %} 
-{# Компонент: Навигационный хедер Используется на всех страницах сайта. Отображает: - Логотип - Навигационное меню - Кнопку переключения темы (если включена) - Информацию о пользователе и действия (вход/выход, добавление/редактирование НКО) #}
+{% load static %}
 
 <header class="bg-white dark:bg-gray-800 shadow-sm py-3 px-5 sticky top-0 z-50">
   <div class="flex items-center justify-between">
@@ -8,17 +7,10 @@
       {# Логотип #}
       <div class="flex items-center gap-2">
         <a href="{% url 'index' %}" class="flex">
-          {# Светлая тема #}
           <img
             src="{% static 'images/LOGO_ROSATOM.svg' %}"
             alt="Rosatom Logo"
-            class="logo-light h-6 md:h-7"
-          />
-          {# Тёмная тема #}
-          <img
-            src="{% static 'images/rosatom-logo.svg' %}"
-            alt="Rosatom Logo White"
-            class="logo-dark h-6 md:h-7 hidden dark:block"
+            class="h-8 md:h-9 dark:brightness-0 dark:invert transition-all"
           />
         </a>
       </div>
@@ -95,7 +87,7 @@
         Добавить НКО
       </a>
       {% else %} {# Пользователь с НКО - проверяем статус модерации #} 
-      {% if user_nko.get_pending_version or not user_nko.is_approved %} 
+      {% if user_nko.get_pending_version or not user_nko.is_approved %}
       {# НКО на модерации - показываем статус #}
       <span
         class="inline-block py-2 px-4 rounded-md text-sm font-medium text-white bg-yellow-600"
