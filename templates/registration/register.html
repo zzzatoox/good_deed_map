@@ -1,7 +1,7 @@
-{% extends 'registration/auth_base.html' %} {% load static %} {# Заголовок
-страницы #} {% block title %}Регистрация - Карта добрых дел{% endblock %} {# Alt
-для иконки #} {% block icon_alt %}Иконка регистрации{% endblock %} {# Заголовок
-формы #} {% block form_title %}Регистрация{% endblock %} {# Содержимое формы #}
+{% extends 'registration/auth_base.html' %} {% load static %}
+{% block title %}Регистрация - Карта добрых дел{% endblock %} 
+{% block icon_alt %}Иконка регистрации{% endblock %} 
+{% block form_title %}Регистрация{% endblock %}
 {% block form_content %}
 <form method="post" class="w-full space-y-4">
   {% csrf_token %} {# Сообщения #} {% if messages %}
