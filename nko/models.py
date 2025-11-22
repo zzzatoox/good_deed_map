@@ -97,7 +97,8 @@ class NKO(models.Model):
         return ", ".join([category.name for category in self.categories.all()])
 
     def get_pending_version(self):
-        return self.versions.filter(is_approved=False).first()
+        """Получить ожидающую модерации версию (не отклоненную)"""
+        return self.versions.filter(is_approved=False, is_rejected=False).first()
 
 
 class NKOVersion(models.Model):
@@ -196,12 +197,19 @@ class NKOVersion(models.Model):
     def reject_changes(self, reason=""):
         """Отклонить заявку с указанием причины"""
         self.is_rejected = True
+        self.is_approved = False
         self.rejection_reason = reason
         self.save()
 
         # Снимаем флаг ожидающих изменений с основной записи НКО
+        # только если больше нет других ожидающих версий
         nko = self.nko
-        nko.has_pending_changes = False
-        nko.save()
+        pending_versions = NKOVersion.objects.filter(
+            nko=nko, is_approved=False, is_rejected=False
+        ).exclude(pk=self.pk)
+
+        if not pending_versions.exists():
+            nko.has_pending_changes = False
+            nko.save()
 
         return True

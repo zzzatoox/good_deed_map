@@ -151,9 +151,8 @@
         </div>
         
         <input type="hidden" name="action" value="reject_versions_action">
-        <input type="hidden" name="_selected_action" value="{{ queryset|join:',' }}">
-        {% for version in versions %}
-        <input type="hidden" name="_selected_action" value="{{ version.pk }}">
+        {% for id in selected_ids %}
+        <input type="hidden" name="selected_ids" value="{{ id }}">
         {% endfor %}
         
         <div class="form-actions">

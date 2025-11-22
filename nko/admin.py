@@ -86,6 +86,7 @@ class NKOAdmin(admin.ModelAdmin):
         """Отклонить и удалить неодобренные НКО"""
         from django.shortcuts import render
         from django.http import HttpResponseRedirect
+        from django.urls import reverse
 
         # Фильтруем только неодобренные НКО
         unapproved_nko = queryset.filter(is_approved=False)
@@ -93,27 +94,59 @@ class NKOAdmin(admin.ModelAdmin):
             self.message_user(
                 request, "Можно отклонять только неодобренные НКО", level="warning"
             )
-            return HttpResponseRedirect(request.get_full_path())
+            changelist_url = reverse("admin:nko_nko_changelist")
+            return HttpResponseRedirect(changelist_url)
 
         # Если форма была отправлена
         if "apply" in request.POST:
             form = RejectVersionForm(request.POST)
             if form.is_valid():
+                # Получаем ID выбранных НКО из скрытых полей
+                selected_ids = request.POST.getlist("selected_ids")
                 reason = form.cleaned_data["rejection_reason"]
-                count = unapproved_nko.count()
+
+                if not selected_ids:
+                    self.message_user(
+                        request, "Ошибка: не выбраны НКО для отклонения", level="error"
+                    )
+                    changelist_url = reverse("admin:nko_nko_changelist")
+                    return HttpResponseRedirect(changelist_url)
+
+                # Получаем заново queryset по ID
+                nko_to_delete = NKO.objects.filter(
+                    id__in=selected_ids, is_approved=False
+                )
+                count = nko_to_delete.count()
 
                 # Можно отправить уведомление владельцам НКО о причине отказа
                 # Пока просто удаляем
-                unapproved_nko.delete()
+                nko_to_delete.delete()
 
                 self.message_user(request, f"Отклонено и удалено НКО: {count}")
-                return HttpResponseRedirect(request.get_full_path())
+                changelist_url = reverse("admin:nko_nko_changelist")
+                return HttpResponseRedirect(changelist_url)
+            else:
+                # Форма невалидна
+                selected_ids = request.POST.getlist("selected_ids")
+                nko_list = NKO.objects.filter(id__in=selected_ids, is_approved=False)
+                context = {
+                    "form": form,
+                    "nko_list": nko_list,
+                    "selected_ids": selected_ids,
+                    "action_name": "reject_nko_action",
+                    "opts": self.model._meta,
+                    "title": "Укажите причину отказа в создании НКО",
+                }
+                return render(request, "admin/reject_nko_form.html", context)
 
         # Показываем форму для ввода причины
         form = RejectVersionForm()
+        # Сохраняем ID выбранных НКО
+        selected_ids = list(unapproved_nko.values_list("id", flat=True))
         context = {
             "form": form,
             "nko_list": unapproved_nko,
+            "selected_ids": selected_ids,
             "action_name": "reject_nko_action",
             "opts": self.model._meta,
             "title": "Укажите причину отказа в создании НКО",
@@ -207,18 +240,32 @@ class NKOVersionAdmin(admin.ModelAdmin):
 
     def reject_versions_action(self, request, queryset):
         """Отклонить выбранные версии с указанием причины"""
-        from django.shortcuts import render, redirect
-        from django.urls import path, reverse
+        from django.shortcuts import render
         from django.http import HttpResponseRedirect
+        from django.urls import reverse
 
         # Если форма была отправлена
         if "apply" in request.POST:
             form = RejectVersionForm(request.POST)
             if form.is_valid():
+                # Получаем ID выбранных версий из скрытых полей
+                selected_ids = request.POST.getlist("selected_ids")
                 reason = form.cleaned_data["rejection_reason"]
+
+                if not selected_ids:
+                    self.message_user(
+                        request,
+                        "Ошибка: не выбраны версии для отклонения",
+                        level="error",
+                    )
+                    return HttpResponseRedirect(request.get_full_path())
+
                 count = 0
 
-                for version in queryset:
+                # Получаем заново queryset по ID
+                versions_to_reject = NKOVersion.objects.filter(id__in=selected_ids)
+
+                for version in versions_to_reject:
                     if version.is_approved:
                         self.message_user(
                             request,
@@ -230,14 +277,34 @@ class NKOVersionAdmin(admin.ModelAdmin):
                     if version.reject_changes(reason):
                         count += 1
 
-                self.message_user(request, f"Отклонено заявок: {count}")
-                return HttpResponseRedirect(request.get_full_path())
+                if count > 0:
+                    self.message_user(request, f"Отклонено заявок: {count}")
+
+                # Редирект на список версий
+                changelist_url = reverse("admin:nko_nkoversion_changelist")
+                return HttpResponseRedirect(changelist_url)
+            else:
+                # Форма невалидна, показываем ошибки
+                selected_ids = request.POST.getlist("selected_ids")
+                versions = NKOVersion.objects.filter(id__in=selected_ids)
+                context = {
+                    "form": form,
+                    "versions": versions,
+                    "selected_ids": selected_ids,
+                    "action_name": "reject_versions_action",
+                    "opts": self.model._meta,
+                    "title": "Укажите причину отказа",
+                }
+                return render(request, "admin/reject_versions_form.html", context)
 
         # Показываем форму для ввода причины
         form = RejectVersionForm()
+        # Сохраняем ID выбранных версий
+        selected_ids = list(queryset.values_list("id", flat=True))
         context = {
             "form": form,
             "versions": queryset,
+            "selected_ids": selected_ids,
             "action_name": "reject_versions_action",
             "opts": self.model._meta,
             "title": "Укажите причину отказа",
@@ -271,9 +338,25 @@ class NKOVersionAdmin(admin.ModelAdmin):
         # Если версия была отклонена
         if obj.is_rejected and (not prev or not prev.is_rejected):
             obj.is_approved = False
+            # Проверяем наличие причины отказа
+            if not obj.rejection_reason:
+                self.message_user(
+                    request, "Ошибка: необходимо указать причину отказа", level="error"
+                )
+                obj.is_rejected = False
+                obj.save()
+                return
+
+            # Снимаем флаг ожидающих изменений только если больше нет других ожидающих версий
             nko = obj.nko
-            nko.has_pending_changes = False
-            nko.save()
+            pending_versions = NKOVersion.objects.filter(
+                nko=nko, is_approved=False, is_rejected=False
+            ).exclude(pk=obj.pk)
+
+            if not pending_versions.exists():
+                nko.has_pending_changes = False
+                nko.save()
+
             self.message_user(request, f"Версия {obj} отклонена")
 
     def get_fieldsets(self, request, obj=None):
@@ -283,7 +366,17 @@ class NKOVersionAdmin(admin.ModelAdmin):
                 "Основная информация",
                 {"fields": ("nko", "created_by", "created_at", "change_description")},
             ),
-            ("Статус", {"fields": ("is_approved", "is_rejected", "is_current")}),
+            (
+                "Статус",
+                {
+                    "fields": (
+                        "is_approved",
+                        "is_rejected",
+                        "is_current",
+                        "rejection_reason",
+                    )
+                },
+            ),
             (
                 "Данные НКО",
                 {
@@ -317,6 +410,7 @@ class NKOVersionAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         """Поля только для чтения"""
         readonly = ["created_at", "created_by", "nko"]
-        if obj and obj.is_rejected:
-            readonly.append("rejection_reason_display")
+        # Если версия одобрена, блокируем изменение статуса отклонения
+        if obj and obj.is_approved:
+            readonly.extend(["is_rejected", "rejection_reason"])
         return readonly

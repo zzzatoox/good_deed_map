@@ -149,8 +149,8 @@
         </div>
         
         <input type="hidden" name="action" value="reject_nko_action">
-        {% for nko in nko_list %}
-        <input type="hidden" name="_selected_action" value="{{ nko.pk }}">
+        {% for id in selected_ids %}
+        <input type="hidden" name="selected_ids" value="{{ id }}">
         {% endfor %}
         
         <div class="form-actions">
