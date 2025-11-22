@@ -46,7 +46,6 @@ class NKOAdmin(admin.ModelAdmin):
         "city",
         "owner",
         "is_approved",
-        "conflict_warning",
         "has_pending_changes",
         "created_at",
     ]
@@ -62,34 +61,6 @@ class NKOAdmin(admin.ModelAdmin):
     filter_horizontal = ["categories"]
     list_per_page = 20
     actions = ["approve_nko", "disapprove_nko", "reject_nko_action"]
-
-    def conflict_warning(self, obj):
-        """Предупреждение о конфликтах для неодобренных НКО"""
-        if obj.is_approved:
-            return ""
-
-        # Проверяем, нет ли у владельца уже другого НКО
-        existing_nko = NKO.objects.filter(owner=obj.owner).exclude(pk=obj.pk).first()
-        if existing_nko:
-            return format_html(
-                '<span style="color: red; font-weight: bold;" title="У пользователя уже есть НКО: {}">⚠️ КОНФЛИКТ</span>',
-                existing_nko.name,
-            )
-
-        # Проверяем, нет ли ожидающих заявок на передачу прав этому пользователю
-        pending_transfer = NKOVersion.objects.filter(
-            new_owner=obj.owner, is_approved=False, is_rejected=False
-        ).first()
-
-        if pending_transfer:
-            return format_html(
-                '<span style="color: orange;" title="Есть ожидающая заявка на передачу НКО: {}">⚠️</span>',
-                pending_transfer.nko.name,
-            )
-
-        return ""
-
-    conflict_warning.short_description = "⚠️"
 
     def get_categories(self, obj):
         return ", ".join([c.name for c in obj.categories.all()])
@@ -232,7 +203,6 @@ class NKOVersionAdmin(admin.ModelAdmin):
         "created_by",
         "new_owner",
         "status_display",
-        "conflict_warning",
         "is_current",
         "created_at",
         "change_description_preview",
@@ -243,51 +213,6 @@ class NKOVersionAdmin(admin.ModelAdmin):
     actions = ["approve_versions", "reject_versions_action"]
     filter_horizontal = ["categories"]
     readonly_fields = ["rejection_reason_display"]
-
-    def conflict_warning(self, obj):
-        """Предупреждение о конфликтах владения"""
-        if obj.is_approved or obj.is_rejected:
-            return ""
-
-        if not obj.new_owner:
-            return ""
-
-        # Проверяем, нет ли у нового владельца уже НКО
-        existing_nko = (
-            NKO.objects.filter(owner=obj.new_owner).exclude(pk=obj.nko.pk).first()
-        )
-        if existing_nko:
-            return format_html(
-                '<span style="color: red; font-weight: bold;" title="У пользователя уже есть НКО">⚠️ КОНФЛИКТ</span>'
-            )
-
-        # Проверяем, нет ли других ожидающих заявок для этого пользователя
-        other_pending = (
-            NKOVersion.objects.filter(
-                new_owner=obj.new_owner, is_approved=False, is_rejected=False
-            )
-            .exclude(pk=obj.pk)
-            .exists()
-        )
-
-        if other_pending:
-            return format_html(
-                '<span style="color: orange;" title="Есть другая ожидающая заявка для этого пользователя">⚠️</span>'
-            )
-
-        # Проверяем, нет ли ожидающей заявки на создание НКО этим пользователем
-        pending_nko = NKO.objects.filter(
-            owner=obj.new_owner, is_approved=False
-        ).exists()
-
-        if pending_nko:
-            return format_html(
-                '<span style="color: orange;" title="У пользователя есть ожидающая заявка на создание НКО">⚠️</span>'
-            )
-
-        return ""
-
-    conflict_warning.short_description = "⚠️"
 
     def status_display(self, obj):
         """Отображение статуса заявки"""
