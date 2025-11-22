@@ -181,3 +181,29 @@ def transfer_ownership(request, pk):
         form = TransferOwnershipForm()
 
     return render(request, "nko/transfer_ownership.html", {"form": form, "nko": nko})
+
+
+@login_required
+def my_requests(request):
+    """Просмотр заявок пользователя (ожидающих и отклоненных)"""
+    user_nko = NKO.objects.filter(owner=request.user).first()
+
+    pending_versions = []
+    rejected_versions = []
+
+    if user_nko:
+        pending_versions = NKOVersion.objects.filter(
+            nko=user_nko, is_approved=False, is_rejected=False
+        ).order_by("-created_at")
+
+        rejected_versions = NKOVersion.objects.filter(
+            nko=user_nko, is_rejected=True
+        ).order_by("-created_at")
+
+    context = {
+        "user_nko": user_nko,
+        "pending_versions": pending_versions,
+        "rejected_versions": rejected_versions,
+    }
+
+    return render(request, "nko/my_requests.html", context)

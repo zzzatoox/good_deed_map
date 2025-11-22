@@ -78,7 +78,19 @@
         Привет, {{ user.first_name|default:user.username }}!
       </span>
 
-      {# Проверка наличия НКО у пользователя #} {% if not user_nko %} 
+      {# Проверка наличия НКО у пользователя #} 
+      {% if user_nko %}
+      {# Ссылка на мои заявки #}
+      <a
+        href="{% url 'my_requests' %}"
+        class="inline-block py-2 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        title="Просмотреть статус заявок"
+      >
+        📋 Мои заявки
+      </a>
+      {% endif %}
+      
+      {% if not user_nko %} 
       {# Пользователь без НКО - показываем кнопку добавления #}
       <a
         href="{% url 'add_nko' %}"

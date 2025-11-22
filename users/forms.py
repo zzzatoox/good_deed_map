@@ -68,10 +68,44 @@ class UserRegisterForm(UserCreationForm):
             raise forms.ValidationError("Пользователь с таким Email уже существует")
         return email
 
+    def _clean_name_field(self, field_name, field_label):
+        """
+        Общий метод для валидации и форматирования полей ФИО.
+        Приводит к формату: Первая буква заглавная, остальные строчные.
+        Поддерживает дефисы для двойных фамилий/имен.
+        """
+        value = self.cleaned_data.get(field_name)
+        if not value:
+            return value
+
+        value = value.strip()
+
+        import re
+
+        if not re.match(r"^[а-яёА-ЯЁa-zA-Z\-]+$", value):
+            raise forms.ValidationError(
+                f"{field_label} может содержать только буквы (кириллица или латиница) и дефис."
+            )
+
+        formatted_value = "-".join(part.capitalize() for part in value.split("-"))
+
+        return formatted_value
+
+    def clean_first_name(self):
+        return self._clean_name_field("first_name", "Имя")
+
+    def clean_last_name(self):
+        return self._clean_name_field("last_name", "Фамилия")
+
+    def clean_patronymic(self):
+        value = self.cleaned_data.get("patronymic")
+        if not value or not value.strip():
+            return ""
+        return self._clean_name_field("patronymic", "Отчество")
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
-        # Set username to email to avoid needing separate username field
         user.username = self.cleaned_data["email"]
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]

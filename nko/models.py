@@ -143,6 +143,8 @@ class NKOVersion(models.Model):
         auto_now_add=True, verbose_name="Дата создания версии"
     )
     is_approved = models.BooleanField(default=False, verbose_name="Версия одобрена")
+    is_rejected = models.BooleanField(default=False, verbose_name="Версия отклонена")
+    rejection_reason = models.TextField(blank=True, verbose_name="Причина отказа")
     is_current = models.BooleanField(default=False, verbose_name="Текущая версия")
     change_description = models.TextField(blank=True, verbose_name="Описание изменений")
 
@@ -155,6 +157,7 @@ class NKOVersion(models.Model):
         return f"Версия {self.nko.name} от {self.created_at}"
 
     def apply_changes(self):
+        """Применить одобренные изменения к основной записи НКО"""
         if not self.is_approved:
             return False
 
@@ -187,5 +190,18 @@ class NKOVersion(models.Model):
         self.save()
 
         NKOVersion.objects.filter(nko=nko).exclude(pk=self.pk).update(is_current=False)
+
+        return True
+
+    def reject_changes(self, reason=""):
+        """Отклонить заявку с указанием причины"""
+        self.is_rejected = True
+        self.rejection_reason = reason
+        self.save()
+
+        # Снимаем флаг ожидающих изменений с основной записи НКО
+        nko = self.nko
+        nko.has_pending_changes = False
+        nko.save()
 
         return True
