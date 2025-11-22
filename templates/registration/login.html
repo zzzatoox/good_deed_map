@@ -5,23 +5,38 @@
 {% block form_title %}Вход{% endblock %} {# Содержимое формы #} 
 {% block form_content %}
 <form method="post" class="w-full space-y-4">
-  {% csrf_token %} {# Сообщения #} {% if messages %}
-  <div class="space-y-2">
-    {% for message in messages %}
-    <div
-      class="px-3 py-2 rounded text-sm {% if message.tags %}text-{{ message.tags }}{% endif %}"
-    >
-      {{ message }}
-    </div>
-    {% endfor %}
+  {% csrf_token %}
+  
+  {# Ошибки формы #}
+  {% if form.non_field_errors %}
+  <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded dark:bg-red-900/30 dark:text-red-200">
+    {{ form.non_field_errors }}
   </div>
-  {% endif %} {# Ошибки формы #} {% if form.non_field_errors %}
-  <div class="text-red-500 text-sm">{{ form.non_field_errors }}</div>
-  {% endif %} {# Поле username #}
-  <div>{{ form.username.errors }} {{ form.username }}</div>
+  {% endif %}
+  
+  {# Поле username #}
+  <div>
+    {{ form.username }}
+    {% if form.username.errors %}
+    <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+      {% for error in form.username.errors %}
+      <p>❌ {{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
 
   {# Поле password #}
-  <div>{{ form.password.errors }} {{ form.password }}</div>
+  <div>
+    {{ form.password }}
+    {% if form.password.errors %}
+    <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+      {% for error in form.password.errors %}
+      <p>❌ {{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
 
   {# Ссылка "Забыли пароль?" #}
   <div class="flex justify-end">

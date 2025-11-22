@@ -6,6 +6,18 @@
     overflow-x: hidden;
     max-width: 100vw;
   }
+  
+  /* Сдвигаем сообщения вниз, чтобы не перекрывали иконку */
+  #messages-container {
+    top: 200px !important; /* Иконка 250px высотой, половина выступает = 125px + отступ */
+  }
+  
+  /* На маленьких экранах возвращаем стандартную позицию */
+  @media (max-width: 640px) {
+    #messages-container {
+      top: 80px !important;
+    }
+  }
 </style>
 {% endblock %} {# Фон страницы - серый как на формах #} 
 {% block body_class%}bg-gray-100 dark:bg-gray-900{% endblock %} 
