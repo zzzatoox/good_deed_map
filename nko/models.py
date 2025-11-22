@@ -196,10 +196,17 @@ class NKOVersion(models.Model):
 
     def reject_changes(self, reason=""):
         """Отклонить заявку с указанием причины"""
-        self.is_rejected = True
-        self.is_approved = False
-        self.rejection_reason = reason
-        self.save()
+        # Используем update для более надежного обновления
+        NKOVersion.objects.filter(pk=self.pk).update(
+            is_rejected=True, is_approved=False, rejection_reason=reason
+        )
+
+        # Перезагружаем объект из БД
+        self.refresh_from_db()
+
+        # Проверяем, что изменения действительно сохранились
+        if not self.is_rejected or self.is_approved:
+            return False
 
         # Снимаем флаг ожидающих изменений с основной записи НКО
         # только если больше нет других ожидающих версий
@@ -209,7 +216,6 @@ class NKOVersion(models.Model):
         ).exclude(pk=self.pk)
 
         if not pending_versions.exists():
-            nko.has_pending_changes = False
-            nko.save()
+            NKO.objects.filter(pk=nko.pk).update(has_pending_changes=False)
 
         return True

@@ -98,7 +98,7 @@ class NKOAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(changelist_url)
 
         # Если форма была отправлена
-        if "apply" in request.POST:
+        if request.POST.get("post") == "yes":
             form = RejectVersionForm(request.POST)
             if form.is_valid():
                 # Получаем ID выбранных НКО из скрытых полей
@@ -243,47 +243,13 @@ class NKOVersionAdmin(admin.ModelAdmin):
         from django.shortcuts import render
         from django.http import HttpResponseRedirect
         from django.urls import reverse
+        from django.db import transaction
 
-        # Если форма была отправлена
-        if "apply" in request.POST:
+        # Проверяем, была ли отправлена форма с причиной отказа
+        if request.POST.get("post") == "yes":
             form = RejectVersionForm(request.POST)
-            if form.is_valid():
-                # Получаем ID выбранных версий из скрытых полей
-                selected_ids = request.POST.getlist("selected_ids")
-                reason = form.cleaned_data["rejection_reason"]
 
-                if not selected_ids:
-                    self.message_user(
-                        request,
-                        "Ошибка: не выбраны версии для отклонения",
-                        level="error",
-                    )
-                    return HttpResponseRedirect(request.get_full_path())
-
-                count = 0
-
-                # Получаем заново queryset по ID
-                versions_to_reject = NKOVersion.objects.filter(id__in=selected_ids)
-
-                for version in versions_to_reject:
-                    if version.is_approved:
-                        self.message_user(
-                            request,
-                            f"Версия {version} уже была одобрена и не может быть отклонена",
-                            level="warning",
-                        )
-                        continue
-
-                    if version.reject_changes(reason):
-                        count += 1
-
-                if count > 0:
-                    self.message_user(request, f"Отклонено заявок: {count}")
-
-                # Редирект на список версий
-                changelist_url = reverse("admin:nko_nkoversion_changelist")
-                return HttpResponseRedirect(changelist_url)
-            else:
+            if not form.is_valid():
                 # Форма невалидна, показываем ошибки
                 selected_ids = request.POST.getlist("selected_ids")
                 versions = NKOVersion.objects.filter(id__in=selected_ids)
@@ -296,6 +262,56 @@ class NKOVersionAdmin(admin.ModelAdmin):
                     "title": "Укажите причину отказа",
                 }
                 return render(request, "admin/reject_versions_form.html", context)
+
+            if form.is_valid():
+                # Получаем ID выбранных версий из скрытых полей
+                selected_ids = request.POST.getlist("selected_ids")
+                reason = form.cleaned_data["rejection_reason"]
+
+                if not selected_ids:
+                    self.message_user(
+                        request,
+                        "Ошибка: не выбраны версии для отклонения",
+                        level="error",
+                    )
+                    changelist_url = reverse("admin:nko_nkoversion_changelist")
+                    return HttpResponseRedirect(changelist_url)
+
+                count = 0
+                errors = []
+
+                # Получаем заново queryset по ID
+                versions_to_reject = NKOVersion.objects.filter(id__in=selected_ids)
+
+                # Используем транзакцию для атомарности операции
+                with transaction.atomic():
+                    for version in versions_to_reject:
+                        if version.is_approved:
+                            self.message_user(
+                                request,
+                                f"Версия {version} уже была одобрена и не может быть отклонена",
+                                level="warning",
+                            )
+                            continue
+
+                        try:
+                            if version.reject_changes(reason):
+                                count += 1
+                            else:
+                                errors.append(f"Не удалось отклонить {version}")
+                        except Exception as e:
+                            errors.append(f"Ошибка при отклонении {version}: {str(e)}")
+
+                if count > 0:
+                    self.message_user(request, f"Отклонено заявок: {count}")
+
+                if errors:
+                    for error in errors:
+                        self.message_user(request, error, level="error")
+
+                # Редирект на список версий
+                changelist_url = reverse("admin:nko_nkoversion_changelist")
+                return HttpResponseRedirect(changelist_url)
 
         # Показываем форму для ввода причины
         form = RejectVersionForm()

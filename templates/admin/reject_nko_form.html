@@ -149,12 +149,16 @@
         </div>
         
         <input type="hidden" name="action" value="reject_nko_action">
+        <input type="hidden" name="post" value="yes">
         {% for id in selected_ids %}
+        <input type="hidden" name="_selected_action" value="{{ id }}">
         <input type="hidden" name="selected_ids" value="{{ id }}">
         {% endfor %}
+        <input type="hidden" name="select_across" value="0">
+        <input type="hidden" name="index" value="0">
         
         <div class="form-actions">
-            <button type="submit" name="apply" class="btn btn-danger">
+            <button type="submit" class="btn btn-danger">
                 ✗ Отклонить и удалить НКО
             </button>
             <a href="{% url 'admin:nko_nko_changelist' %}" class="btn btn-secondary">
