@@ -3,7 +3,14 @@
 {# Заголовок формы #} {% block form_title %}Редактировать НКО{% endblock %} 
 {# Содержимое формы #} {% block form_content %}
 <form method="post" enctype="multipart/form-data" class="w-full" id="ngo-form">
-  {% csrf_token %} {{ form.non_field_errors }}
+  {% csrf_token %}
+  
+  {# Общие ошибки формы #}
+  {% if form.non_field_errors %}
+  <div class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded dark:bg-red-900/30 dark:text-red-200">
+    {{ form.non_field_errors }}
+  </div>
+  {% endif %}
 
   <div class="form-grid">
     {# Основная колонка - первые 5 полей #}
@@ -19,8 +26,15 @@
         <div
           class="categories-container bg-white bg-opacity-90 rounded-xl border-2 border-white p-3 sm:p-4 shadow-md dark:bg-gray-700 dark:border-gray-600"
         >
-          {{ field }} {{ field.errors }}
+          {{ field }}
         </div>
+        {% if field.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in field.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
         {% if field.help_text %}
         <p class="text-xs text-white/80 mt-1">{{ field.help_text }}</p>
         {% endif %}
@@ -32,7 +46,15 @@
         >
           {{ field.label }}
         </label>
-        {{ field }} {{ field.errors }} {% if field.help_text %}
+        {{ field }}
+        {% if field.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in field.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% if field.help_text %}
         <p class="text-xs text-white/80 mt-1">{{ field.help_text }}</p>
         {% endif %}
       </div>
@@ -52,7 +74,7 @@
         <div
           class="file-input-container bg-white bg-opacity-90 rounded-xl border-2 border-white p-3 shadow-md dark:bg-gray-700 dark:border-gray-600"
         >
-          {{ field }} {{ field.errors }}
+          {{ field }}
           <div
             id="logo-validation"
             class="file-validation-message"
@@ -62,6 +84,13 @@
             * Допустимые форматы: PNG, JPG и JPEG
           </p>
         </div>
+        {% if field.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in field.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
         {% if field.help_text %}
         <p class="text-xs text-white/80 mt-1">{{ field.help_text }}</p>
         {% endif %}
@@ -73,7 +102,15 @@
         >
           {{ field.label }}
         </label>
-        {{ field }} {{ field.errors }} {% if field.help_text %}
+        {{ field }}
+        {% if field.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in field.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% if field.help_text %}
         <p class="text-xs text-white/80 mt-1">{{ field.help_text }}</p>
         {% endif %}
       </div>

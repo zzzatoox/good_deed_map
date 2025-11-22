@@ -4,7 +4,14 @@
 {% block form_title %}Добавить новое НКО{% endblock %} {# Содержимое формы #}
 {% block form_content %}
 <form method="post" enctype="multipart/form-data" class="w-full" id="ngo-form">
-  {% csrf_token %} {{ form.non_field_errors }}
+  {% csrf_token %}
+  
+  {# Общие ошибки формы #}
+  {% if form.non_field_errors %}
+  <div class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded dark:bg-red-900/30 dark:text-red-200">
+    {{ form.non_field_errors }}
+  </div>
+  {% endif %}
 
   <div class="form-grid">
     {# Основная колонка #}
@@ -16,7 +23,14 @@
         >
           Название НКО
         </label>
-        {{ form.name }} {{ form.name.errors }}
+        {{ form.name }}
+        {% if form.name.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in form.name.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
 
       {# Категории #}
@@ -29,8 +43,15 @@
         <div
           class="categories-container bg-white bg-opacity-90 rounded-xl border-2 border-white p-3 sm:p-4 shadow-md dark:bg-gray-700 dark:border-gray-600"
         >
-          {{ form.categories }} {{ form.categories.errors }}
+          {{ form.categories }}
         </div>
+        {% if form.categories.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in form.categories.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
 
       {# Описание #}
@@ -40,7 +61,14 @@
         >
           Описание НКО
         </label>
-        {{ form.description }} {{ form.description.errors }}
+        {{ form.description }}
+        {% if form.description.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in form.description.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
 
       {# Функционал волонтеров #}
@@ -50,7 +78,14 @@
         >
           Функционал волонтеров (опционально)
         </label>
-        {{ form.volunteer_functions }} {{ form.volunteer_functions.errors }}
+        {{ form.volunteer_functions }}
+        {% if form.volunteer_functions.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in form.volunteer_functions.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
 
       {# Адрес #}
@@ -60,7 +95,14 @@
         >
           Адрес
         </label>
-        {{ form.address }} {{ form.address.errors }}
+        {{ form.address }}
+        {% if form.address.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in form.address.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
     </div>
 
@@ -73,7 +115,14 @@
         >
           Город
         </label>
-        {{ form.city }} {{ form.city.errors }}
+        {{ form.city }}
+        {% if form.city.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in form.city.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
 
       {# Логотип #}
@@ -86,7 +135,7 @@
         <div
           class="file-input-container bg-white bg-opacity-90 rounded-xl border-2 border-white p-3 shadow-md dark:bg-gray-700 dark:border-gray-600"
         >
-          {{ form.logo }} {{ form.logo.errors }}
+          {{ form.logo }}
           <div
             id="logo-validation"
             class="file-validation-message"
@@ -96,6 +145,13 @@
             * Допустимые форматы: PNG, JPG и JPEG
           </p>
         </div>
+        {% if form.logo.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in form.logo.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
 
       {# Сайт #}
@@ -105,7 +161,14 @@
         >
           Сайт (опционально)
         </label>
-        {{ form.website }} {{ form.website.errors }}
+        {{ form.website }}
+        {% if form.website.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in form.website.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
 
       {# Соцсеть #}
@@ -115,7 +178,14 @@
         >
           Соцсеть (опционально)
         </label>
-        {{ form.other_social }} {{ form.other_social.errors }}
+        {{ form.other_social }}
+        {% if form.other_social.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in form.other_social.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
 
       {# Телефон #}
@@ -125,7 +195,14 @@
         >
           Контактный телефон (опционально)
         </label>
-        {{ form.phone }} {{ form.phone.errors }}
+        {{ form.phone }}
+        {% if form.phone.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in form.phone.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
 
       {# Кнопки #}
