@@ -116,6 +116,12 @@
   })();
 </script>
 
+{# Подключаем IMask.js для маски телефона #}
+<script src="https://unpkg.com/imask"></script>
+
+{# Подключаем скрипт маски телефона #}
+<script src="{% static 'js/phone-mask.js' %}"></script>
+
 {# Подключаем модуль add_nko.js для валидации и автодополнения #}
 <script type="module" src="{% static 'js/add_nko.js' %}"></script>
 {% endblock %}

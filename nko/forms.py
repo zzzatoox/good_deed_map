@@ -131,7 +131,13 @@ class NKOForm(forms.ModelForm):
                 attrs={"rows": 3, "placeholder": "Чем могут помочь волонтеры?"}
             ),
             "address": forms.Textarea(attrs={"rows": 2}),
-            "phone": forms.TextInput(attrs={"placeholder": "+7 (XXX) XXX-XX-XX"}),
+            "phone": forms.TextInput(
+                attrs={
+                    "placeholder": "+7 (XXX) XXX-XX-XX",
+                    "class": "phone-input",
+                    "autocomplete": "tel",
+                }
+            ),
         }
 
 
@@ -171,7 +177,13 @@ class NKOEditForm(forms.ModelForm):
             "description": forms.Textarea(attrs={"rows": 3}),
             "volunteer_functions": forms.Textarea(attrs={"rows": 3}),
             "address": forms.Textarea(attrs={"rows": 2}),
-            "phone": forms.TextInput(attrs={"placeholder": "+7 (XXX) XXX-XX-XX"}),
+            "phone": forms.TextInput(
+                attrs={
+                    "placeholder": "+7 (XXX) XXX-XX-XX",
+                    "class": "phone-input",
+                    "autocomplete": "tel",
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
