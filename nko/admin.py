@@ -3,7 +3,6 @@ from django.utils.html import format_html
 from django import forms
 
 # from unfold.admin import ModelAdmin
-from unfold.contrib.forms.widgets import WysiwygWidget
 from .models import Region, City, Category, NKO, NKOVersion
 
 
@@ -47,6 +46,7 @@ class NKOAdmin(admin.ModelAdmin):
         "city",
         "owner",
         "is_approved",
+        "conflict_warning",
         "has_pending_changes",
         "created_at",
     ]
@@ -63,6 +63,34 @@ class NKOAdmin(admin.ModelAdmin):
     list_per_page = 20
     actions = ["approve_nko", "disapprove_nko", "reject_nko_action"]
 
+    def conflict_warning(self, obj):
+        """Предупреждение о конфликтах для неодобренных НКО"""
+        if obj.is_approved:
+            return ""
+
+        # Проверяем, нет ли у владельца уже другого НКО
+        existing_nko = NKO.objects.filter(owner=obj.owner).exclude(pk=obj.pk).first()
+        if existing_nko:
+            return format_html(
+                '<span style="color: red; font-weight: bold;" title="У пользователя уже есть НКО: {}">⚠️ КОНФЛИКТ</span>',
+                existing_nko.name,
+            )
+
+        # Проверяем, нет ли ожидающих заявок на передачу прав этому пользователю
+        pending_transfer = NKOVersion.objects.filter(
+            new_owner=obj.owner, is_approved=False, is_rejected=False
+        ).first()
+
+        if pending_transfer:
+            return format_html(
+                '<span style="color: orange;" title="Есть ожидающая заявка на передачу НКО: {}">⚠️</span>',
+                pending_transfer.nko.name,
+            )
+
+        return ""
+
+    conflict_warning.short_description = "⚠️"
+
     def get_categories(self, obj):
         return ", ".join([c.name for c in obj.categories.all()])
 
@@ -70,8 +98,50 @@ class NKOAdmin(admin.ModelAdmin):
 
     def approve_nko(self, request, queryset):
         """Одобрить выбранные НКО"""
-        count = queryset.update(is_approved=True)
-        self.message_user(request, f"Одобрено НКО: {count}")
+        count_success = 0
+        count_error = 0
+
+        for nko in queryset:
+            # Проверяем, нет ли у владельца уже другого НКО
+            existing_nko = (
+                NKO.objects.filter(owner=nko.owner).exclude(pk=nko.pk).first()
+            )
+            if existing_nko:
+                self.message_user(
+                    request,
+                    f"Невозможно одобрить НКО '{nko.name}': пользователь {nko.owner.get_full_name() or nko.owner.username} "
+                    f"уже владеет НКО '{existing_nko.name}'",
+                    level="error",
+                )
+                count_error += 1
+                continue
+
+            # Проверяем, нет ли ожидающих заявок на передачу прав этому пользователю
+            pending_transfer = NKOVersion.objects.filter(
+                new_owner=nko.owner, is_approved=False, is_rejected=False
+            ).first()
+
+            if pending_transfer:
+                self.message_user(
+                    request,
+                    f"Внимание: У пользователя {nko.owner.get_full_name() or nko.owner.username} есть ожидающая заявка "
+                    f"на передачу прав на НКО '{pending_transfer.nko.name}'. "
+                    f"Одобрите или отклоните её перед одобрением нового НКО.",
+                    level="warning",
+                )
+                count_error += 1
+                continue
+
+            nko.is_approved = True
+            nko.save()
+            count_success += 1
+
+        if count_success > 0:
+            self.message_user(request, f"Одобрено НКО: {count_success}")
+        if count_error > 0:
+            self.message_user(
+                request, f"Ошибок при одобрении: {count_error}", level="error"
+            )
 
     approve_nko.short_description = "✓ Одобрить выбранные НКО"
 
@@ -103,7 +173,6 @@ class NKOAdmin(admin.ModelAdmin):
             if form.is_valid():
                 # Получаем ID выбранных НКО из скрытых полей
                 selected_ids = request.POST.getlist("selected_ids")
-                reason = form.cleaned_data["rejection_reason"]
 
                 if not selected_ids:
                     self.message_user(
@@ -163,6 +232,7 @@ class NKOVersionAdmin(admin.ModelAdmin):
         "created_by",
         "new_owner",
         "status_display",
+        "conflict_warning",
         "is_current",
         "created_at",
         "change_description_preview",
@@ -173,6 +243,51 @@ class NKOVersionAdmin(admin.ModelAdmin):
     actions = ["approve_versions", "reject_versions_action"]
     filter_horizontal = ["categories"]
     readonly_fields = ["rejection_reason_display"]
+
+    def conflict_warning(self, obj):
+        """Предупреждение о конфликтах владения"""
+        if obj.is_approved or obj.is_rejected:
+            return ""
+
+        if not obj.new_owner:
+            return ""
+
+        # Проверяем, нет ли у нового владельца уже НКО
+        existing_nko = (
+            NKO.objects.filter(owner=obj.new_owner).exclude(pk=obj.nko.pk).first()
+        )
+        if existing_nko:
+            return format_html(
+                '<span style="color: red; font-weight: bold;" title="У пользователя уже есть НКО">⚠️ КОНФЛИКТ</span>'
+            )
+
+        # Проверяем, нет ли других ожидающих заявок для этого пользователя
+        other_pending = (
+            NKOVersion.objects.filter(
+                new_owner=obj.new_owner, is_approved=False, is_rejected=False
+            )
+            .exclude(pk=obj.pk)
+            .exists()
+        )
+
+        if other_pending:
+            return format_html(
+                '<span style="color: orange;" title="Есть другая ожидающая заявка для этого пользователя">⚠️</span>'
+            )
+
+        # Проверяем, нет ли ожидающей заявки на создание НКО этим пользователем
+        pending_nko = NKO.objects.filter(
+            owner=obj.new_owner, is_approved=False
+        ).exists()
+
+        if pending_nko:
+            return format_html(
+                '<span style="color: orange;" title="У пользователя есть ожидающая заявка на создание НКО">⚠️</span>'
+            )
+
+        return ""
+
+    conflict_warning.short_description = "⚠️"
 
     def status_display(self, obj):
         """Отображение статуса заявки"""
@@ -224,9 +339,20 @@ class NKOVersionAdmin(admin.ModelAdmin):
             version.rejection_reason = ""
             version.save()
 
-            if version.apply_changes():
-                count_success += 1
-            else:
+            try:
+                if version.apply_changes():
+                    count_success += 1
+                else:
+                    count_error += 1
+            except ValueError as e:
+                # Откатываем одобрение если возникла ошибка
+                version.is_approved = False
+                version.save()
+                self.message_user(
+                    request,
+                    f"Ошибка при одобрении версии {version}: {str(e)}",
+                    level="error",
+                )
                 count_error += 1
 
         if count_success > 0:
@@ -344,12 +470,18 @@ class NKOVersionAdmin(admin.ModelAdmin):
         if obj.is_approved and (not prev or not prev.is_approved):
             obj.is_rejected = False
             obj.rejection_reason = ""
-            if obj.apply_changes():
-                self.message_user(request, f"Версия {obj} одобрена и применена")
-            else:
-                self.message_user(
-                    request, f"Ошибка при применении версии {obj}", level="error"
-                )
+            try:
+                if obj.apply_changes():
+                    self.message_user(request, f"Версия {obj} одобрена и применена")
+                else:
+                    self.message_user(
+                        request, f"Ошибка при применении версии {obj}", level="error"
+                    )
+            except ValueError as e:
+                # Откатываем одобрение
+                obj.is_approved = False
+                obj.save()
+                self.message_user(request, f"Ошибка: {str(e)}", level="error")
 
         # Если версия была отклонена
         if obj.is_rejected and (not prev or not prev.is_rejected):

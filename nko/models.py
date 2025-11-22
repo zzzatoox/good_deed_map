@@ -164,6 +164,19 @@ class NKOVersion(models.Model):
 
         nko = self.nko
 
+        # Проверка при передаче прав: новый владелец не должен иметь других НКО
+        if self.new_owner:
+            existing_nko = (
+                NKO.objects.filter(owner=self.new_owner).exclude(pk=nko.pk).first()
+            )
+            if existing_nko:
+                # Отменяем применение изменений
+                raise ValueError(
+                    f"Невозможно передать права: пользователь {self.new_owner.get_full_name() or self.new_owner.username} "
+                    f"уже является владельцем НКО '{existing_nko.name}'. "
+                    f"Один пользователь может владеть только одним НКО."
+                )
+
         nko.name = self.name
         nko.description = self.description
         nko.volunteer_functions = self.volunteer_functions

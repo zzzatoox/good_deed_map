@@ -80,14 +80,38 @@ def add_nko(request):
 
         return redirect("edit_nko", pk=existing.pk)
 
+    # Проверяем, нет ли ожидающих заявок на передачу прав этому пользователю
+    pending_transfer = NKOVersion.objects.filter(
+        new_owner=request.user, is_approved=False, is_rejected=False
+    ).first()
+
+    if pending_transfer:
+        from django.contrib import messages
+
+        messages.warning(
+            request,
+            f"У вас есть ожидающая заявка на передачу прав НКО '{pending_transfer.nko.name}'. "
+            f"Дождитесь её рассмотрения перед созданием нового НКО.",
+        )
+        return redirect("index")
+
     if request.method == "POST":
         form = NKOForm(request.POST, request.FILES)
         if form.is_valid():
+            from django.contrib import messages
+
             nko = form.save(commit=False)
             nko.owner = request.user
             nko.is_approved = False
             nko.save()
             form.save_m2m()
+
+            messages.success(
+                request,
+                f"Заявка на создание НКО '{nko.name}' отправлена на модерацию. "
+                f"После одобрения администратором НКО появится на карте.",
+            )
+
             return redirect("index")
     else:
         form = NKOForm()
@@ -106,6 +130,8 @@ def edit_nko(request, pk):
     if request.method == "POST":
         form = NKOEditForm(request.POST, request.FILES)
         if form.is_valid():
+            from django.contrib import messages
+
             version = form.save(commit=False)
             version.nko = nko
             version.created_by = request.user
@@ -118,6 +144,13 @@ def edit_nko(request, pk):
 
             nko.has_pending_changes = True
             nko.save()
+
+            messages.success(
+                request,
+                f"Изменения в НКО '{nko.name}' отправлены на модерацию. "
+                f"После одобрения администратором изменения будут применены.",
+            )
+
             return redirect("index")
     else:
         initial_data = {
@@ -148,8 +181,45 @@ def transfer_ownership(request, pk):
         form = TransferOwnershipForm(request.POST)
         if form.is_valid():
             new_owner = form.cleaned_data["new_owner_email"]
+            from django.contrib import messages
 
-            if NKO.objects.filter(owner=new_owner).exists():
+            # Проверяем, нет ли у нового владельца уже НКО
+            existing_nko = NKO.objects.filter(owner=new_owner).first()
+            if existing_nko:
+                messages.error(
+                    request,
+                    f"Невозможно передать права: пользователь {new_owner.get_full_name() or new_owner.username} "
+                    f"уже владеет НКО '{existing_nko.name}'. Один пользователь может владеть только одним НКО.",
+                )
+                return render(
+                    request, "nko/transfer_ownership.html", {"form": form, "nko": nko}
+                )
+
+            # Проверяем, нет ли ожидающих заявок на передачу прав этому пользователю
+            pending_transfer = NKOVersion.objects.filter(
+                new_owner=new_owner, is_approved=False, is_rejected=False
+            ).first()
+
+            if pending_transfer:
+                messages.warning(
+                    request,
+                    f"У пользователя {new_owner.get_full_name() or new_owner.username} уже есть ожидающая заявка "
+                    f"на передачу прав НКО '{pending_transfer.nko.name}'. "
+                    f"Дождитесь её рассмотрения перед отправкой новой заявки.",
+                )
+                return render(
+                    request, "nko/transfer_ownership.html", {"form": form, "nko": nko}
+                )
+
+            # Проверяем, нет ли неодобренного НКО у этого пользователя
+            pending_nko = NKO.objects.filter(owner=new_owner, is_approved=False).first()
+            if pending_nko:
+                messages.warning(
+                    request,
+                    f"У пользователя {new_owner.get_full_name() or new_owner.username} есть ожидающая заявка "
+                    f"на создание НКО '{pending_nko.name}'. "
+                    f"Дождитесь её рассмотрения перед передачей прав.",
+                )
                 return render(
                     request, "nko/transfer_ownership.html", {"form": form, "nko": nko}
                 )
@@ -175,6 +245,12 @@ def transfer_ownership(request, pk):
 
             nko.has_pending_changes = True
             nko.save()
+
+            messages.success(
+                request,
+                f"Заявка на передачу прав НКО '{nko.name}' пользователю "
+                f"{new_owner.get_full_name() or new_owner.username} отправлена на модерацию.",
+            )
 
             return redirect("index")
     else:
