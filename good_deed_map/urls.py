@@ -22,22 +22,33 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from nko import views as nko_views
 from users import views as users_views
+from users.forms import CustomPasswordResetForm
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", nko_views.index, name="index"),
     path("nko/", include("nko.urls")),
     path("users/", include("users.urls")),
+    path("captcha/", include("captcha.urls")),
     path("accounts/login/", users_views.login_view, name="login"),
     path("accounts/register/", users_views.register, name="register"),
     path("accounts/logout/", users_views.logout_view, name="logout"),
-    path("accounts/confirm-email/<uuid:token>/", users_views.confirm_email, name="confirm_email"),
-    path("accounts/resend-confirmation/", users_views.resend_confirmation, name="resend_confirmation"),
+    path(
+        "accounts/confirm-email/<uuid:token>/",
+        users_views.confirm_email,
+        name="confirm_email",
+    ),
+    path(
+        "accounts/resend-confirmation/",
+        users_views.resend_confirmation,
+        name="resend_confirmation",
+    ),
     # Password reset URLs with custom templates
     path(
         "accounts/password_reset/",
         auth_views.PasswordResetView.as_view(
-            template_name="registration/password_reset.html"
+            template_name="registration/password_reset.html",
+            form_class=CustomPasswordResetForm,
         ),
         name="password_reset",
     ),

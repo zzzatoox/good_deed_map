@@ -1,0 +1,97 @@
+/* Стили для django-simple-captcha */
+
+.captcha {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.captcha img {
+    border-radius: 0.5rem;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dark .captcha img {
+    border-color: #4b5563;
+}
+
+.captcha input[type="text"] {
+    width: 100%;
+    max-width: 150px;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    color: #111827;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.captcha input[type="text"]:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.dark .captcha input[type="text"] {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+.dark .captcha input[type="text"]:focus {
+    border-color: #60a5fa;
+}
+
+/* Кнопка обновления капчи */
+.captcha .captcha-refresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.captcha .captcha-refresh:hover {
+    background-color: #e5e7eb;
+}
+
+.dark .captcha .captcha-refresh {
+    background-color: #374151;
+    border-color: #4b5563;
+}
+
+.dark .captcha .captcha-refresh:hover {
+    background-color: #4b5563;
+}
+
+/* Скрываем встроенную ссылку обновления */
+.captcha a[href*="refresh"] {
+    display: inline-block;
+    color: #3b82f6;
+    text-decoration: none;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s;
+}
+
+.captcha a[href*="refresh"]:hover {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.dark .captcha a[href*="refresh"] {
+    color: #60a5fa;
+}
+
+.dark .captcha a[href*="refresh"]:hover {
+    background-color: #1e3a8a;
+    color: #93c5fd;
+}

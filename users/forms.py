@@ -1,6 +1,11 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import (
+    UserCreationForm,
+    AuthenticationForm,
+    PasswordResetForm,
+)
 from django.contrib.auth.models import User
+from captcha.fields import CaptchaField
 from .models import Profile
 
 
@@ -13,6 +18,14 @@ class UserRegisterForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True, label="Имя")
     last_name = forms.CharField(max_length=30, required=True, label="Фамилия")
     patronymic = forms.CharField(max_length=150, required=False, label="Отчество")
+    captcha = CaptchaField(
+        label="Подтверждение",
+        help_text="Решите простой пример для защиты от ботов",
+        error_messages={
+            "invalid": "Неверный ответ. Попробуйте ещё раз.",
+            "required": "Пожалуйста, решите пример.",
+        },
+    )
 
     class Meta:
         model = User
@@ -157,3 +170,57 @@ class CustomAuthenticationForm(AuthenticationForm):
                 code="inactive",
             )
         super().confirm_login_allowed(user)
+
+
+class ResendConfirmationForm(forms.Form):
+    """Форма для повторной отправки письма подтверждения"""
+
+    email = forms.EmailField(
+        required=True,
+        label="Email адрес",
+        widget=forms.EmailInput(
+            attrs={
+                "class": "w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 "
+                "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 "
+                "focus:ring-2 focus:ring-blue-500 focus:border-transparent "
+                "transition duration-200",
+                "placeholder": "example@mail.ru",
+            }
+        ),
+    )
+    captcha = CaptchaField(
+        label="Введите результат",
+        help_text="Решите простой пример для подтверждения",
+        error_messages={
+            "invalid": "Неверный ответ. Попробуйте ещё раз.",
+            "required": "Пожалуйста, решите пример.",
+        },
+    )
+
+
+class CustomPasswordResetForm(PasswordResetForm):
+    """Форма восстановления пароля с капчей"""
+
+    captcha = CaptchaField(
+        label="Подтверждение",
+        help_text="Решите простой пример для защиты от ботов",
+        error_messages={
+            "invalid": "Неверный ответ. Попробуйте ещё раз.",
+            "required": "Пожалуйста, решите пример.",
+        },
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Стилизуем поле email
+        self.fields["email"].widget.attrs.update(
+            {
+                "class": "w-full p-3 rounded-xl border-2 border-white bg-white bg-opacity-90 "
+                "text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 "
+                "focus:ring-[#4495D1] transition duration-200 shadow-md text-base "
+                "dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400",
+                "placeholder": "Электронная почта",
+                "type": "email",
+                "autocomplete": "email",
+            }
+        )

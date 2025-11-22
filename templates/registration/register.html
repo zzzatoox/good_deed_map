@@ -1,4 +1,9 @@
 {% extends 'registration/auth_base.html' %} {% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/captcha.css' %}">
+{% endblock %}
+
 {% block title %}Регистрация - Карта добрых дел{% endblock %} 
 {% block icon_alt %}Иконка регистрации{% endblock %} 
 {% block form_title %}Регистрация{% endblock %}
@@ -79,6 +84,26 @@
     {% if form.patronymic.errors %}
     <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
       {% for error in form.patronymic.errors %}
+      <p>❌ {{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  {# Капча #}
+  <div>
+    <label class="block text-sm font-medium text-white dark:text-gray-300 mb-2">
+      {{ form.captcha.label }}
+    </label>
+    <div class="captcha-wrapper">
+      {{ form.captcha }}
+    </div>
+    {% if form.captcha.help_text %}
+    <p class="mt-1 text-sm text-gray-200 dark:text-gray-400">{{ form.captcha.help_text }}</p>
+    {% endif %}
+    {% if form.captcha.errors %}
+    <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+      {% for error in form.captcha.errors %}
       <p>❌ {{ error }}</p>
       {% endfor %}
     </div>

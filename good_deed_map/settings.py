@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "captcha",
     "nko",
     "users",
 ]
@@ -188,3 +189,12 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 )
 
 YANDEX_MAPS_API_KEY = os.environ.get("YANDEX_MAPS_API_KEY", "")
+# Captcha settings
+CAPTCHA_IMAGE_SIZE = (150, 50)
+CAPTCHA_FONT_SIZE = 30
+CAPTCHA_LETTER_ROTATION = (-25, 25)
+CAPTCHA_BACKGROUND_COLOR = "#ffffff"
+CAPTCHA_FOREGROUND_COLOR = "#15256D"
+CAPTCHA_NOISE_FUNCTIONS = ("captcha.helpers.noise_dots",)
+CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.math_challenge"  # Математическая капча
+CAPTCHA_TIMEOUT = 5  # Время действия капчи в минутах

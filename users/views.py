@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout, views as auth_views
+from django.contrib.auth import logout, views as auth_views
 from django.conf import settings
 from django.http import HttpResponseNotAllowed
 from django.contrib import messages
@@ -7,7 +7,7 @@ from django.core.mail import send_mail
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.views.decorators.http import require_http_methods
-from .forms import UserRegisterForm, CustomAuthenticationForm
+from .forms import UserRegisterForm, CustomAuthenticationForm, ResendConfirmationForm
 from .models import EmailConfirmationToken
 
 
@@ -57,7 +57,7 @@ def register(request):
             except Exception as e:
                 messages.error(
                     request,
-                    f"Ошибка при отправке письма подтверждения. Пожалуйста, обратитесь к администратору.",
+                    "Ошибка при отправке письма подтверждения. Пожалуйста, обратитесь к администратору.",
                 )
                 # Можно добавить логирование ошибки
                 print(f"Email sending error: {e}")
@@ -111,27 +111,29 @@ def login_view(request, *args, **kwargs):
 def resend_confirmation(request):
     """Повторная отправка письма подтверждения"""
     if request.method == "POST":
-        email = request.POST.get("email")
+        form = ResendConfirmationForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
 
-        try:
-            user = User.objects.get(email=email, is_active=False)
-
-            # Удаляем старые токены для этого пользователя
-            EmailConfirmationToken.objects.filter(user=user).delete()
-
-            # Создаем новый токен
-            token = EmailConfirmationToken.objects.create(user=user)
-
-            # Формируем ссылку подтверждения
-            confirmation_url = request.build_absolute_uri(
-                reverse("confirm_email", kwargs={"token": token.token})
-            )
-
-            # Отправляем письмо
             try:
-                send_mail(
-                    subject="Повторное подтверждение регистрации на Карте добрых дел",
-                    message=f"""Здравствуйте, {user.get_full_name() or user.username}!
+                user = User.objects.get(email=email, is_active=False)
+
+                # Удаляем старые токены для этого пользователя
+                EmailConfirmationToken.objects.filter(user=user).delete()
+
+                # Создаем новый токен
+                token = EmailConfirmationToken.objects.create(user=user)
+
+                # Формируем ссылку подтверждения
+                confirmation_url = request.build_absolute_uri(
+                    reverse("confirm_email", kwargs={"token": token.token})
+                )
+
+                # Отправляем письмо
+                try:
+                    send_mail(
+                        subject="Повторное подтверждение регистрации на Карте добрых дел",
+                        message=f"""Здравствуйте, {user.get_full_name() or user.username}!
 
 Вы запросили повторную отправку письма подтверждения регистрации.
 
@@ -145,32 +147,34 @@ def resend_confirmation(request):
 С уважением,
 Команда "Карта добрых дел"
 """,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                )
-                return render(
-                    request,
-                    "registration/email_confirmation_sent.html",
-                    {"email": user.email},
-                )
-            except Exception as e:
-                messages.error(
-                    request,
-                    "Ошибка при отправке письма подтверждения. Пожалуйста, обратитесь к администратору.",
-                )
-                print(f"Email sending error: {e}")
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[user.email],
+                        fail_silently=False,
+                    )
+                    return render(
+                        request,
+                        "registration/email_confirmation_sent.html",
+                        {"email": user.email},
+                    )
+                except Exception as e:
+                    messages.error(
+                        request,
+                        "Ошибка при отправке письма подтверждения. Пожалуйста, обратитесь к администратору.",
+                    )
+                    print(f"Email sending error: {e}")
 
-        except User.DoesNotExist:
-            # Не сообщаем, что пользователь не найден (безопасность)
-            pass
+            except User.DoesNotExist:
+                # Не сообщаем, что пользователь не найден (безопасность)
+                pass
 
-        # В любом случае показываем страницу "письмо отправлено"
-        return render(
-            request, "registration/email_confirmation_sent.html", {"email": email}
-        )
+            # В любом случае показываем страницу "письмо отправлено"
+            return render(
+                request, "registration/email_confirmation_sent.html", {"email": email}
+            )
+    else:
+        form = ResendConfirmationForm()
 
-    return render(request, "registration/resend_confirmation.html")
+    return render(request, "registration/resend_confirmation.html", {"form": form})
 
 
 def logout_view(request):
