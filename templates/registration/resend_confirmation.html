@@ -1,0 +1,52 @@
+{% extends 'registration/auth_base.html' %}
+{% load i18n %}
+
+{% block title %}Повторная отправка подтверждения - {{ block.super }}{% endblock %}
+
+{% block icon_alt %}✉️{% endblock %}
+
+{% block form_title %}Повторная отправка подтверждения{% endblock %}
+
+{% block form_content %}
+<form method="post" class="space-y-6">
+    {% csrf_token %}
+    
+    <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Email адрес
+        </label>
+        <input type="email" 
+               id="email" 
+               name="email" 
+               required
+               class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 
+                      bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                      transition duration-200"
+               placeholder="example@mail.ru">
+    </div>
+
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <p class="text-sm text-blue-800 dark:text-blue-300">
+            Укажите email, который вы использовали при регистрации. Если аккаунт не подтвержден, на него будет отправлена новая ссылка для подтверждения.
+        </p>
+    </div>
+
+    <button type="submit"
+            class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white 
+                   font-medium py-3 px-6 rounded-lg
+                   hover:from-blue-600 hover:to-purple-700 
+                   focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+                   transform transition duration-200 hover:scale-[1.02]">
+        Отправить письмо
+    </button>
+</form>
+
+<div class="mt-6 text-center">
+    <a href="{% url 'login' %}" 
+       class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 
+              transition duration-200">
+        Вернуться ко входу
+    </a>
+</div>
+{% endblock %}

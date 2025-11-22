@@ -1,0 +1,44 @@
+{% extends 'registration/auth_base.html' %}
+{% load i18n %}
+
+{% block title %}Подтверждение отправлено - {{ block.super }}{% endblock %}
+
+{% block icon_alt %}✉️{% endblock %}
+
+{% block form_title %}Письмо отправлено!{% endblock %}
+
+{% block form_content %}
+<div class="text-center space-y-6">
+    <div class="mb-6">
+        <div class="mx-auto w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
+            <svg class="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+        </div>
+        <p class="text-gray-600 dark:text-gray-400 text-lg mb-4">
+            На вашу почту отправлено письмо с инструкциями для подтверждения регистрации.
+        </p>
+    </div>
+
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <p class="text-sm text-blue-800 dark:text-blue-300">
+            <strong>Совет:</strong> Проверьте папку "Спам", если письмо не пришло в течение нескольких минут.
+        </p>
+    </div>
+
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+        <p class="text-sm text-yellow-800 dark:text-yellow-300">
+            <strong>Важно:</strong> Ссылка для подтверждения действительна в течение 24 часов.
+        </p>
+    </div>
+
+    <a href="{% url 'index' %}" 
+       class="inline-block w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white 
+              font-medium py-3 px-6 rounded-lg
+              hover:from-blue-600 hover:to-purple-700 
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+              transform transition duration-200 hover:scale-[1.02]">
+        Вернуться на главную
+    </a>
+</div>
+{% endblock %}

@@ -4,6 +4,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
+from django.utils import timezone
+import uuid
+from datetime import timedelta
 
 
 # Create your models here.
@@ -47,3 +50,27 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     if hasattr(instance, "profile"):
         instance.profile.save()
+
+
+class EmailConfirmationToken(models.Model):
+    """Токен для подтверждения email при регистрации"""
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, verbose_name="Пользователь"
+    )
+    token = models.UUIDField(
+        default=uuid.uuid4, editable=False, unique=True, verbose_name="Токен"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+
+    class Meta:
+        verbose_name = "Токен подтверждения email"
+        verbose_name_plural = "Токены подтверждения email"
+
+    def __str__(self):
+        return f"Токен для {self.user.username}"
+
+    def is_valid(self):
+        """Проверка, что токен еще действителен (24 часа)"""
+        expiration_time = self.created_at + timedelta(hours=24)
+        return timezone.now() < expiration_time

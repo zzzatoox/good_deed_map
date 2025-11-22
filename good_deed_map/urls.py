@@ -31,6 +31,8 @@ urlpatterns = [
     path("accounts/login/", users_views.login_view, name="login"),
     path("accounts/register/", users_views.register, name="register"),
     path("accounts/logout/", users_views.logout_view, name="logout"),
+    path("accounts/confirm-email/<uuid:token>/", users_views.confirm_email, name="confirm_email"),
+    path("accounts/resend-confirmation/", users_views.resend_confirmation, name="resend_confirmation"),
     # Password reset URLs with custom templates
     path(
         "accounts/password_reset/",

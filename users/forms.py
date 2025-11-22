@@ -147,3 +147,13 @@ class CustomAuthenticationForm(AuthenticationForm):
                     "autocomplete": "current-password",
                 }
             )
+
+    def confirm_login_allowed(self, user):
+        """Проверка, может ли пользователь войти"""
+        if not user.is_active:
+            raise forms.ValidationError(
+                "Этот аккаунт не активирован. Пожалуйста, подтвердите свой email адрес. "
+                "Проверьте почту или запросите повторную отправку письма подтверждения.",
+                code="inactive",
+            )
+        super().confirm_login_allowed(user)

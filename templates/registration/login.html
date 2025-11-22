@@ -56,13 +56,19 @@
     Войти
   </button>
 
-  {# Ссылка на регистрацию #}
-  <div class="text-center">
+  {# Ссылки внизу формы #}
+  <div class="text-center space-y-2">
     <a
       href="{% url 'register' %}"
-      class="text-white text-base mt-4 opacity-90 hover:opacity-100 hover:underline transition duration-200 text-center dark:text-gray-200"
+      class="block text-white text-base opacity-90 hover:opacity-100 hover:underline transition duration-200 dark:text-gray-200"
     >
       Ещё нет аккаунта?
+    </a>
+    <a
+      href="{% url 'resend_confirmation' %}"
+      class="block text-white text-sm opacity-80 hover:opacity-100 hover:underline transition duration-200 dark:text-gray-300"
+    >
+      Не пришло письмо подтверждения?
     </a>
   </div>
 </form>
