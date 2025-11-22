@@ -8,41 +8,6 @@
 {# Используем стандартный header из partials/header.html #} {# Отключаем футер на главной странице #} 
 {% block footer %} {% endblock %} {# Основной контент #} {% block content %} 
 {# Модальное окно НКО #} {% include 'partials/nko_modal.html' %} 
-
-{# Системные сообщения - плавающие поверх карты #}
-{% if messages %}
-<div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-2xl px-4" id="messages-container">
-  {% for message in messages %}
-  <div class="mb-3 rounded-lg shadow-xl p-4 {% if message.tags == 'error' %}bg-red-500 text-white{% elif message.tags == 'warning' %}bg-yellow-500 text-white{% elif message.tags == 'success' %}bg-green-500 text-white{% else %}bg-blue-500 text-white{% endif %} animate-slide-down message-alert" role="alert">
-    <div class="flex items-start justify-between">
-      <div class="flex-1">
-        <p class="font-bold text-sm mb-1">
-          {% if message.tags == 'error' %}❌ Ошибка
-          {% elif message.tags == 'warning' %}⚠️ Внимание
-          {% elif message.tags == 'success' %}✅ Успешно
-          {% else %}ℹ️ Информация
-          {% endif %}
-        </p>
-        <p class="text-sm">{{ message }}</p>
-      </div>
-      <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200 font-bold text-xl leading-none">&times;</button>
-    </div>
-  </div>
-  {% endfor %}
-</div>
-<script>
-  // Автоматически скрывать сообщения через 8 секунд
-  setTimeout(() => {
-    const messages = document.querySelectorAll('.message-alert');
-    messages.forEach(msg => {
-      msg.style.transition = 'opacity 0.5s ease-out';
-      msg.style.opacity = '0';
-      setTimeout(() => msg.remove(), 500);
-    });
-  }, 8000);
-</script>
-{% endif %}
-
 {# Главный контейнер с картой и фильтрами #}
 <main class="main-container flex flex-col md:flex-row">
   {# Левая панель с фильтрами #} {% include 'partials/filter_panel.html' %} 

@@ -9,6 +9,23 @@
     {# Tailwind CSS CDN #}
     <script src="https://cdn.tailwindcss.com"></script>
 
+    {# CSS анимация для плавающих сообщений #}
+    <style>
+      @keyframes slide-down {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-slide-down {
+        animation: slide-down 0.3s ease-out;
+      }
+    </style>
+
     {# Google Fonts - Inter #}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -73,18 +90,43 @@
     class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-inter {% block body_class %}{% endblock %}"
   >
     {# Навигация #} {% block header %} {% include 'partials/header.html' %} 
-    {% endblock %} {# Системные сообщения Django #} {% if messages %}
-    <div class="container mx-auto px-4 mt-4">
+    {% endblock %}
+    
+    {# Системные сообщения Django - плавающие уведомления #}
+    {% if messages %}
+    <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-2xl px-4" id="messages-container">
       {% for message in messages %}
-      <div
-        class="bg-{{ message.tags|default:'blue' }}-100 dark:bg-{{ message.tags|default:'blue' }}-900 border-l-4 border-{{ message.tags|default:'blue' }}-500 text-{{ message.tags|default:'blue' }}-700 dark:text-{{ message.tags|default:'blue' }}-200 p-4 mb-4 rounded"
-        role="alert"
-      >
-        <p class="font-medium">{{ message }}</p>
+      <div class="mb-3 rounded-lg shadow-xl p-4 {% if message.tags == 'error' %}bg-red-500 text-white{% elif message.tags == 'warning' %}bg-yellow-500 text-white{% elif message.tags == 'success' %}bg-green-500 text-white{% else %}bg-blue-500 text-white{% endif %} animate-slide-down message-alert" role="alert">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <p class="font-bold text-sm mb-1">
+              {% if message.tags == 'error' %}❌ Ошибка
+              {% elif message.tags == 'warning' %}⚠️ Внимание
+              {% elif message.tags == 'success' %}✅ Успешно
+              {% else %}ℹ️ Информация
+              {% endif %}
+            </p>
+            <p class="text-sm">{{ message }}</p>
+          </div>
+          <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200 font-bold text-xl leading-none">&times;</button>
+        </div>
       </div>
       {% endfor %}
     </div>
-    {% endif %} {# Основной контент #}
+    <script>
+      // Автоматически скрывать сообщения через 8 секунд
+      setTimeout(() => {
+        const messages = document.querySelectorAll('.message-alert');
+        messages.forEach(msg => {
+          msg.style.transition = 'opacity 0.5s ease-out';
+          msg.style.opacity = '0';
+          setTimeout(() => msg.remove(), 500);
+        });
+      }, 8000);
+    </script>
+    {% endif %}
+    
+    {# Основной контент #}
     <main class="{% block main_class %}{% endblock %}">
       {% block content %}{% endblock %}
     </main>

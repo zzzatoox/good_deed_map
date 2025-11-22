@@ -90,24 +90,6 @@
       {% block form_title %}Форма НКО{% endblock %}
     </h2>
 
-    {# Блок для отображения сообщений #}
-    {% if messages %}
-    <div class="mb-4 space-y-2">
-      {% for message in messages %}
-      <div class="rounded-lg p-4 {% if message.tags == 'error' %}bg-red-100 border-l-4 border-red-500 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700{% elif message.tags == 'success' %}bg-green-100 border-l-4 border-green-500 text-green-700{% else %}bg-blue-100 border-l-4 border-blue-500 text-blue-700{% endif %} dark:bg-opacity-80" role="alert">
-        <p class="font-bold">
-          {% if message.tags == 'error' %}❌ Ошибка
-          {% elif message.tags == 'warning' %}⚠️ Внимание
-          {% elif message.tags == 'success' %}✅ Успешно
-          {% else %}ℹ️ Информация
-          {% endif %}
-        </p>
-        <p>{{ message }}</p>
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-
     {# Контент формы - переопределяется в дочерних шаблонах #} 
     {% block form_content %}{% endblock %}
   </div>
