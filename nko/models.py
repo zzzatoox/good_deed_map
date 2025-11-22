@@ -1,6 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.core.validators import RegexValidator
+import re
+
+
+# Валидатор для российского номера телефона
+phone_regex = RegexValidator(
+    regex=r"^\+?[78][\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$",
+    message="Неверный формат номера телефона. Используйте российский номер: +7 (XXX) XXX-XX-XX или 8 (XXX) XXX-XX-XX",
+)
 
 
 # Create your models here.
@@ -53,7 +62,11 @@ class NKO(models.Model):
     )
 
     phone = models.CharField(
-        max_length=20, blank=True, verbose_name="Контактный телефон"
+        max_length=20,
+        blank=True,
+        verbose_name="Контактный телефон",
+        validators=[phone_regex],
+        help_text="Формат: +7 (XXX) XXX-XX-XX или 8 (XXX) XXX-XX-XX",
     )
     address = models.TextField(blank=True, verbose_name="Адрес")
 
@@ -115,7 +128,11 @@ class NKOVersion(models.Model):
         blank=True, verbose_name="Функционал волонтеров"
     )
     phone = models.CharField(
-        max_length=20, blank=True, verbose_name="Контактный телефон"
+        max_length=20,
+        blank=True,
+        verbose_name="Контактный телефон",
+        validators=[phone_regex],
+        help_text="Формат: +7 (XXX) XXX-XX-XX или 8 (XXX) XXX-XX-XX",
     )
     address = models.TextField(blank=True, verbose_name="Адрес")
     latitude = models.FloatField(null=True, blank=True, verbose_name="Широта")

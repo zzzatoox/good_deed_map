@@ -1,6 +1,45 @@
 from django import forms
 from django.db.models import Case, When, IntegerField
 from .models import NKO, Category, NKOVersion
+import re
+
+
+def validate_russian_phone(phone):
+    """
+    Валидация российского номера телефона.
+    Принимаемые форматы:
+    - +7 (XXX) XXX-XX-XX
+    - +7XXXXXXXXXX
+    - 8 (XXX) XXX-XX-XX
+    - 8XXXXXXXXXX
+    - 7XXXXXXXXXX
+    """
+    if not phone:
+        return phone
+
+    # Удаляем все нецифровые символы кроме +
+    cleaned = re.sub(r"[^\d+]", "", phone)
+
+    # Проверяем различные форматы
+    patterns = [
+        r"^\+7\d{10}$",  # +7XXXXXXXXXX
+        r"^8\d{10}$",  # 8XXXXXXXXXX
+        r"^7\d{10}$",  # 7XXXXXXXXXX
+    ]
+
+    for pattern in patterns:
+        if re.match(pattern, cleaned):
+            # Нормализуем к формату +7XXXXXXXXXX
+            if cleaned.startswith("8"):
+                cleaned = "+7" + cleaned[1:]
+            elif cleaned.startswith("7"):
+                cleaned = "+" + cleaned
+            return cleaned
+
+    raise forms.ValidationError(
+        "Некорректный формат телефона. "
+        "Используйте российский номер: +7 (XXX) XXX-XX-XX или 8 (XXX) XXX-XX-XX"
+    )
 
 
 class StyledCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
@@ -62,6 +101,12 @@ class NKOForm(forms.ModelForm):
             self.fields["categories"].queryset = qs
             self.fields["categories"].widget.attrs.update({"class": "grid gap-2"})
 
+    def clean_phone(self):
+        phone = self.cleaned_data.get("phone")
+        if phone:
+            return validate_russian_phone(phone)
+        return phone
+
     class Meta:
         model = NKO
         fields = [
@@ -86,6 +131,7 @@ class NKOForm(forms.ModelForm):
                 attrs={"rows": 3, "placeholder": "Чем могут помочь волонтеры?"}
             ),
             "address": forms.Textarea(attrs={"rows": 2}),
+            "phone": forms.TextInput(attrs={"placeholder": "+7 (XXX) XXX-XX-XX"}),
         }
 
 
@@ -125,6 +171,7 @@ class NKOEditForm(forms.ModelForm):
             "description": forms.Textarea(attrs={"rows": 3}),
             "volunteer_functions": forms.Textarea(attrs={"rows": 3}),
             "address": forms.Textarea(attrs={"rows": 2}),
+            "phone": forms.TextInput(attrs={"placeholder": "+7 (XXX) XXX-XX-XX"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -174,6 +221,12 @@ class NKOEditForm(forms.ModelForm):
             ).order_by("is_other", "name")
             self.fields["categories"].queryset = qs
             self.fields["categories"].widget.attrs.update({"class": "grid gap-2"})
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get("phone")
+        if phone:
+            return validate_russian_phone(phone)
+        return phone
 
 
 class TransferOwnershipForm(forms.ModelForm):
