@@ -159,6 +159,8 @@ def edit_nko(request, pk):
             "volunteer_functions": nko.volunteer_functions,
             "phone": nko.phone,
             "address": nko.address,
+            "latitude": nko.latitude,
+            "longitude": nko.longitude,
             "website": nko.website,
             "vk_link": nko.vk_link,
             "telegram_link": nko.telegram_link,
@@ -166,6 +168,11 @@ def edit_nko(request, pk):
         }
         form = NKOEditForm(initial=initial_data)
         form.fields["categories"].initial = nko.categories.all()
+        # Ensure hidden latitude/longitude inputs show current values
+        if "latitude" in form.fields:
+            form.fields["latitude"].initial = nko.latitude
+        if "longitude" in form.fields:
+            form.fields["longitude"].initial = nko.longitude
 
     return render(request, "nko/edit_nko.html", {"form": form, "nko": nko})
 

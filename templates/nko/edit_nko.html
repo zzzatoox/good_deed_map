@@ -96,6 +96,33 @@
         {% endif %}
       </div>
       {% else %}
+      {% if field.name == 'latitude' or field.name == 'longitude' %}
+      <div>
+        <label
+          class="block text-white text-sm font-medium mb-2 dark:text-gray-200"
+        >
+          {{ field.label }}
+        </label>
+
+        <input type="text" readonly
+          class="w-full p-3 rounded-xl border-2 border-white bg-white bg-opacity-90 text-gray-800 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          value="{% if field.value %}{{ field.value|floatformat:6 }}{% else %}{% endif %}" />
+
+        {# Keep hidden input so value is submitted/updated by JS #}
+        {{ field }}
+
+        {% if field.errors %}
+        <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+          {% for error in field.errors %}
+          <p>❌ {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% if field.help_text %}
+        <p class="text-xs text-white/80 mt-1">{{ field.help_text }}</p>
+        {% endif %}
+      </div>
+      {% else %}
       <div>
         <label
           class="block text-white text-sm font-medium mb-2 dark:text-gray-200"
@@ -114,6 +141,7 @@
         <p class="text-xs text-white/80 mt-1">{{ field.help_text }}</p>
         {% endif %}
       </div>
+      {% endif %}
       {% endif %} {% endif %} {% endfor %} {# Кнопки #}
       <div class="space-y-3">
         <button
@@ -151,8 +179,4 @@
   </div>
 </form>
 {% endblock %}
-{# Hidden latitude/longitude inputs (filled by JS) #}
-<div style="display:none;">
-  {{ form.latitude }}
-  {{ form.longitude }}
-</div>
+ 
