@@ -86,7 +86,7 @@ function initMapAndUI(pointsData) {
     pointsData.forEach((point) => {
       const placemark = new ymaps.Placemark(point.coords, point.properties, {
         iconLayout: iconLayouts[point.properties.category] || iconLayouts.other,
-        iconShape: { type: "Circle", coordinates: [0, 0], radius: 20 },
+        iconShape: { type: "Circle", coordinates: [20, 20], radius: 20 },
       });
 
       // Обработчик клика по метке - открываем модальное окно
