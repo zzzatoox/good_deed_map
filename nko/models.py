@@ -40,6 +40,12 @@ class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название категории")
     description = models.TextField(blank=True, verbose_name="Описание")
     icon = models.CharField(max_length=50, blank=True, verbose_name="Иконка")
+    color = models.CharField(
+        max_length=7,
+        default="#6CACE4",
+        verbose_name="Цвет",
+        help_text="Цвет в формате HEX, например: #56C02B",
+    )
 
     class Meta:
         verbose_name = "Категория"

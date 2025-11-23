@@ -19,38 +19,26 @@ def nko_list_api(request):
     )
     data = []
     for nko in nko_list:
-        category_list = [category.name for category in nko.categories.all()]
-        category_ids = [category.id for category in nko.categories.all()]
+        categories_data = []
+        for category in nko.categories.all():
+            categories_data.append(
+                {
+                    "id": category.id,
+                    "name": category.name,
+                    "slug": slugify(category.name, allow_unicode=True),
+                    "icon": category.icon,
+                    "color": category.color,
+                }
+            )
 
-        def map_category_to_key(name):
-            s = (name or "").lower()
-            if "живот" in s:
-                return "animals"
-            if "эколог" in s or "устойчив" in s:
-                return "ecology"
-            if "спорт" in s or "здоровье" in s:
-                return "sport"
-            if "социал" in s or "помощ" in s:
-                return "social"
-            if "территор" in s or "местн" in s:
-                return "territory"
-            return "other"
-
-        category_keys = [map_category_to_key(c) for c in category_list]
-        category_slugs = [slugify(c) for c in category_list]
-        primary_category = category_keys[0] if category_keys else "other"
         data.append(
             {
                 "id": nko.id,
                 "name": nko.name,
-                "categories": category_list,
-                "category_ids": category_ids,
-                "category_slugs": category_slugs,
-                "category_keys": category_keys,
-                "primary_category": primary_category,
+                "categories": categories_data,
                 "city": nko.city.name,
                 "city_id": nko.city.id,
-                "city_slug": slugify(nko.city.name),
+                "city_slug": slugify(nko.city.name, allow_unicode=True),
                 "region": nko.region.name,
                 "latitude": nko.latitude,
                 "longitude": nko.longitude,
@@ -67,8 +55,19 @@ def nko_list_api(request):
 
 
 def categories_api(request):
-    cats = Category.objects.all().values("id", "name")
-    return JsonResponse(list(cats), safe=False)
+    categories = Category.objects.all()
+    cats = []
+    for category in categories:
+        cats.append(
+            {
+                "id": category.id,
+                "name": category.name,
+                "slug": slugify(category.name, allow_unicode=True),
+                "icon": category.icon,
+                "color": category.color,
+            }
+        )
+    return JsonResponse(cats, safe=False)
 
 
 @login_required
