@@ -470,23 +470,16 @@ function updateCategoryVisualState() {
     const categoryType = category.getAttribute("data-category");
     const isActive = activeCategories.includes(categoryType);
     
-    // Находим цвет категории
-    const categoryData = categoriesMap[categoryType];
-    const ringColor = categoryData?.color || '#6CACE4';
+    // Находим цвет категории из data-атрибута
+    const categoryColor = category.getAttribute("data-color") || '#6CACE4';
+    
+    // Устанавливаем CSS переменную для цвета категории
+    category.style.setProperty('--category-color', categoryColor);
     
     if (isActive) {
-      category.classList.add("ring-2", "ring-offset-2");
-      // Применяем цвет через inline style вместо Tailwind класса
-      const iconDiv = category.querySelector('.rounded-full');
-      if (iconDiv) {
-        iconDiv.style.boxShadow = `0 0 0 2px white, 0 0 0 4px ${ringColor}`;
-      }
+      category.classList.add("active");
     } else {
-      category.classList.remove("ring-2", "ring-offset-2");
-      const iconDiv = category.querySelector('.rounded-full');
-      if (iconDiv) {
-        iconDiv.style.boxShadow = '';
-      }
+      category.classList.remove("active");
     }
   });
 }

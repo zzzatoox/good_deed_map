@@ -122,6 +122,20 @@
 }
 
 /**
+ * Hover эффект для категорий - цветное кольцо
+ */
+.category-filter:hover .category-icon {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--category-color, #6CACE4);
+}
+
+/**
+ * Активная категория - цветное кольцо
+ */
+.category-filter.active .category-icon {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--category-color, #6CACE4) !important;
+}
+
+/**
  * Ограничение текста категорий (многострочное с ellipsis)
  */
 .category-filter span {
