@@ -5,7 +5,8 @@
 >
   <div class="border-b border-gray-200 dark:border-gray-600 pb-5">
     <h3
-      class="text-base font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100"
+      class="text-base font-semibold mb-1 flex items-center gap-2 text-gray-900 dark:text-gray-100"
+      aria-label="Заголовок Категории"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -20,23 +21,21 @@
       Категории
     </h3>
 
-    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin pl-1 pr-1 pt-1">
       {# Экология #}
       <div
-        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter pt-2"
         data-category="ecology"
         role="button"
         tabindex="0"
         aria-label="Фильтр: Экология"
       >
         <div
-          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-green-100 dark:group-hover:bg-green-800"
+          class="h-10 w-10 bg-[#56C02B] rounded-full flex items-center justify-center text-2xl leading-none font-bold shadow-md
+            transition-all duration-200
+            group-hover:ring-2 group-hover:ring-offset-2 group-hover:ring-[#56C02B]"
         >
-          <div
-            class="h-10 w-10 bg-[#56C02B] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
-          >
-            🍃️
-          </div>
+          🍃️
         </div>
         <span
           class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#56C02B]"
@@ -47,20 +46,18 @@
 
       {# Территория #}
       <div
-        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter pt-2"
         data-category="territory"
         role="button"
         tabindex="0"
         aria-label="Фильтр: Территория"
       >
         <div
-          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-yellow-100 dark:group-hover:bg-yellow-800"
+          class="h-10 w-10 bg-[#FCC30B] rounded-full flex items-center justify-center text-2xl leading-none font-bold shadow-md
+            transition-all duration-200
+            group-hover:ring-2 group-hover:ring-offset-2 group-hover:ring-[#FCC30B]"
         >
-          <div
-            class="h-10 w-10 bg-[#FCC30B] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
-          >
-            🏕️
-          </div>
+          🏕️
         </div>
         <span
           class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#FCC30B]"
@@ -71,20 +68,18 @@
 
       {# Животные #}
       <div
-        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter pt-2"
         data-category="animals"
         role="button"
         tabindex="0"
         aria-label="Фильтр: Животные"
       >
         <div
-          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-teal-100 dark:group-hover:bg-teal-800"
+          class="h-10 w-10 bg-[#259789] rounded-full flex items-center justify-center text-2xl leading-none font-bold shadow-md
+            transition-all duration-200
+            group-hover:ring-2 group-hover:ring-offset-2 group-hover:ring-[#259789]"
         >
-          <div
-            class="h-10 w-10 bg-[#259789] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
-          >
-            🐶️
-          </div>
+          🐶️
         </div>
         <span
           class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#259789]"
@@ -95,20 +90,18 @@
 
       {# Спорт #}
       <div
-        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter pt-2"
         data-category="sport"
         role="button"
         tabindex="0"
         aria-label="Фильтр: Спорт"
       >
         <div
-          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-pink-100 dark:group-hover:bg-pink-800"
+          class="h-10 w-10 bg-[#E20072] rounded-full flex items-center justify-center text-2xl leading-none font-bold shadow-md
+            transition-all duration-200
+            group-hover:ring-2 group-hover:ring-offset-2 group-hover:ring-[#E20072]"
         >
-          <div
-            class="h-10 w-10 bg-[#E20072] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
-          >
-            🏋️
-          </div>
+          🏋️
         </div>
         <span
           class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#E20072]"
@@ -119,20 +112,18 @@
 
       {# Социальная защита #}
       <div
-        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter pt-2"
         data-category="social"
         role="button"
         tabindex="0"
         aria-label="Фильтр: Социальная защита"
       >
         <div
-          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-slate-100 dark:group-hover:bg-slate-800"
+          class="h-10 w-10 bg-[#1D293D] rounded-full flex items-center justify-center text-2xl leading-none font-bold shadow-md
+            transition-all duration-200
+            group-hover:ring-2 group-hover:ring-offset-2 group-hover:ring-[#1D293D]"
         >
-          <div
-            class="h-10 w-10 bg-[#1D293D] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
-          >
-            🛡️
-          </div>
+          🛡️
         </div>
         <span
           class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 text-center transition-colors duration-200 group-hover:text-[#1D293D]"
@@ -143,20 +134,18 @@
 
       {# Другое #}
       <div
-        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter"
+        class="flex-none flex flex-col items-center min-w-[68px] cursor-pointer group category-filter pt-2"
         data-category="other"
         role="button"
         tabindex="0"
         aria-label="Фильтр: Другое"
       >
         <div
-          class="w-10 h-10 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:bg-sky-100 dark:group-hover:bg-sky-800"
+          class="h-10 w-10 bg-[#6CACE4] rounded-full flex items-center justify-center text-2xl leading-none font-bold shadow-md
+            transition-all duration-200
+            group-hover:ring-2 group-hover:ring-offset-2 group-hover:ring-[#6CACE4]"
         >
-          <div
-            class="h-10 w-10 bg-[#6CACE4] rounded-full text-white flex items-center justify-center text-2xl leading-none font-bold shadow-md"
-          >
-            🎸️
-          </div>
+          🎸️
         </div>
         <span
           class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200 group-hover:text-[#6CACE4]"
