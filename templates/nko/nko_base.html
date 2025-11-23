@@ -123,5 +123,11 @@
 <script src="{% static 'js/phone-mask.js' %}"></script>
 
 {# Подключаем модуль add_nko.js для валидации и автодополнения #}
+<!-- Передаём Yandex Maps API key в window (безопасно: публичный JS-ключ)
+     Не кладите сюда приватный геокодер-ключ, используйте его только на сервере. -->
+<script>
+  window.YANDEX_MAPS_API_KEY = "{{ YANDEX_MAPS_API_KEY|escapejs }}";
+</script>
 <script type="module" src="{% static 'js/add_nko.js' %}"></script>
+<script src="{% static 'js/address_autocomplete.js' %}"></script>
 {% endblock %}

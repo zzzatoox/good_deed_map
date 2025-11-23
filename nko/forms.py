@@ -117,6 +117,8 @@ class NKOForm(forms.ModelForm):
             "volunteer_functions",
             "phone",
             "address",
+            "latitude",
+            "longitude",
             "logo",
             "website",
             "vk_link",
@@ -131,6 +133,8 @@ class NKOForm(forms.ModelForm):
                 attrs={"rows": 3, "placeholder": "Чем могут помочь волонтеры?"}
             ),
             "address": forms.Textarea(attrs={"rows": 2}),
+            "latitude": forms.HiddenInput(attrs={"id": "id_lat"}),
+            "longitude": forms.HiddenInput(attrs={"id": "id_lon"}),
             "phone": forms.TextInput(
                 attrs={
                     "placeholder": "+7 (XXX) XXX-XX-XX",
@@ -166,6 +170,8 @@ class NKOEditForm(forms.ModelForm):
             "volunteer_functions",
             "phone",
             "address",
+            "latitude",
+            "longitude",
             "logo",
             "website",
             "vk_link",
@@ -177,6 +183,8 @@ class NKOEditForm(forms.ModelForm):
             "description": forms.Textarea(attrs={"rows": 3}),
             "volunteer_functions": forms.Textarea(attrs={"rows": 3}),
             "address": forms.Textarea(attrs={"rows": 2}),
+            "latitude": forms.HiddenInput(attrs={"id": "id_lat"}),
+            "longitude": forms.HiddenInput(attrs={"id": "id_lon"}),
             "phone": forms.TextInput(
                 attrs={
                     "placeholder": "+7 (XXX) XXX-XX-XX",
