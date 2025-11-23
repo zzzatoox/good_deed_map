@@ -1,9 +1,54 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django import forms
 
 # from unfold.admin import ModelAdmin
 from .models import Region, City, Category, NKO, NKOVersion
+
+
+class ColorPickerWidget(forms.TextInput):
+    """Виджет с color picker и текстовым полем для HEX"""
+
+    def render(self, name, value, attrs=None, renderer=None):
+        if value is None:
+            value = "#6CACE4"
+
+        # ID для синхронизации picker и текстового поля
+        color_picker_id = f"id_{name}_picker"
+        text_input_id = f"id_{name}"
+
+        html = f'''
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="color" 
+                   id="{color_picker_id}" 
+                   value="{value}" 
+                   style="width: 60px; height: 40px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px;"
+                   onchange="document.getElementById('{text_input_id}').value = this.value.toUpperCase()">
+            <input type="text" 
+                   name="{name}" 
+                   id="{text_input_id}" 
+                   value="{value}" 
+                   maxlength="7" 
+                   pattern="^#[0-9A-Fa-f]{{6}}$"
+                   style="width: 100px; padding: 8px; font-family: monospace; text-transform: uppercase;"
+                   placeholder="#RRGGBB"
+                   oninput="this.value = this.value.toUpperCase(); if(/^#[0-9A-F]{{6}}$/.test(this.value)) document.getElementById('{color_picker_id}').value = this.value;">
+            <span style="color: #666; font-size: 12px;">Выберите цвет или введите HEX-код</span>
+        </div>
+        '''
+        return mark_safe(html)
+
+
+class CategoryAdminForm(forms.ModelForm):
+    """Форма для Category с color picker"""
+
+    class Meta:
+        model = Category
+        fields = "__all__"
+        widgets = {
+            "color": ColorPickerWidget(),
+        }
 
 
 class RejectVersionForm(forms.Form):
@@ -33,9 +78,19 @@ class CityAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ["name", "icon"]
+    form = CategoryAdminForm
+    list_display = ["name", "icon", "color_preview", "color"]
     search_fields = ["name"]
     list_per_page = 20
+
+    def color_preview(self, obj):
+        """Показываем превью цвета в списке"""
+        return format_html(
+            '<div style="width: 30px; height: 30px; background-color: {}; border: 1px solid #ccc; border-radius: 4px;"></div>',
+            obj.color,
+        )
+
+    color_preview.short_description = "Превью"
 
 
 @admin.register(NKO)
