@@ -251,23 +251,26 @@ function attachUIHandlers(pointsData) {
     });
   });
 
-  document
-    .getElementById("city-select")
-    .addEventListener("change", function () {
+  const citySelect = document.getElementById("city-select");
+  if (citySelect) {
+    citySelect.addEventListener("change", function () {
       selectedCity = this.value;
       filterPointsByCategoriesAndCity(activeCategories, selectedCity);
     });
+  }
 
-  document
-    .getElementById("clear-filters")
-    .addEventListener("click", function () {
+  const clearFiltersBtn = document.getElementById("clear-filters");
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener("click", function () {
       activeCategories = [];
       selectedCity = "all";
-      document.getElementById("city-select").value = "all";
+      const citySelectEl = document.getElementById("city-select");
+      if (citySelectEl) citySelectEl.value = "all";
       updateCategoryVisualState();
       filterPointsByCategoriesAndCity(activeCategories, selectedCity);
       this.classList.add("hidden");
     });
+  }
 
   document.querySelectorAll(".point-item").forEach((item) => {
     item.addEventListener("click", function () {
@@ -288,10 +291,10 @@ function attachUIHandlers(pointsData) {
 
   // search handlers
   function performSearch() {
-    const searchText = document
-      .getElementById("search-input")
-      .value.trim()
-      .toLowerCase();
+    const searchInputEl = document.getElementById("search-input");
+    if (!searchInputEl) return;
+    
+    const searchText = searchInputEl.value.trim().toLowerCase();
     if (!searchText) {
       filterPointsByCategoriesAndCity(activeCategories, selectedCity);
       return;
@@ -338,17 +341,19 @@ function attachUIHandlers(pointsData) {
     }
   }
 
-  document
-    .getElementById("search-input")
-    .addEventListener("input", performSearch);
-  document
-    .getElementById("search-input")
-    .addEventListener("keypress", function (e) {
+  const searchInput = document.getElementById("search-input");
+  const searchButton = document.getElementById("search-button");
+  
+  if (searchInput) {
+    searchInput.addEventListener("input", performSearch);
+    searchInput.addEventListener("keypress", function (e) {
       if (e.key === "Enter") performSearch();
     });
-  document
-    .getElementById("search-button")
-    .addEventListener("click", performSearch);
+  }
+  
+  if (searchButton) {
+    searchButton.addEventListener("click", performSearch);
+  }
 
   // Обновляем начальный счётчик
   updatePointsCount(pointsData.length);
@@ -410,7 +415,11 @@ function filterPointsByCategoriesAndCity(categories, city) {
 
 function updateActiveFiltersDisplay() {
   const activeFiltersContainer = document.getElementById("active-filters");
+  if (!activeFiltersContainer) return; // Элемент может отсутствовать на странице
+  
   const filtersList = activeFiltersContainer.querySelector(".flex");
+  if (!filtersList) return;
+  
   filtersList.innerHTML = "";
   if (activeCategories.length > 0 || selectedCity !== "all") {
     activeFiltersContainer.classList.remove("hidden");
