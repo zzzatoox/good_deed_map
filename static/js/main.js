@@ -199,7 +199,7 @@ function renderPointsList(pointsData, rawList) {
 
     const badgesHtml = categories
       .map(cat => 
-        `<span class="text-white text-xs font-medium px-2 py-1 rounded-md" style="background-color: ${cat.color};">${cat.name}</span>`
+        `<span class="text-white text-xs font-medium px-2 py-1 rounded-md whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] inline-block" style="background-color: ${cat.color};" title="${cat.name}">${cat.name}</span>`
       )
       .join(" ");
 
@@ -549,9 +549,10 @@ function showNkoModal(id) {
     const categories = nko.categories || [];
     categories.forEach((cat) => {
       const span = document.createElement("span");
-      span.className = "text-white text-xs font-medium px-2 py-1 rounded-md";
+      span.className = "text-white text-xs font-medium px-2 py-1 rounded-md whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] inline-block";
       span.style.backgroundColor = cat.color || '#6CACE4';
       span.textContent = cat.name;
+      span.title = cat.name;
       badgesEl.appendChild(span);
     });
   }
