@@ -1,0 +1,18 @@
+[Unit]
+Description=Gunicorn daemon for Good Deed Map
+After=network.target
+
+[Service]
+User=user
+Group=user
+WorkingDirectory=/home/user/good_deed_map
+Environment="PATH=/home/user/good_deed_map/venv/bin"
+ExecStart=/home/user/good_deed_map/venv/bin/gunicorn \
+    --config gunicorn_config.py \
+    good_deed_map.wsgi:application
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
