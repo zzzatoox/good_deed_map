@@ -278,9 +278,9 @@
 {{ ngos|json_script:"ngos-data" }}
 {{ categories|json_script:"categories-data" }}
 {{ cities|json_script:"cities-data" }}
-{# Подключаем Яндекс.Карты API и основной модуль инициализации карты #}
-<script src="https://api-maps.yandex.ru/2.1/?apikey={{ YANDEX_MAPS_API_KEY }}&lang=ru_RU" type="text/javascript" defer></script>
-  <script src="{% static 'js/address_autocomplete.js' %}" defer></script>
+{# Подключаем Яндекс.Карты API и основной модуль инициализации карты - СИНХРОННО #}
+<script src="https://api-maps.yandex.ru/2.1/?apikey={{ YANDEX_MAPS_API_KEY }}&lang=ru_RU" type="text/javascript"></script>
+<script src="{% static 'js/address_autocomplete.js' %}"></script>
 <script type="module">
   import { fetchAndInit } from '{% static "js/main_tsx.js" %}';
 
