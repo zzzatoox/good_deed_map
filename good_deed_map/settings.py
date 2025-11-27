@@ -203,3 +203,21 @@ CAPTCHA_FOREGROUND_COLOR = "#15256D"
 CAPTCHA_NOISE_FUNCTIONS = ("captcha.helpers.noise_dots",)
 CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.math_challenge"  # Математическая капча
 CAPTCHA_TIMEOUT = 5  # Время действия капчи в минутах
+
+# Security settings for production behind reverse proxy
+if not DEBUG:
+    # Trust the X-Forwarded-Proto header from Nginx
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+    # CSRF settings for reverse proxy
+    CSRF_TRUSTED_ORIGINS = [
+        "http://it-hackathon-team03.mephi.ru",
+        "https://it-hackathon-team03.mephi.ru",
+        "http://85.143.112.32",
+    ]
+
+    # Session cookie settings
+    SESSION_COOKIE_SECURE = False  # Set to True if using HTTPS
+    CSRF_COOKIE_SECURE = False  # Set to True if using HTTPS
+    SESSION_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_HTTPONLY = False  # Must be False for AJAX requests
