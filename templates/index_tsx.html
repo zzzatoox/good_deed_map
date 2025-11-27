@@ -284,11 +284,23 @@
 <script type="module">
   import { fetchAndInit } from '{% static "js/main_tsx.js" %}';
 
+  let attempts = 0;
+  const maxAttempts = 50; // 10 seconds max
+
   function tryInit() {
+    attempts++;
     if (typeof ymaps !== 'undefined') {
       fetchAndInit();
-    } else {
+    } else if (attempts < maxAttempts) {
       setTimeout(tryInit, 200);
+    } else {
+      console.warn('Yandex Maps failed to load after 10 seconds, continuing without map');
+      // Try to initialize without map
+      try {
+        fetchAndInit();
+      } catch (e) {
+        console.error('Failed to initialize:', e);
+      }
     }
   }
   tryInit();
