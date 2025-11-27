@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #2196F3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        .info-block {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #2196F3;
+            border-radius: 3px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #777;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>🔑 Вам переданы права на НКО</h2>
+    </div>
+    <div class="content">
+        <p>Здравствуйте, {{ new_owner.get_full_name|default:new_owner.username }}!</p>
+        
+        <p>Уведомляем вас, что вам были переданы права владения НКО.</p>
+        
+        <div class="info-block">
+            <p><span class="info-label">Название НКО:</span> {{ nko.name }}</p>
+            <p><span class="info-label">Предыдущий владелец:</span> {{ previous_owner.get_full_name|default:previous_owner.username }}</p>
+            <p><span class="info-label">Новый владелец:</span> {{ new_owner.get_full_name|default:new_owner.username }} (вы)</p>
+        </div>
+        
+        <p>Теперь вы являетесь владельцем этого НКО и можете управлять его данными на карте добрых дел.</p>
+        
+        <p style="margin-top: 20px;">
+            С уважением,<br>
+            Команда "Карта добрых дел"
+        </p>
+    </div>
+    <div class="footer">
+        <p>&copy; 2025 Карта добрых дел. Все права защищены.</p>
+    </div>
+</body>
+</html>

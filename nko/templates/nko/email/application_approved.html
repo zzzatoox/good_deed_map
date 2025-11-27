@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        .success-icon {
+            font-size: 48px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .info-block {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #4CAF50;
+            border-radius: 3px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #777;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>✅ Ваша заявка одобрена!</h2>
+    </div>
+    <div class="content">
+        <div class="success-icon">🎉</div>
+        
+        <p>Здравствуйте, {{ user.get_full_name|default:user.username }}!</p>
+        
+        <p>Рады сообщить, что ваша заявка на <strong>{{ application_type }}</strong> была одобрена модератором.</p>
+        
+        <div class="info-block">
+            <p><span class="info-label">Название НКО:</span> {{ nko.name }}</p>
+            {% if is_new_nko %}
+            <p><span class="info-label">Статус:</span> НКО успешно добавлено на карту</p>
+            {% elif is_transfer %}
+            <p><span class="info-label">Статус:</span> Права владения переданы новому владельцу</p>
+            {% else %}
+            <p><span class="info-label">Статус:</span> Изменения успешно применены</p>
+            {% endif %}
+        </div>
+        
+        {% if is_new_nko %}
+        <p>Ваше НКО теперь отображается на карте добрых дел и доступно для всех пользователей.</p>
+        {% elif not is_transfer %}
+        <p>Внесенные вами изменения успешно применены и отображаются на карте.</p>
+        {% endif %}
+        
+        <p style="margin-top: 20px;">
+            Спасибо за участие в проекте "Карта добрых дел"!
+        </p>
+    </div>
+    <div class="footer">
+        <p>&copy; 2025 Карта добрых дел. Все права защищены.</p>
+    </div>
+</body>
+</html>

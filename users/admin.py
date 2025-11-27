@@ -11,7 +11,11 @@ class ProfileInline(admin.StackedInline):
     can_delete = False
     verbose_name = "Профиль"
     verbose_name_plural = "Профиль"
-    fields = ("patronymic", "phone_number", "email_confirmed")
+    fields = (
+        "patronymic",
+        "email_confirmed",
+        "receive_nko_notifications",
+    )
     readonly_fields = ("email_confirmed",)
 
 

@@ -5,6 +5,10 @@ from django import forms
 
 # from unfold.admin import ModelAdmin
 from .models import Region, City, Category, NKO, NKOVersion
+from .email_utils import (
+    send_application_decision_notification,
+    send_transfer_notification_to_new_owner,
+)
 
 
 class ColorPickerWidget(forms.TextInput):
@@ -257,17 +261,41 @@ class NKOVersionAdmin(admin.ModelAdmin):
         "nko",
         "created_by",
         "new_owner",
+        "city_display",
         "status_display",
         "is_current",
         "created_at",
         "change_description_preview",
     ]
     list_filter = ["is_approved", "is_rejected", "is_current", "created_at"]
-    search_fields = ["nko__name", "created_by__username", "new_owner__username"]
+    search_fields = [
+        "nko__name",
+        "created_by__username",
+        "new_owner__username",
+        "city_name",
+        "region_name",
+    ]
     list_per_page = 20
     actions = ["approve_versions", "reject_versions_action"]
     filter_horizontal = ["categories"]
     readonly_fields = ["rejection_reason_display"]
+
+    def city_display(self, obj):
+        """Отображение города (новый или существующий)"""
+        if obj.city_name:
+            region_text = (
+                f", {obj.region_name}" if obj.region_name else " (регион не указан)"
+            )
+            return format_html(
+                '<span style="color: #0066cc;">🏙️ {}{} (новый)</span>',
+                obj.city_name,
+                region_text,
+            )
+        elif obj.nko and obj.nko.city:
+            return obj.nko.city.name
+        return "—"
+
+    city_display.short_description = "Город"
 
     def status_display(self, obj):
         """Отображение статуса заявки"""
@@ -322,6 +350,13 @@ class NKOVersionAdmin(admin.ModelAdmin):
             try:
                 if version.apply_changes():
                     count_success += 1
+
+                    # Отправляем уведомление автору заявки об одобрении
+                    send_application_decision_notification(version, approved=True)
+
+                    # Если это передача прав, отправляем уведомление новому владельцу
+                    if version.new_owner:
+                        send_transfer_notification_to_new_owner(version)
                 else:
                     count_error += 1
             except ValueError as e:
@@ -403,6 +438,11 @@ class NKOVersionAdmin(admin.ModelAdmin):
                         try:
                             if version.reject_changes(reason):
                                 count += 1
+
+                                # Отправляем уведомление автору заявки об отклонении
+                                send_application_decision_notification(
+                                    version, approved=False
+                                )
                             else:
                                 errors.append(f"Не удалось отклонить {version}")
                         except Exception as e:
@@ -511,13 +551,14 @@ class NKOVersionAdmin(admin.ModelAdmin):
                     "fields": (
                         "name",
                         "categories",
+                        "city_name",
+                        "region_name",
                         "description",
                         "volunteer_functions",
                         "phone",
                         "address",
                         "latitude",
                         "longitude",
-                        "logo",
                     )
                 },
             ),

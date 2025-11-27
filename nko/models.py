@@ -5,11 +5,26 @@ from django.core.validators import RegexValidator
 import re
 
 
-# Валидатор для российского номера телефона
-phone_regex = RegexValidator(
-    regex=r"^\+?[78][\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$",
-    message="Неверный формат номера телефона. Используйте российский номер: +7 (XXX) XXX-XX-XX или 8 (XXX) XXX-XX-XX",
-)
+# Валидатор для российского номера телефона (опционально)
+def validate_phone_optional(value):
+    """Validates Russian phone number format, allows empty string"""
+    if not value or not value.strip():
+        return
+
+    # Check if value is just mask placeholder or prefix
+    cleaned = re.sub(r"[^\d+]", "", value)
+    if cleaned in ["", "+7", "7", "+", "8"]:
+        return
+
+    phone_regex = RegexValidator(
+        regex=r"^\+?[78][\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$",
+        message="Неверный формат номера телефона. Используйте российский номер: +7 (XXX) XXX-XX-XX или 8 (XXX) XXX-XX-XX",
+    )
+    phone_regex(value)
+
+
+# Keep old validator name for backwards compatibility
+phone_regex = validate_phone_optional
 
 
 # Create your models here.
@@ -70,18 +85,15 @@ class NKO(models.Model):
     phone = models.CharField(
         max_length=20,
         blank=True,
+        default="",
         verbose_name="Контактный телефон",
         validators=[phone_regex],
-        help_text="Формат: +7 (XXX) XXX-XX-XX или 8 (XXX) XXX-XX-XX",
+        help_text="Формат: +7 (XXX) XXX-XX-XX или 8 (XXX) XXX-XX-XX (необязательно)",
     )
     address = models.TextField(blank=True, verbose_name="Адрес")
 
     latitude = models.FloatField(null=True, blank=True, verbose_name="Широта")
     longitude = models.FloatField(null=True, blank=True, verbose_name="Долгота")
-
-    logo = models.ImageField(
-        upload_to="nko_logos/", blank=True, null=True, verbose_name="Логотип"
-    )
 
     website = models.URLField(blank=True, verbose_name="Сайт")
     vk_link = models.URLField(blank=True, verbose_name="ВКонтакте")
@@ -136,16 +148,20 @@ class NKOVersion(models.Model):
     phone = models.CharField(
         max_length=20,
         blank=True,
+        default="",
         verbose_name="Контактный телефон",
         validators=[phone_regex],
-        help_text="Формат: +7 (XXX) XXX-XX-XX или 8 (XXX) XXX-XX-XX",
+        help_text="Формат: +7 (XXX) XXX-XX-XX или 8 (XXX) XXX-XX-XX (необязательно)",
     )
     address = models.TextField(blank=True, verbose_name="Адрес")
+    city_name = models.CharField(
+        max_length=100, blank=True, verbose_name="Название города (текст)"
+    )
+    region_name = models.CharField(
+        max_length=100, blank=True, verbose_name="Название региона (текст)"
+    )
     latitude = models.FloatField(null=True, blank=True, verbose_name="Широта")
     longitude = models.FloatField(null=True, blank=True, verbose_name="Долгота")
-    logo = models.ImageField(
-        upload_to="nko_logos/versions/", blank=True, null=True, verbose_name="Логотип"
-    )
     website = models.URLField(blank=True, verbose_name="Сайт")
     vk_link = models.URLField(blank=True, verbose_name="ВКонтакте")
     telegram_link = models.URLField(blank=True, verbose_name="Telegram")
@@ -200,6 +216,35 @@ class NKOVersion(models.Model):
                     f"Один пользователь может владеть только одним НКО."
                 )
 
+        # Handle city_name - create city if it doesn't exist
+        if self.city_name:
+            city_name_formatted = self.city_name.strip().title()
+            city = City.objects.filter(name__iexact=city_name_formatted).first()
+
+            if not city:
+                # Create new city with region from region_name or default
+                region = None
+
+                if self.region_name:
+                    region_name_formatted = self.region_name.strip().title()
+                    region = Region.objects.filter(
+                        name__iexact=region_name_formatted
+                    ).first()
+
+                    if not region:
+                        # Create new region if doesn't exist
+                        region = Region.objects.create(name=region_name_formatted)
+
+                if not region:
+                    # Use default region if region_name not provided
+                    region = Region.objects.filter(name="Не указан").first()
+                    if not region:
+                        region = Region.objects.create(name="Не указан")
+
+                city = City.objects.create(name=city_name_formatted, region=region)
+
+            nko.city = city
+
         nko.name = self.name
         nko.description = self.description
         nko.volunteer_functions = self.volunteer_functions
@@ -211,9 +256,6 @@ class NKOVersion(models.Model):
         nko.vk_link = self.vk_link
         nko.telegram_link = self.telegram_link
         nko.other_social = self.other_social
-
-        if self.logo:
-            nko.logo = self.logo
 
         if self.new_owner:
             nko.owner = self.new_owner

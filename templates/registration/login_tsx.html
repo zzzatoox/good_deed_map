@@ -3,8 +3,8 @@
 {% block header %}{% endblock %}
 {% block footer %}{% endblock %}
 
-{# Страница ошибки 403 в стиле React app #}
-{% block title %}Доступ запрещен - 403{% endblock %}
+{# Страница входа в стиле React app с белым фоном как у модального окна НКО #}
+{% block title %}Вход - Карта добрых дел{% endblock %}
 
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -53,6 +53,9 @@
     outline: none;
     box-shadow: 0 0 0 3px rgba(86, 192, 43, 0.3);
   }
+  .focus\:border-brand-green:focus {
+    border-color: #56C02B;
+  }
 
   .shadow-inner-sm { box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
 
@@ -95,88 +98,168 @@
     
     {# Floating Icons #}
     <div class="absolute inset-0 overflow-hidden">
-      {# Shield Icon #}
+      {# Heart Icon #}
       <div class="absolute transform-gpu w-16 h-16 text-brand-raspberry opacity-20 dark:opacity-10 filter blur-sm animate-float" 
            style="top: 15%; left: 10%; animation-duration: 15s; animation-delay: 0s;">
         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-          <path fill-rule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.749.749 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+          <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
         </svg>
       </div>
       
-      {# Lock Icon #}
+      {# Users Icon #}
       <div class="absolute transform-gpu w-20 h-20 text-brand-orange opacity-20 dark:opacity-10 filter blur-sm animate-float" 
            style="top: 30%; left: 85%; animation-duration: 20s; animation-delay: -5s;">
         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-          <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clip-rule="evenodd" />
+          <path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" />
         </svg>
       </div>
       
-      {# Hand Stop Icon #}
+      {# Globe Icon #}
       <div class="absolute transform-gpu w-24 h-24 text-brand-green opacity-20 dark:opacity-10 filter blur-sm animate-float" 
            style="top: 70%; left: 5%; animation-duration: 18s; animation-delay: -10s;">
         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M10.5 1.875a1.125 1.125 0 012.25 0v8.219c.517.162 1.02.382 1.5.659V3.375a1.125 1.125 0 012.25 0v10.937a4.505 4.505 0 00-3.25 2.373 8.963 8.963 0 014-.935A.75.75 0 0018 15v-2.266a3.368 3.368 0 01.988-2.37 1.125 1.125 0 011.591 1.59 1.118 1.118 0 00-.329.79v3.006h-.005a6 6 0 01-1.752 4.007l-1.736 1.736a6 6 0 01-4.242 1.757H10.5a7.5 7.5 0 01-7.5-7.5V6.375a1.125 1.125 0 012.25 0v5.519c.46-.452.965-.832 1.5-1.141V3.375a1.125 1.125 0 012.25 0v6.526c.495-.1.997-.151 1.5-.151V1.875z" />
+          <path d="M21.721 12.752a9.711 9.711 0 00-.945-5.003 12.754 12.754 0 01-4.339 2.708 18.991 18.991 0 01-.214 4.772 17.165 17.165 0 005.498-2.477zM14.634 15.55a17.324 17.324 0 00.332-4.647c-.952.227-1.945.347-2.966.347-1.021 0-2.014-.12-2.966-.347a17.515 17.515 0 00.332 4.647 17.385 17.385 0 005.268 0zM9.772 17.119a18.963 18.963 0 004.456 0A17.182 17.182 0 0112 21.724a17.18 17.18 0 01-2.228-4.605zM7.777 15.23a18.87 18.87 0 01-.214-4.774 12.753 12.753 0 01-4.34-2.708 9.711 9.711 0 00-.944 5.004 17.165 17.165 0 005.498 2.477zM21.356 14.752a9.765 9.765 0 01-7.478 6.817 18.64 18.64 0 001.988-4.718 18.627 18.627 0 005.49-2.098zM2.644 14.752c1.682.971 3.53 1.688 5.49 2.099a18.64 18.64 0 001.988 4.718 9.765 9.765 0 01-7.478-6.816zM13.878 2.43a9.755 9.755 0 016.116 3.986 11.267 11.267 0 01-3.746 2.504 18.63 18.63 0 00-2.37-6.49zM12 2.276a17.152 17.152 0 012.805 7.121c-.897.23-1.837.353-2.805.353-.968 0-1.908-.122-2.805-.353A17.151 17.151 0 0112 2.276zM10.122 2.43a18.629 18.629 0 00-2.37 6.490 11.266 11.266 0 01-3.746-2.504 9.754 9.754 0 016.116-3.985z" />
         </svg>
       </div>
       
-      {# Key Icon #}
+      {# Paint Brush Icon #}
       <div class="absolute transform-gpu w-14 h-14 text-brand-turquoise opacity-20 dark:opacity-10 filter blur-sm animate-float" 
            style="top: 80%; left: 90%; animation-duration: 22s; animation-delay: -2s;">
         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-          <path fill-rule="evenodd" d="M15.75 1.5a6.75 6.75 0 00-6.651 7.906c.067.39-.032.717-.221.906l-6.5 6.499a3 3 0 00-.878 2.121v2.818c0 .414.336.75.75.75H6a.75.75 0 00.75-.75v-1.5h1.5A.75.75 0 009 19.5v-1.5h1.5a.75.75 0 00.53-.22l2.658-2.658c.19-.189.517-.288.906-.22A6.75 6.75 0 1015.75 1.5zm0 3a.75.75 0 000 1.5A2.25 2.25 0 0118 8.25a.75.75 0 001.5 0 3.75 3.75 0 00-3.75-3.75z" clip-rule="evenodd" />
+          <path fill-rule="evenodd" d="M20.599 1.5c-.376 0-.743.111-1.055.32l-5.08 3.385a18.747 18.747 0 00-3.471 2.987 10.04 10.04 0 014.815 4.815 18.748 18.748 0 002.987-3.472l3.386-5.079A1.902 1.902 0 0020.599 1.5zm-8.3 14.025a18.76 18.76 0 001.896-1.207 8.026 8.026 0 00-4.513-4.513A18.75 18.75 0 008.475 11.7l-.278.5a5.26 5.26 0 013.601 3.602l.502-.278zM6.75 13.5A3.75 3.75 0 003 17.25a1.5 1.5 0 01-1.601 1.497.75.75 0 00-.7 1.123 5.25 5.25 0 009.8-2.62 3.75 3.75 0 00-3.75-3.75z" clip-rule="evenodd" />
         </svg>
       </div>
       
-      {# Alert Icon #}
+      {# Book Icon #}
       <div class="absolute transform-gpu w-12 h-12 text-brand-yellow opacity-20 dark:opacity-10 filter blur-sm animate-float" 
            style="top: 5%; left: 60%; animation-duration: 16s; animation-delay: -8s;">
         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-          <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
+          <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A8.237 8.237 0 016 18.75c1.995 0 3.823.707 5.25 1.886V4.533zM12.75 20.636A8.214 8.214 0 0118 18.75c.966 0 1.89.166 2.75.47a.75.75 0 001-.708V4.262a.75.75 0 00-.5-.707A9.735 9.735 0 0018 3a9.707 9.707 0 00-5.25 1.533v16.103z" />
         </svg>
       </div>
     </div>
   </div>
 
-  {# Error Panel - solid white #}
+  {# Login Panel - solid white like NKO modal #}
   <div class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl p-8 transform transition-all duration-300 animate-fade-in-scale relative z-10">
     {# Theme toggle button #}
     <button type="button" class="theme-toggle absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-all transform hover:scale-105 focus:outline-none cursor-pointer" aria-label="Toggle theme">
       <svg class="icon-sun w-5 h-5 text-slate-600 dark:text-slate-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4V2m0 20v-2M4.22 4.22L2.81 2.81M21.19 21.19l-1.41-1.41M4 12H2m20 0h-2M4.22 19.78l-1.41 1.41M21.19 2.81l-1.41 1.41M12 8a4 4 0 100 8 4 4 0 000-8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <svg class="icon-moon w-5 h-5 text-slate-600 dark:text-slate-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="currentColor"/></svg>
     </button>
-    
     <div class="flex flex-col items-center text-center mb-8 animate-fade-in-up" style="animation-delay: 100ms;">
-      <div class="bg-orange-500 p-4 rounded-full shadow-inner-sm mb-4 flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
-          <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clip-rule="evenodd" />
-        </svg>
+      <div class="bg-brand-green p-3 rounded-lg shadow-inner-sm mb-4 flex items-center justify-center">
+        <img src="{% static 'images/rosatom-logo.svg' %}" alt="Росатом" class="w-16 h-16" style="filter: brightness(0) invert(1);" />
       </div>
-      <h1 class="text-6xl font-extrabold text-slate-800 dark:text-slate-100 mb-2">403</h1>
-      <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3">Доступ запрещен</h2>
-      <p class="text-slate-600 dark:text-slate-300 mt-2 max-w-sm">
-        У вас нет прав для доступа к этой странице. Пожалуйста, войдите в систему или обратитесь к администратору.
-      </p>
+      <h1 class="text-3xl font-bold text-slate-800 dark:text-slate-100">Карта добрых дел</h1>
+      <p class="text-slate-600 dark:text-slate-300 mt-2">Войдите для управления вашей организацией.</p>
     </div>
 
-    <div class="space-y-4 animate-fade-in-up" style="animation-delay: 200ms;">
-      <a
-        href="/"
-        class="w-full flex items-center justify-center gap-2 bg-brand-green text-white font-semibold px-4 py-3 rounded-lg shadow-md hover:bg-brand-green-dark transition-colors transform hover:scale-105"
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      
+      {# Non-field errors #}
+      {% if form.non_field_errors %}
+      <div class="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg dark:bg-red-900/20 dark:border-red-800 dark:text-red-200 animate-fade-in-up" style="animation-delay: 150ms;">
+        {% for error in form.non_field_errors %}
+        <p class="text-sm">{{ error }}</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {# Email/Username field #}
+      <div class="animate-fade-in-up" style="animation-delay: 200ms;">
+        <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          Email или имя пользователя
+        </label>
+        <div class="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
+            <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+          </svg>
+          <input
+            type="text"
+            name="{{ form.username.name }}"
+            id="{{ form.username.id_for_label }}"
+            value="{{ form.username.value|default:'' }}"
+            placeholder="ваш@email.com"
+            required
+            class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-brand-green focus:border-brand-green outline-none transition"
+          />
+        </div>
+        {% if form.username.errors %}
+        <div class="mt-1 text-red-600 dark:text-red-400 text-sm">
+          {% for error in form.username.errors %}
+          <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      {# Password field #}
+      <div class="animate-fade-in-up" style="animation-delay: 300ms;">
+        <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          Пароль
+        </label>
+        <div class="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clip-rule="evenodd" />
+          </svg>
+          <input
+            type="password"
+            name="{{ form.password.name }}"
+            id="{{ form.password.id_for_label }}"
+            placeholder="••••••••"
+            required
+            class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-brand-green focus:border-brand-green outline-none transition"
+          />
+        </div>
+        {% if form.password.errors %}
+        <div class="mt-1 text-red-600 dark:text-red-400 text-sm">
+          {% for error in form.password.errors %}
+          <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <div class="mt-2 text-right">
+          <a href="{% url 'password_reset' %}" class="text-sm text-brand-green hover:text-brand-green-dark dark:hover:text-brand-green transition-colors">
+            Забыли пароль?
+          </a>
+        </div>
+      </div>
+
+      {# Submit button #}
+      <button
+        type="submit"
+        class="w-full flex items-center justify-center gap-2 bg-brand-green text-white font-semibold px-4 py-3 rounded-lg shadow-md hover:bg-brand-green-dark transition-colors transform hover:scale-105 animate-fade-in-up"
+        style="animation-delay: 400ms;"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
-          <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
+          <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 006 5.25v13.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V15a.75.75 0 011.5 0v3.75a3 3 0 01-3 3h-6a3 3 0 01-3-3V5.25a3 3 0 013-3h6a3 3 0 013 3V9A.75.75 0 0115 9V5.25a1.5 1.5 0 00-1.5-1.5h-6zm10.72 4.72a.75.75 0 011.06 0l3 3a.75.75 0 010 1.06l-3 3a.75.75 0 11-1.06-1.06l1.72-1.72H9a.75.75 0 010-1.5h10.94l-1.72-1.72a.75.75 0 010-1.06z" clip-rule="evenodd" />
         </svg>
-        <span>Вернуться на главную</span>
-      </a>
-    </div>
+        <span>Войти</span>
+      </button>
+    </form>
 
-    {# Additional info #}
-    <div class="text-center mt-6 animate-fade-in-up" style="animation-delay: 300ms;">
-      <p class="text-sm text-slate-600 dark:text-slate-400">
-        Нужна помощь?
-        <a href="/" class="font-semibold text-brand-green hover:text-brand-green-dark dark:hover:text-brand-green transition-colors">
-          Свяжитесь с нами
+    {# Additional links #}
+    <div class="text-center mt-6 space-y-4 animate-fade-in-up" style="animation-delay: 500ms;">
+      <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-slate-300 dark:border-slate-600"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-2 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400">или</span>
+        </div>
+      </div>
+      
+      <a href="/" class="block text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-green-dark dark:hover:text-brand-green transition-colors">
+        Исследовать карту как гость →
+      </a>
+      
+      <p class="text-sm text-slate-600 dark:text-slate-400 !mt-6">
+        Нет аккаунта?
+        <a href="{% url 'register' %}" class="font-semibold text-brand-green hover:text-brand-green-dark dark:hover:text-brand-green transition-colors">
+          Зарегистрируйтесь
         </a>
       </p>
     </div>
@@ -213,78 +296,3 @@
   });
 </script>
 {% endblock %}
-
-            <div class="w-full space-y-4">
-                <p class="text-white text-center mb-4 dark:text-gray-200">
-                    У вас нет прав для доступа к этой странице. Пожалуйста, обратитесь к администратору.
-                </p>
-                <div class="flex flex-col items-center justify-center mt-4">
-                    <div class="flex items-center justify-center mb-4">
-                        <div class="animate-bounce text-white text-4xl mr-2">🔒</div>
-                        <div class="animate-bounce text-white text-4xl" style="animation-delay: 0.2s">😢</div>
-                        <div class="animate-bounce text-white text-4xl ml-2" style="animation-delay: 0.4s">⛔</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Action buttons -->
-            <div class="w-full mt-6 space-y-3">
-                <a href="/" 
-                    class="w-full py-3 bg-white text-[#15256D] font-bold text-xl rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 hover:scale-105 hover:shadow-xl active:scale-95">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                    </svg>
-                    Вернуться на главную
-                </a>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        const themeToggle = document.getElementById('theme-toggle');
-        const moonIcon = document.getElementById('moon-icon');
-        const sunIcon = document.getElementById('sun-icon');
-        const htmlElement = document.documentElement;
-
-        // Initialize theme
-        function initializeTheme() {
-            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                enableDarkTheme();
-            } else {
-                enableLightTheme();
-            }
-        }
-
-        function enableDarkTheme() {
-            htmlElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-            // Показываем иконку солнца, скрываем луну
-            moonIcon.classList.add('hidden');
-            sunIcon.classList.remove('hidden');
-        }
-
-        function enableLightTheme() {
-            htmlElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-            // Показываем иконку луны, скрываем солнце
-            moonIcon.classList.remove('hidden');
-            sunIcon.classList.add('hidden');
-        }
-
-        // Toggle theme function
-        function toggleTheme() {
-            if (htmlElement.classList.contains('dark')) {
-                enableLightTheme();
-            } else {
-                enableDarkTheme();
-            }
-        }
-
-        // Initialize theme on page load
-        initializeTheme();
-
-        // Add event listener to theme toggle button
-        themeToggle.addEventListener('click', toggleTheme);
-    </script>
-</body>
-</html>

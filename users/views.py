@@ -7,7 +7,12 @@ from django.core.mail import send_mail
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.views.decorators.http import require_http_methods
-from .forms import UserRegisterForm, CustomAuthenticationForm, ResendConfirmationForm
+from .forms import (
+    UserRegisterForm,
+    UserRegisterTsxForm,
+    CustomAuthenticationForm,
+    ResendConfirmationForm,
+)
 from .models import EmailConfirmationToken
 
 
@@ -55,22 +60,105 @@ def register(request):
                     f"Пожалуйста, проверьте почту и перейдите по ссылке для активации аккаунта.",
                 )
             except Exception as e:
+                import traceback
+                import logging
+
+                logger = logging.getLogger(__name__)
+                error_details = traceback.format_exc()
+                logger.error(f"Email sending error in register(): {e}")
+                logger.error(f"Full traceback:\n{error_details}")
                 messages.error(
                     request,
-                    "Ошибка при отправке письма подтверждения. Пожалуйста, обратитесь к администратору.",
+                    f"Ошибка при отправке письма подтверждения: {str(e)}. Пожалуйста, обратитесь к администратору.",
                 )
-                # Можно добавить логирование ошибки
-                print(f"Email sending error: {e}")
 
             return render(
                 request,
-                "registration/email_confirmation_sent.html",
+                "registration/email_confirmation_sent_tsx.html",
                 {"email": user.email},
             )
     else:
         form = UserRegisterForm()
 
     return render(request, "registration/register.html", {"form": form})
+
+
+def register_tsx(request):
+    if request.method == "POST":
+        form = UserRegisterTsxForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = False  # Деактивируем пользователя до подтверждения email
+            user.save()
+
+            # Создаем токен подтверждения
+            token = EmailConfirmationToken.objects.create(user=user)
+
+            # Формируем ссылку подтверждения
+            confirmation_url = request.build_absolute_uri(
+                reverse("confirm_email", kwargs={"token": token.token})
+            )
+
+            # Отправляем письмо
+            try:
+                send_mail(
+                    subject="Подтверждение регистрации на Карте добрых дел",
+                    message=f"""Здравствуйте!
+
+Спасибо за регистрацию на сайте "Карта добрых дел".
+
+Для завершения регистрации и активации аккаунта, пожалуйста, перейдите по ссылке:
+{confirmation_url}
+
+Ссылка действительна в течение 24 часов.
+
+Если вы не регистрировались на нашем сайте, просто проигнорируйте это письмо.
+
+С уважением,
+Команда "Карта добрых дел"
+""",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+                messages.success(
+                    request,
+                    f"На адрес {user.email} отправлено письмо с подтверждением. "
+                    f"Пожалуйста, проверьте почту и перейдите по ссылке для активации аккаунта.",
+                )
+            except Exception as e:
+                import traceback
+                import logging
+
+                logger = logging.getLogger(__name__)
+                error_details = traceback.format_exc()
+                logger.error(f"Email sending error in register_tsx(): {e}")
+                logger.error(f"Full traceback:\n{error_details}")
+                messages.error(
+                    request,
+                    f"Ошибка при отправке письма подтверждения: {str(e)}. Пожалуйста, обратитесь к администратору.",
+                )
+
+            return render(
+                request,
+                "registration/email_confirmation_sent_tsx.html",
+                {"email": user.email},
+            )
+        else:
+            # Собираем все ошибки валидации и отправляем как messages
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if field == "__all__":
+                        messages.error(request, error)
+                    else:
+                        field_label = (
+                            form.fields[field].label if field in form.fields else field
+                        )
+                        messages.error(request, f"{field_label}: {error}")
+    else:
+        form = UserRegisterTsxForm()
+
+    return render(request, "registration/register_tsx.html", {"form": form})
 
 
 def confirm_email(request, token):
@@ -96,7 +184,7 @@ def confirm_email(request, token):
     # Удаляем использованный токен
     token_obj.delete()
 
-    return render(request, "registration/email_confirmed.html")
+    return render(request, "registration/email_confirmed_tsx.html")
 
 
 def login_view(request, *args, **kwargs):
@@ -153,15 +241,18 @@ def resend_confirmation(request):
                     )
                     return render(
                         request,
-                        "registration/email_confirmation_sent.html",
+                        "registration/email_confirmation_sent_tsx.html",
                         {"email": user.email},
                     )
                 except Exception as e:
+                    import logging
+
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"Email sending error in resend_confirmation: {e}")
                     messages.error(
                         request,
                         "Ошибка при отправке письма подтверждения. Пожалуйста, обратитесь к администратору.",
                     )
-                    print(f"Email sending error: {e}")
 
             except User.DoesNotExist:
                 # Не сообщаем, что пользователь не найден (безопасность)
@@ -174,7 +265,7 @@ def resend_confirmation(request):
     else:
         form = ResendConfirmationForm()
 
-    return render(request, "registration/resend_confirmation.html", {"form": form})
+    return render(request, "registration/resend_confirmation_tsx.html", {"form": form})
 
 
 def logout_view(request):

@@ -1,0 +1,322 @@
+/* Copy of index.css for TSX page (brand green overrides) */
+/* Original file copied to avoid editing originals — modifications below adjust selected state to brand green */
+
+/* ========================================
+   (Truncated copy) — We'll keep the original styles and only override the selected rule for the TSX copy
+   ======================================== */
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-down { animation: slide-down 0.3s ease-out; }
+
+/* ... keep other rules as in original (omitted for brevity) ... */
+
+.point-item {
+  border-left: 3px solid transparent;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+  padding: 1rem; /* p-4 */
+  background-color: rgba(255,255,255,0.8); /* bg-white/80 */
+  border: 1px solid rgba(226,232,240,0.9); /* slate-200/90 */
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 0 1px 2px rgba(2,6,23,0.04); /* subtle */
+}
+
+/* Override: use React brand green for selected state */
+.point-item.selected {
+  background-color: rgba(86, 192, 43, 0.12); /* brand green translucent */
+  border-left-color: #56C02B; /* brand green */
+}
+
+.point-item:hover { 
+  background-color: rgba(255,255,255,0.92);
+  box-shadow: 0 10px 30px rgba(2,6,23,0.08); /* stronger hover shadow */
+  transform: translateY(-2px);
+}
+
+/* Emphasize title color on hover like React (brand green-dark) */
+.point-item h3, .point-item .title {
+  color: #111827; /* slate-900 */
+  transition: color 0.12s ease;
+}
+.point-item:hover h3, .point-item:hover .title {
+  color: #4F8B3C; /* brand green-dark */
+}
+
+/* Match React's `group:hover .group-hover:text-brand-green-dark` utility */
+.group:hover .group-hover\:text-brand-green-dark {
+  --tw-text-opacity: 1;
+  color: rgba(79, 139, 60, var(--tw-text-opacity, 1));
+}
+
+/* Support focus-visible variant too */
+.group:focus .group-hover\:text-brand-green-dark,
+.group:focus-visible .group-hover\:text-brand-green-dark {
+  --tw-text-opacity: 1;
+  color: rgba(79, 139, 60, var(--tw-text-opacity, 1));
+}
+
+/* Ensure Tailwind-style ring utilities use the brand green on hover/focus for TSX page */
+.point-item:hover, .point-item:focus {
+  --tw-ring-color: rgba(86,192,43,0.24);
+  --tw-ring-offset-color: transparent;
+  box-shadow: 0 10px 30px rgba(2,6,23,0.08), 0 0 0 4px rgba(86,192,43,0.06);
+}
+
+/* Focus: make keyboard focus visible with brand-green ring */
+.point-item:focus {
+  outline: none;
+  box-shadow: 0 10px 30px rgba(2,6,23,0.08), 0 0 0 4px rgba(86,192,43,0.12);
+}
+
+/* Sidebar category buttons: prevent long names from wrapping to two lines
+   and keep buttons compact similar to React app */
+.category-filter {
+  min-width: 0; /* allow child to shrink for ellipsis */
+}
+.category-filter > span:last-child {
+  display: inline-block;
+  /* allow slightly longer names by default on TSX page; keep an upper limit */
+  max-width: 16rem; /* increased from 14rem */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* On tablet and smaller screens allow the same wider limit since layout
+   often provides enough horizontal space for category labels. */
+@media (max-width: 1024px) {
+  .category-filter > span:last-child { max-width: 16rem; }
+}
+
+/* On narrow phones keep a reasonable limit but slightly larger than before */
+@media (max-width: 640px) {
+  .category-filter > span:last-child { max-width: 13.5rem; }
+}
+
+/* Grid layout for categories: two columns on desktop, single column on small screens */
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .categories-grid { grid-template-columns: 1fr; }
+}
+
+/* Ensure category button contents align nicely inside grid cells */
+.categories-grid .category-filter {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.375rem; padding-bottom: 0.375rem; /* match py-1.5 */
+  justify-content: flex-start;
+}
+
+/* Mobile sidebar (slide-up drawer) */
+.mobile-sidebar { display: block; }
+
+@media (max-width: 1024px) {
+  .mobile-sidebar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    height: 100vh;
+    max-height: 100vh;
+    margin: 0;
+    border-radius: 0; /* full height — no rounded top */
+    transform: translateY(100%);
+    transition: transform 250ms ease;
+    z-index: 99999; /* ensure it's above other UI */
+    overflow: visible;
+    display: block;
+    width: 100%;
+    pointer-events: auto;
+  }
+  .mobile-sidebar.open { transform: translateY(0%); }
+  /* overlay should be above most page UI but below the drawer */
+  #mobile-sidebar-overlay { display: block; z-index: 99990; pointer-events: auto; }
+  #mobile-sidebar-overlay.hidden { display: none; }
+}
+
+/* Make drawer contents scrollable and use native momentum scrolling */
+.mobile-sidebar, .mobile-sidebar.open {
+  -webkit-overflow-scrolling: touch;
+}
+.mobile-sidebar .overflow-y-auto, .mobile-sidebar #points-list {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* On mobile when open make the drawer background fully opaque (override bg-white/60) */
+@media (max-width: 1024px) {
+  .mobile-sidebar.open > .bg-white\/60 {
+    background-color: #ffffff !important;
+  }
+}
+
+/* Hover effect for mobile sidebar close button (small X in header) */
+#sidebar-close-mobile {
+  transition: background-color 160ms ease, color 160ms ease, transform 120ms ease;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+#sidebar-close-mobile:hover {
+  background-color: rgba(241,245,249,0.9); /* slate-100 */
+  color: #111827; /* slate-900 */
+  transform: scale(1.05);
+}
+#sidebar-close-mobile:active { transform: scale(0.98); }
+#sidebar-close-mobile:focus {
+  outline: none;
+  box-shadow: 0 0 0 6px rgba(86,192,43,0.08);
+}
+
+/* Stronger, more specific selectors to ensure hover applies inside mobile sidebar */
+.mobile-sidebar #sidebar-close-mobile:hover {
+  background-color: rgba(241,245,249,0.95) !important;
+  color: #111827 !important;
+  transform: scale(1.06) !important;
+}
+.mobile-sidebar #sidebar-close-mobile:focus {
+  box-shadow: 0 0 0 6px rgba(86,192,43,0.12) !important;
+}
+
+/* Ensure the color dot remains a perfect circle and does not stretch
+   when the category name is truncated or when flexbox constraints apply. */
+.categories-grid .category-filter .category-color-dot {
+  flex: 0 0 0.75rem; /* don't grow or shrink, fixed size */
+  width: 0.75rem; /* 12px */
+  height: 0.75rem;
+  min-width: 0.75rem;
+  min-height: 0.75rem;
+  border-radius: 9999px; /* full circle */
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* If Tailwind's generic hover:ring-2 rule computes box-shadow from variables,
+   the above --tw-ring-color will cause the ring to render green instead of blue. */
+
+/* Remove focus ring for modal close button to match React app (no blue ring) */
+#nko-modal-close:focus, #nko-modal-close:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-color: transparent !important;
+}
+
+/* Remove browser default focus rings on top-right action buttons.
+   For visual simplicity we remove the colored ring entirely.
+   (Accessible focus can still be provided via other UI affordances.) */
+#add-edit-ngo:focus, #add-edit-ngo:focus-visible,
+#user-menu-toggle:focus, #user-menu-toggle:focus-visible,
+#login-btn:focus, #login-btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-color: transparent !important;
+}
+
+/* Also remove any persistent outline on the inner svg/icons when focused */
+#add-edit-ngo svg, #user-menu-toggle svg, #login-btn svg {
+  outline: none;
+}
+
+/* Theme toggle button icons visibility */
+#theme-toggle .icon-sun { display: inline-block; }
+#theme-toggle .icon-moon { display: none; }
+.dark #theme-toggle .icon-sun { display: none; }
+.dark #theme-toggle .icon-moon { display: inline-block; }
+
+/* Theme toggle button base styling to match header buttons */
+#theme-toggle {
+  background-clip: padding-box;
+}
+
+/* Tailwind-style focus utilities (copied from React app) */
+/* .focus\:ring-brand-green:focus */
+.focus\:ring-brand-green:focus, .focus\:ring-brand-green:focus-visible {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgba(86, 192, 43, var(--tw-ring-opacity, 1));
+}
+
+/* .focus\:ring-2:focus - ring shadow generation */
+.focus\:ring-2:focus, .focus\:ring-2:focus-visible {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), 0 0 0 #0000;
+}
+
+/* .focus\:border-brand-green:focus */
+.focus\:border-brand-green:focus, .focus\:border-brand-green:focus-visible {
+  --tw-border-opacity: 1;
+  border-color: rgba(86, 192, 43, var(--tw-border-opacity, 1));
+}
+
+/* Autocomplete suggestions for address fields */
+.address-suggest-container {
+  position: fixed;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 2147483647; /* ensure it's above map layers and overlays */
+  background: var(--autocomplete-bg, #ffffff);
+  border: 1px solid rgba(15, 23, 42, 0.06); /* subtle border */
+  border-radius: 0.5rem;
+  box-shadow: 0 6px 24px rgba(2,6,23,0.08);
+  max-height: 18rem; /* limit height to avoid breaking layout */
+  overflow: auto;
+  display: none; /* shown by script when suggestions available */
+  min-width: 220px;
+  width: auto;
+  box-sizing: border-box;
+}
+
+.address-suggest-container .suggest-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(15,23,42,0.04);
+  background: transparent;
+  transition: background-color 120ms ease, color 120ms ease;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.address-suggest-container .suggest-item:last-child {
+  border-bottom: none;
+}
+
+.address-suggest-container .suggest-item:hover,
+.address-suggest-container .suggest-item:focus {
+  background: rgba(86,192,43,0.06);
+  color: #0b3a1a;
+  outline: none;
+}
+
+.address-suggest-container .suggest-item .small {
+  display: block;
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin-top: 0.15rem;
+}
+
+/* Make sure long suggestion text doesn't wrap and push layout — allow graceful truncation */
+.address-suggest-container .suggest-item div {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* For small screens, allow the suggestions to expand the full width of the input */
+@media (max-width: 640px) {
+  .address-suggest-container { left: 0; right: 0; width: 100%; min-width: 0; }
+}

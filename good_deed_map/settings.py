@@ -149,6 +149,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
@@ -189,6 +190,10 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 )
 
 YANDEX_MAPS_API_KEY = os.environ.get("YANDEX_MAPS_API_KEY", "")
+
+# Site URL for email links (should be set in production)
+SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000")
+
 # Captcha settings
 CAPTCHA_IMAGE_SIZE = (150, 50)
 CAPTCHA_FONT_SIZE = 30

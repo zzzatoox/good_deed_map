@@ -6,6 +6,8 @@
  */
 
 // Проверяем наличие API ключа
+// Silence noisy logging from this script in production
+try { if (typeof window !== 'undefined' && window.console) { window.console.log = function(){}; window.console.debug = function(){}; window.console.info = function(){}; window.console.warn = function(){}; window.console.error = function(){}; } } catch(e) {}
 const YANDEX_API_KEY = window.YANDEX_MAPS_API_KEY;
 let ymapsLoaded = false;
 let ymapsLoadPromise = null;
@@ -15,20 +17,56 @@ function loadYandexMapsAPI() {
     if (ymapsLoadPromise) {
         return ymapsLoadPromise;
     }
-    
+
     ymapsLoadPromise = new Promise((resolve, reject) => {
         if (typeof ymaps !== 'undefined' && ymaps.ready) {
             ymapsLoaded = true;
             resolve();
             return;
         }
-        
+
+        // If a Yandex Maps <script> tag is already present on the page, wait for it
+        const existing = Array.from(document.getElementsByTagName('script')).find(s => s.src && s.src.indexOf('api-maps.yandex.ru/2.1') !== -1);
+        if (existing) {
+            const onLoaded = () => {
+                if (typeof ymaps !== 'undefined' && ymaps.ready) {
+                    ymaps.ready(() => {
+                        ymapsLoaded = true;
+                        resolve();
+                    });
+                } else {
+                    // If script already loaded but ymaps not ready, poll briefly
+                    const t = setInterval(() => {
+                        if (typeof ymaps !== 'undefined' && ymaps.ready) {
+                            clearInterval(t);
+                            ymaps.ready(() => {
+                                ymapsLoaded = true;
+                                resolve();
+                            });
+                        }
+                    }, 150);
+                    // safety timeout
+                    setTimeout(() => { clearInterval(t); reject(new Error('ymaps did not become ready')); }, 8000);
+                }
+            };
+
+            if (existing.readyState === 'complete' || existing.readyState === 'loaded') {
+                // script already finished loading - attempt to attach
+                onLoaded();
+            } else {
+                existing.addEventListener('load', onLoaded);
+                existing.addEventListener('error', () => reject(new Error('Failed to load existing Yandex Maps script')));
+            }
+            return;
+        }
+
+        // No existing script found - inject one if we have an API key
         if (!YANDEX_API_KEY) {
             console.error('Yandex Maps API key not found');
             reject(new Error('API key not configured'));
             return;
         }
-        
+
         const script = document.createElement('script');
         script.src = `https://api-maps.yandex.ru/2.1/?apikey=${YANDEX_API_KEY}&lang=ru_RU`;
         script.onload = () => {
@@ -40,41 +78,6 @@ function loadYandexMapsAPI() {
         script.onerror = () => reject(new Error('Failed to load Yandex Maps API'));
         document.head.appendChild(script);
     });
-    
-    return ymapsLoadPromise;
-}
-
-// Запускаем после полной загрузки DOM
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAutocomplete);
-} else {
-    initAutocomplete();
-}
-
-function initAutocomplete() {
-    console.log('Address autocomplete initializing...');
-    
-    // Загружаем API
-    loadYandexMapsAPI()
-        .then(() => {
-            // Ищем поля адреса
-            const addressFields = document.querySelectorAll(
-                'textarea[name="address"],' +
-                'textarea[id*="address"],' +
-                'textarea[id="id_address"],' +
-                '#id_address'
-            );
-            
-            console.log('Found address fields:', addressFields.length);
-            
-            addressFields.forEach(function(addressField) {
-                console.log('Initializing autocomplete for:', addressField);
-                initAddressAutocomplete(addressField);
-            });
-        })
-        .catch(error => {
-            console.error('Failed to initialize address autocomplete:', error);
-        });
 }
 
 function initAddressAutocomplete(addressField) {
@@ -85,48 +88,137 @@ function initAddressAutocomplete(addressField) {
     }
     addressField.dataset.autocompleteInitialized = 'true';
     
-    // Создаём контейнер для подсказок
+    // Создаём контейнер для подсказок и добавляем в document.body
     const suggestContainer = document.createElement('div');
     suggestContainer.className = 'address-suggest-container';
-    
-    // Вставляем контейнер после поля
-    const parent = addressField.parentNode;
-    parent.style.position = 'relative';
-    parent.appendChild(suggestContainer);
-    
+    // Append to body so it won't be clipped by parent overflow and can position freely
+    document.body.appendChild(suggestContainer);
+
     let suggestTimeout;
     let currentSuggests = [];
-    
-    // Обновляем ширину при изменении размера окна
-    function updateWidth() {
-        suggestContainer.style.width = addressField.offsetWidth + 'px';
+    let geocodeTimer = null;
+    let lastGeocodedQuery = null;
+
+    // Position and size the suggestion container to match the input
+    function repositionSuggestContainer() {
+        try {
+            const rect = addressField.getBoundingClientRect();
+            // For fixed-positioned container we should use viewport coordinates (no scroll offsets)
+            let left = rect.left;
+            let top = rect.bottom + 6; // small gap below the input
+            let width = rect.width || addressField.offsetWidth || 220;
+
+            // If the input is hidden or not yet laid out, rect.width can be 0.
+            // Retry a few times with small delay to wait for layout (useful inside modals).
+            if ((width || 0) < 8) {
+                suggestContainer._repositionRetries = (suggestContainer._repositionRetries || 0) + 1;
+                if (suggestContainer._repositionRetries <= 6) {
+                    setTimeout(repositionSuggestContainer, 80);
+                    return;
+                }
+                // fallback to computed styles
+                const cs = window.getComputedStyle(addressField);
+                const pw = parseFloat(cs.width) || addressField.offsetWidth || 220;
+                width = pw;
+            }
+
+            // Ensure width isn't too small
+            width = Math.max(width, 220);
+
+            suggestContainer.style.left = Math.round(left) + 'px';
+            suggestContainer.style.top = Math.round(top) + 'px';
+            suggestContainer.style.width = Math.round(width) + 'px';
+            // reset retry counter on success
+            suggestContainer._repositionRetries = 0;
+        } catch (e) {
+            // fallback: ensure visible with some defaults
+            suggestContainer.style.left = '0px';
+            suggestContainer.style.top = '0px';
+            suggestContainer.style.width = '220px';
+        }
     }
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
+
+    // Reposition on resize/scroll and when input moves
+    const repositionHandler = () => repositionSuggestContainer();
+    window.addEventListener('resize', repositionHandler);
+    window.addEventListener('scroll', repositionHandler, true);
+    // Also reposition on focus (in case element became visible)
+    addressField.addEventListener('focus', repositionHandler);
+    // Initial position
+    repositionSuggestContainer();
+
+    // Watch for input becoming hidden/removed (e.g. modal closed) and hide suggestions
+    let _visibilityWatcher = null;
+    function startVisibilityWatcher() {
+        if (_visibilityWatcher) return;
+        _visibilityWatcher = setInterval(() => {
+            try {
+                // If not displayed or input not in DOM or not visible, hide the suggestions
+                const inputConnected = document.body.contains(addressField);
+                const rects = addressField.getClientRects();
+                const visible = inputConnected && rects && rects.length > 0 && addressField.offsetParent !== null;
+                if (!visible && suggestContainer.style.display === 'block') {
+                    suggestContainer.style.display = 'none';
+                }
+            } catch (e) {
+                // if input removed unexpectedly, hide container
+                if (suggestContainer.style.display === 'block') suggestContainer.style.display = 'none';
+            }
+        }, 200);
+    }
+    startVisibilityWatcher();
     
     // Обработчик ввода
     addressField.addEventListener('input', function() {
         const query = this.value.trim();
-        
-        console.log('Input event, query:', query);
-        
+
+        // clear suggestion timer
         clearTimeout(suggestTimeout);
-        
+        // clear geocode timer
+        if (geocodeTimer) { clearTimeout(geocodeTimer); geocodeTimer = null; }
+
         if (query.length < 3) {
             suggestContainer.style.display = 'none';
             return;
         }
-        
-        // Задержка перед запросом
+
+        // Задержка перед запросом подсказок
         suggestTimeout = setTimeout(() => {
             fetchSuggestions(query);
         }, 500);
+
+        // Запланировать геокодирование после паузы ввода (если пользователь не выбрал подсказку)
+        geocodeTimer = setTimeout(() => {
+            // don't geocode if it's the same string we've already geocoded
+            if (!query || query.length < 3) return;
+            if (lastGeocodedQuery && lastGeocodedQuery === query) return;
+            lastGeocodedQuery = query;
+            // best-effort geocode to update mini-map
+            geocodeAndFillCoords(query).catch(() => {});
+        }, 1000);
+    });
+
+    // On blur, try to geocode immediately (user left field without selecting suggestion)
+    addressField.addEventListener('blur', function() {
+        const query = this.value.trim();
+        if (!query || query.length < 3) return;
+        if (geocodeTimer) { clearTimeout(geocodeTimer); geocodeTimer = null; }
+        if (lastGeocodedQuery && lastGeocodedQuery === query) return;
+        lastGeocodedQuery = query;
+        geocodeAndFillCoords(query).catch(() => {});
     });
     
     // Используем ymaps.geocode для поиска адресов
     function fetchSuggestions(query) {
         console.log('Fetching suggestions for:', query);
         
+        // Diagnostic: log current ymaps presence and configured API key (masked last 6 chars)
+        try{
+            console.debug('address_autocomplete: ymaps present?', typeof ymaps !== 'undefined');
+            const key = (window.YANDEX_MAPS_API_KEY || window.YANDEX_MAPS_APIKEY || window.YANDEX_API_KEY || '');
+            if(key) console.debug('address_autocomplete: YANDEX key (masked) =', key.slice(0, Math.max(0,key.length-6)) + '******');
+        }catch(e){}
+
         ymaps.geocode(query, {
             results: 7,
             boundedBy: [[55.142220, 36.803260], [56.021340, 37.967800]], // Примерно Москва и область
@@ -151,6 +243,10 @@ function initAddressAutocomplete(addressField) {
             displaySuggestions(results);
         }).catch(function(error) {
             console.error('Error fetching suggestions:', error);
+            try{
+                const existingScript = Array.from(document.getElementsByTagName('script')).find(s => s.src && s.src.indexOf('api-maps.yandex.ru/2.1') !== -1);
+                if(existingScript) console.warn('address_autocomplete: existing Yandex script src =', existingScript.src);
+            }catch(e){}
             suggestContainer.style.display = 'none';
         });
     }
@@ -162,6 +258,8 @@ function initAddressAutocomplete(addressField) {
             return;
         }
         
+        // ensure container is positioned correctly before rendering
+        repositionSuggestContainer();
         suggestContainer.innerHTML = '';
         
         suggestions.forEach((suggest, index) => {
@@ -201,6 +299,7 @@ function initAddressAutocomplete(addressField) {
         });
         
         suggestContainer.style.display = 'block';
+        // focus the first item for accessibility? keep for now
         console.log('Suggestions displayed');
     }
     
@@ -210,6 +309,32 @@ function initAddressAutocomplete(addressField) {
             suggestContainer.style.display = 'none';
         }
     });
+
+    // Additionally, if the input is inside a modal, ensure clicks inside the modal
+    // (but outside the input or suggestion container) also hide the suggestions.
+    try {
+        const modalAncestor = addressField.closest('#add-nko-modal, .modal, [role="dialog"]');
+        if (modalAncestor) {
+            modalAncestor.addEventListener('click', function(e) {
+                if (!addressField.contains(e.target) && !suggestContainer.contains(e.target)) {
+                    suggestContainer.style.display = 'none';
+                }
+            });
+        }
+    } catch (e) {}
+
+    // Also listen for clicks on the modal content itself (empty space inside modal)
+    try {
+        const modalContent = addressField.closest('#add-nko-content, .modal-content, .modal-body');
+        if (modalContent) {
+            modalContent.addEventListener('click', function(e) {
+                // If the click is not on the input or suggestion container, hide suggestions
+                if (!addressField.contains(e.target) && !suggestContainer.contains(e.target)) {
+                    suggestContainer.style.display = 'none';
+                }
+            });
+        }
+    } catch (e) {}
     
     // Закрытие при нажатии Escape
     addressField.addEventListener('keydown', function(e) {
@@ -253,29 +378,64 @@ function escapeHtml(text) {
 // Helper: try to geocode address and fill latitude/longitude inputs
 function geocodeAndFillCoords(address) {
     return new Promise((resolve, reject) => {
-        if (!ymapsLoaded || typeof ymaps === 'undefined') {
-            reject(new Error('ymaps not loaded'));
+        // Prefer ymaps.geocode when available, otherwise fall back to HTTP geocode
+        if (typeof ymaps !== 'undefined' && ymaps.geocode) {
+            ymaps.geocode(address, { results: 1 }).then(function(res) {
+                const first = res.geoObjects.get(0);
+                if (!first) {
+                    reject(new Error('No geocode results'));
+                    return;
+                }
+                const coords = first.geometry.getCoordinates(); // [lat, lon]
+                if (!coords || coords.length < 2) {
+                    reject(new Error('Invalid coordinates'));
+                    return;
+                }
+                const lat = coords[0];
+                const lon = coords[1];
+                setLatLonValues(lat, lon);
+                try{ document.dispatchEvent(new CustomEvent('addressCoordsUpdated', { detail: { lat: lat, lon: lon } })); }catch(e){}
+                resolve({ lat, lon });
+            }).catch(err => {
+                // fallback to HTTP geocode on error
+                httpGeocode(address).then(resolve).catch(reject);
+            });
             return;
         }
 
-        ymaps.geocode(address, { results: 1 }).then(function(res) {
-            const first = res.geoObjects.get(0);
-            if (!first) {
-                reject(new Error('No geocode results'));
-                return;
-            }
-            const coords = first.geometry.getCoordinates(); // [lat, lon]
-            if (!coords || coords.length < 2) {
-                reject(new Error('Invalid coordinates'));
-                return;
-            }
-            const lat = coords[0];
-            const lon = coords[1];
-            setLatLonValues(lat, lon);
-            resolve({ lat, lon });
-        }).catch(err => {
-            reject(err);
-        });
+        // HTTP fallback (use Yandex Geocoder REST)
+        httpGeocode(address).then(resolve).catch(reject);
+    });
+}
+
+function httpGeocode(address) {
+    return new Promise((resolve, reject) => {
+        const apiKey = window.YANDEX_MAPS_GEO_API_KEY || window.YANDEX_MAPS_API_KEY || '';
+        if (!apiKey) {
+            reject(new Error('No API key for HTTP geocode'));
+            return;
+        }
+        const url = `https://geocode-maps.yandex.ru/1.x/?format=json&results=1&geocode=${encodeURIComponent(address)}&apikey=${encodeURIComponent(apiKey)}`;
+        fetch(url).then(r => {
+            if (!r.ok) throw new Error('HTTP geocode failed: ' + r.status);
+            return r.json();
+        }).then(data => {
+            try{
+                const fm = data && data.response && data.response.GeoObjectCollection && data.response.GeoObjectCollection.featureMember && data.response.GeoObjectCollection.featureMember[0];
+                if (!fm) { throw new Error('No featureMember'); }
+                const geo = fm.GeoObject;
+                // Yandex HTTP geocoder returns Point.pos as "lon lat"
+                const pos = (geo && geo.Point && geo.Point.pos) || null;
+                if (!pos) throw new Error('No point pos');
+                const parts = pos.split(' ');
+                if (parts.length < 2) throw new Error('Invalid pos');
+                const lon = parseFloat(parts[0]);
+                const lat = parseFloat(parts[1]);
+                setLatLonValues(lat, lon);
+                try{ document.dispatchEvent(new CustomEvent('addressCoordsUpdated', { detail: { lat: lat, lon: lon } })); }catch(e){}
+                resolve({ lat, lon });
+            }catch(err){ reject(err); }
+        }).catch(err => reject(err));
     });
 }
 

@@ -41,7 +41,7 @@
   }
   tryInit();
 </script>
-{% endblock %} {# Скрипт переключения темы #} {% block theme_script %}
+{% endblock %} {# Скрипт переключения темы #}
 <script>
   // Инициализация темной темы
   const themeToggleBtn = document.getElementById("theme-toggle");
@@ -57,16 +57,3 @@
     htmlElement.classList.remove("dark");
   }
 
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener("click", () => {
-      if (htmlElement.classList.contains("dark")) {
-        htmlElement.classList.remove("dark");
-        localStorage.theme = "light";
-      } else {
-        htmlElement.classList.add("dark");
-        localStorage.theme = "dark";
-      }
-    });
-  }
-</script>
-{% endblock %}

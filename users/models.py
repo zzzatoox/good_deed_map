@@ -18,6 +18,11 @@ class Profile(models.Model):
         default=False, verbose_name="Email подтвержден"
     )
     patronymic = models.CharField(max_length=150, blank=True, verbose_name="Отчество")
+    receive_nko_notifications = models.BooleanField(
+        default=False,
+        verbose_name="Получать уведомления о новых заявках НКО",
+        help_text="Получать email-уведомления о новых заявках на создание/изменение НКО (для администраторов)",
+    )
 
     class Meta:
         verbose_name = "Профиль"

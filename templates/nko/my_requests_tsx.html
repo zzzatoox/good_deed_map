@@ -1,0 +1,142 @@
+{% extends 'base_tsx.html' %}
+{% load static tz %}
+
+{% block title %}Мои заявки - Карта добрых дел{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/index_tsx.css' %}" rel="stylesheet" />
+<style>
+  @keyframes fade-in-scale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .animate-fade-in-scale { animation: fade-in-scale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+</style>
+{% endblock %}
+
+{% block body_class %}overflow-hidden{% endblock %}
+
+{% block content %}
+<div class="relative h-screen w-screen flex items-center justify-center p-4 overflow-hidden">
+  <!-- Background Map -->
+  <div class="absolute inset-0 bg-slate-200 dark:bg-slate-900">
+    <!-- Decorative pattern -->
+    <div class="absolute inset-0 w-full h-full text-slate-400/30 dark:text-slate-700/80">
+      <svg viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid slice" class="w-full h-full">
+        <defs>
+          <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+            <path d="M 50 0 L 0 0 0 50" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.2"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)"/>
+        <!-- Decorative circles -->
+        <circle cx="200" cy="150" r="100" fill="currentColor" opacity="0.08"/>
+        <circle cx="800" cy="350" r="120" fill="currentColor" opacity="0.08"/>
+        <circle cx="500" cy="250" r="80" fill="currentColor" opacity="0.08"/>
+        <circle cx="100" cy="400" r="60" fill="currentColor" opacity="0.06"/>
+        <circle cx="900" cy="100" r="90" fill="currentColor" opacity="0.06"/>
+      </svg>
+    </div>
+    <div class="absolute inset-0 bg-gradient-to-t from-slate-50/50 to-transparent dark:from-slate-900/50"></div>
+  </div>
+
+  <!-- Applications Panel (matches React styling) -->
+  <div class="relative z-10 w-full max-w-3xl bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xl rounded-2xl max-h-[90vh] flex flex-col transform transition-all duration-300 animate-fade-in-scale">
+    <div class="p-6 border-b border-slate-200/80 dark:border-slate-700/80 flex justify-between items-center">
+      <h1 class="text-3xl font-bold text-slate-800 dark:text-slate-100">Мои заявки</h1>
+      <a href="{% url 'index' %}" class="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-green-dark dark:hover:text-brand-green transition-colors">&larr; Вернуться на карту</a>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6 space-y-4">
+      {% if approved_versions or pending_versions or rejected_versions %}
+        {% comment %} Approved versions {% endcomment %}
+        {% for version in approved_versions %}
+          <div class="bg-white/80 dark:bg-slate-800/80 border border-slate-200/90 dark:border-slate-700/90 rounded-xl p-5 shadow-sm">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">{{ version.name }}{% if version.new_owner %} (Передача прав){% endif %}</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Дата подачи: {{ version.created_at|localtime|date:"d.m.Y" }}</p>
+                {% if version.is_current %}
+                  <p class="text-sm text-green-600 dark:text-green-400 mt-1">✓ Текущая активная версия</p>
+                {% endif %}
+              </div>
+              <div class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200 flex-shrink-0">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Одобрено</span>
+              </div>
+            </div>
+            {% if version.is_current %}
+              <div class="mt-4 pt-4 border-t border-slate-200/80 dark:border-slate-700/80 flex justify-end">
+                <button 
+                  onclick="openTransferModal()"
+                  {% if has_pending_transfer %}disabled{% endif %}
+                  class="flex items-center gap-2 text-sm font-semibold text-brand-green hover:text-brand-green-dark dark:text-brand-green dark:hover:text-brand-turquoise transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 7h12M8 7l4-4M8 7l4 4m0 10H4m8 0l-4-4m4 4l-4 4"/>
+                  </svg>
+                  <span>{% if has_pending_transfer %}Передача на модерации{% else %}Передать права{% endif %}</span>
+                </button>
+              </div>
+            {% endif %}
+            {% if has_pending_transfer %}
+              <div class="mt-4 pt-4 border-t border-slate-200/80 dark:border-slate-700/80 flex justify-end">
+                <span class="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6h4.5"/>
+                  </svg>
+                  <span>Передача прав на модерации</span>
+                </span>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        {% comment %} Pending versions {% endcomment %}
+        {% for version in pending_versions %}
+          <div class="bg-white/80 dark:bg-slate-800/80 border border-slate-200/90 dark:border-slate-700/90 rounded-xl p-5 shadow-sm">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">{{ version.nko.name }}{% if version.new_owner %} (Передача прав){% endif %}</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Дата подачи: {{ version.created_at|localtime|date:"d.m.Y" }}</p>
+              </div>
+              <div class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 flex-shrink-0">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="1.5"/><path d="M12 6v6h4.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>На модерации</span>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+
+        {% comment %} Rejected versions {% endcomment %}
+        {% for version in rejected_versions %}
+          <div class="bg-white/80 dark:bg-slate-800/80 border border-slate-200/90 dark:border-slate-700/90 rounded-xl p-5 shadow-sm">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">{{ version.nko.name }}{% if version.new_owner %} (Передача прав){% endif %}</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Дата подачи: {{ version.created_at|localtime|date:"d.m.Y" }}</p>
+              </div>
+              <div class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200 flex-shrink-0">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="1.5"/><path d="M12 8v4M12 16h.01" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Отклонено</span>
+              </div>
+            </div>
+            {% if version.rejection_reason %}
+              <div class="mt-4 pt-4 border-t border-red-200/80 dark:border-red-500/20">
+                <p class="text-sm font-semibold text-red-900 dark:text-red-200">Причина отказа:</p>
+                <p class="text-sm text-red-800 dark:text-red-300 mt-1">{{ version.rejection_reason }}</p>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="text-center py-20">
+          <p class="text-slate-500 dark:text-slate-400 font-semibold text-lg">У вас пока нет заявок.</p>
+          <p class="text-sm text-slate-400 dark:text-slate-500 mt-2">После добавления НКО его статус появится здесь.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% include "nko/transfer_ownership_modal_tsx.html" %}
+
+{% endblock %}
+{% comment %} Theme handling is centralized in `base_tsx.html`. Keep that canonical implementation there. {% endcomment %}

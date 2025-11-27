@@ -1,0 +1,22 @@
+{% load static %}
+<!-- My Applications modal (injected and populated via AJAX) -->
+<div id="my-apps-overlay" class="hidden fixed inset-0 bg-black/40 z-50"></div>
+
+<div id="my-apps-modal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+  <!-- Background similar to React's page: subtle world-map placeholder + gradient -->
+  <div class="absolute inset-0 bg-slate-200 dark:bg-slate-900" aria-hidden="true">
+    <div class="absolute inset-0 bg-gradient-to-t from-slate-50/50 to-transparent dark:from-slate-900/50"></div>
+  </div>
+
+  <!-- Injected panel will be placed here. It should match React's `Applications Panel` classes. -->
+  <div id="my-apps-body" class="w-full max-w-3xl max-h-[90vh] overflow-hidden"></div>
+
+  <button id="my-apps-close" class="absolute top-6 right-6 z-60 text-slate-600 dark:text-slate-300 px-3 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700">✕</button>
+</div>
+
+<style>
+  @keyframes fade-in-scale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .animate-fade-in-scale { animation: fade-in-scale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  /* ensure overlay blur only on supported platforms */
+  #my-apps-overlay { backdrop-filter: blur(2px); }
+</style>

@@ -5,3 +5,5 @@ migrations
 staticfiles
 media
 *.sqlite3
+map-of-good-deeds
+node_modules
