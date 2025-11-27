@@ -205,6 +205,13 @@
 
   <!-- Map container -->
   <div id="map" class="map-container relative flex-1 min-h-[400px]">
+    <!-- Map loading indicator -->
+    <div id="map-loader" class="absolute inset-0 flex items-center justify-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm z-50">
+      <div class="text-center">
+        <div class="inline-block w-12 h-12 border-4 border-brand-green border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p class="text-slate-600 dark:text-slate-400 font-medium">Загрузка карты...</p>
+      </div>
+    </div>
 
     <!-- Top-right actions (login / add/edit NGO / layout toggle) -->
     <div class="absolute top-4 right-4 z-30">
@@ -285,16 +292,31 @@
   import { fetchAndInit } from '{% static "js/main_tsx.js" %}';
 
   let attempts = 0;
-  const maxAttempts = 50; // 10 seconds max
+  const maxAttempts = 25; // 5 seconds max (reduced from 10)
+  const mapLoader = document.getElementById('map-loader');
+
+  function hideLoader() {
+    if (mapLoader) {
+      mapLoader.style.opacity = '0';
+      mapLoader.style.transition = 'opacity 0.3s ease-out';
+      setTimeout(() => mapLoader.remove(), 300);
+    }
+  }
 
   function tryInit() {
     attempts++;
     if (typeof ymaps !== 'undefined') {
-      fetchAndInit();
+      fetchAndInit().then(() => {
+        hideLoader();
+      }).catch((e) => {
+        console.error('Failed to initialize:', e);
+        hideLoader();
+      });
     } else if (attempts < maxAttempts) {
       setTimeout(tryInit, 200);
     } else {
-      console.warn('Yandex Maps failed to load after 10 seconds, continuing without map');
+      console.warn('Yandex Maps failed to load after 5 seconds, continuing without map');
+      hideLoader();
       // Try to initialize without map
       try {
         fetchAndInit();
@@ -303,6 +325,10 @@
       }
     }
   }
+  
+  // Show loader immediately
+  if (mapLoader) mapLoader.style.display = 'flex';
+  
   tryInit();
 </script>
 <script>
