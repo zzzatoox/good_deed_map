@@ -14,5 +14,13 @@ urlpatterns = [
         ),
         name="login",
     ),
+    path(
+        "login_tsx/",
+        auth_views.LoginView.as_view(
+            template_name="registration/login_tsx.html",
+            authentication_form=CustomAuthenticationForm,
+        ),
+        name="login_tsx",
+    ),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
 ]

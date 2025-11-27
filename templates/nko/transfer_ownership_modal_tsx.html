@@ -1,0 +1,174 @@
+<!-- Transfer Ownership Modal -->
+<div id="transferOwnershipModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+  <div class="!bg-white dark:!bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform transition-all duration-300 scale-95 opacity-0" onclick="event.stopPropagation();">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center flex-shrink-0">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Передача прав на НКО</h2>
+        <p class="text-slate-500 dark:text-slate-400">Запрос будет отправлен на модерацию.</p>
+      </div>
+      <button type="button" onclick="closeTransferModal()" class="p-2 -m-2 text-slate-500 dark:text-slate-400 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <form id="transferOwnershipForm" method="post" action="{% url 'transfer_ownership_tsx' %}" class="flex-1 overflow-y-auto p-6">
+      {% csrf_token %}
+      <div class="space-y-5">
+        <div>
+          <label for="new_owner_email" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email нового владельца</label>
+          <div class="relative">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 12a4 4 0 11-8 0 4 4 0 018 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9"/>
+            </svg>
+            <input
+              type="email"
+              name="new_owner_email"
+              id="new_owner_email"
+              class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-brand-green outline-none transition"
+              placeholder="new.owner@example.com"
+              required
+            />
+          </div>
+        </div>
+        <div>
+          <label for="transfer_reason" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Причина передачи</label>
+          <div class="relative">
+            <svg class="absolute left-3.5 top-4 w-5 h-5 text-slate-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            <textarea
+              name="transfer_reason"
+              id="transfer_reason"
+              rows="4"
+              class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-brand-green outline-none transition"
+              placeholder="Укажите краткую причину передачи прав владения..."
+              required
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="p-6 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center flex-shrink-0 bg-slate-50 dark:bg-slate-800 rounded-b-2xl">
+      <button
+        type="button"
+        onclick="closeTransferModal()"
+        class="px-6 py-2 rounded-lg font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-600 transition"
+      >
+        Отмена
+      </button>
+      <button
+        type="button"
+        onclick="submitTransferForm()"
+        id="submitTransferBtn"
+        disabled
+        class="px-6 py-2 rounded-lg font-semibold text-white bg-brand-green shadow-md hover:bg-brand-green-dark transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+        </svg>
+        <span>Отправить запрос на передачу</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes modal-open {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  .animate-modal-open {
+    animation: modal-open 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+</style>
+
+<script>
+  function updateSubmitButton() {
+    const email = document.getElementById('new_owner_email').value.trim();
+    const reason = document.getElementById('transfer_reason').value.trim();
+    const submitBtn = document.getElementById('submitTransferBtn');
+    
+    if (email && reason) {
+      submitBtn.disabled = false;
+    } else {
+      submitBtn.disabled = true;
+    }
+  }
+
+  function openTransferModal() {
+    const modal = document.getElementById('transferOwnershipModal');
+    const content = modal.querySelector('div[onclick]');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    
+    // Add input listeners
+    document.getElementById('new_owner_email').addEventListener('input', updateSubmitButton);
+    document.getElementById('transfer_reason').addEventListener('input', updateSubmitButton);
+    
+    // Initial check
+    updateSubmitButton();
+    
+    // Trigger animation
+    requestAnimationFrame(() => {
+      content.style.opacity = '1';
+      content.style.transform = 'scale(1)';
+    });
+  }
+
+  function closeTransferModal() {
+    const modal = document.getElementById('transferOwnershipModal');
+    const content = modal.querySelector('div[onclick]');
+    content.style.opacity = '0';
+    content.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+      // Reset form
+      document.getElementById('transferOwnershipForm').reset();
+      // Reset button state
+      document.getElementById('submitTransferBtn').disabled = true;
+    }, 200);
+  }
+
+  function submitTransferForm() {
+    const form = document.getElementById('transferOwnershipForm');
+    const email = document.getElementById('new_owner_email').value;
+    const reason = document.getElementById('transfer_reason').value;
+    
+    if (!email || !reason) {
+      alert('Пожалуйста, заполните все поля');
+      return;
+    }
+
+    const btn = document.getElementById('submitTransferBtn');
+    btn.disabled = true;
+    btn.querySelector('span').textContent = 'Отправка...';
+
+    form.submit();
+  }
+
+  // Close modal on backdrop click
+  document.getElementById('transferOwnershipModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeTransferModal();
+    }
+  });
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !document.getElementById('transferOwnershipModal').classList.contains('hidden')) {
+      closeTransferModal();
+    }
+  });
+</script>

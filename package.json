@@ -1,0 +1,14 @@
+{
+  "name": "good_deed_map-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "devDependencies": {
+    "tailwindcss": "^3.4.7",
+    "postcss": "^8.4.23",
+    "autoprefixer": "^10.4.14"
+  },
+  "scripts": {
+    "build:css": "tailwindcss -i ./assets/src/input.css -o ./static/css/tailwind.css --minify",
+    "watch:css": "tailwindcss -i ./assets/src/input.css -o ./static/css/tailwind.css --watch"
+  }
+}

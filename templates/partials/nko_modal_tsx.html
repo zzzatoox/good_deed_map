@@ -1,0 +1,68 @@
+{# Exact copy of React NgoModal.tsx structure and classes (adapted for template) #}
+<div id="nko-modal-overlay" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-20 transition-opacity duration-300" aria-hidden="true"></div>
+
+<div id="nko-modal" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-20 flex items-end sm:items-center sm:justify-center p-0 sm:p-4" role="dialog" aria-hidden="true">
+  <div id="nko-modal-content" class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-2xl h-full sm:h-auto sm:max-h-[90vh] flex flex-col transform transition-transform duration-300 scale-95 opacity-0 animate-fade-in-scale" onclick="event.stopPropagation();">
+
+    <div class="p-6 border-b border-slate-200 flex justify-between items-start">
+      <div class="flex items-start gap-5">
+        <div id="nko-modal-category-icon" class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 shadow-lg" style="display:none;">
+          <span id="nko-modal-category-icon-inner" class="text-white font-semibold text-lg"></span>
+        </div>
+
+        <div>
+          <h2 id="nko-modal-title" class="text-xl sm:text-3xl font-extrabold text-slate-800"></h2>
+          <p id="nko-modal-category-name" class="text-md sm:text-lg font-semibold text-brand-green-dark mt-1" style="display:none;"></p>
+        </div>
+      </div>
+
+      <button id="nko-modal-close" class="p-2 -m-2 text-slate-500 rounded-full hover:bg-slate-100 hover:text-slate-800 transition">
+        <!-- XMarkIcon -->
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <div class="p-6 overflow-y-auto">
+      <p id="nko-modal-description" class="text-slate-600 mb-6 text-base leading-relaxed"></p>
+
+      <!-- Summarize button removed; keep layout compact -->
+      <div style="height:0;margin:0;padding:0;" aria-hidden="true"></div>
+
+      <div class="space-y-4 text-base">
+         <div class="flex items-start gap-4 text-slate-700">
+            <!-- MapPinIcon -->
+            <svg class="w-6 h-6 mt-0.5 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
+            <div>
+              <span class="font-semibold text-slate-800">Адрес:</span> <span id="nko-modal-address"></span>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 text-slate-700">
+            <!-- PhoneIcon -->
+            <svg class="w-6 h-6 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.11-.21c1.21.49 2.53.76 3.88.76a1 1 0 011 1V20a1 1 0 01-1 1C10.07 21 3 13.93 3 4a1 1 0 011-1h2.5a1 1 0 011 1c0 1.35.26 2.67.76 3.88a1 1 0 01-.21 1.11l-2.43 2.8z" fill="currentColor"/></svg>
+            <div>
+              <span class="font-semibold text-slate-800">Телефон:</span>
+              <a id="nko-modal-phone" href="#" class="text-brand-green-dark hover:underline"></a>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 text-slate-700">
+            <!-- LinkIcon -->
+            <svg class="w-6 h-6 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            <div>
+              <span class="font-semibold text-slate-800">Сайт:</span>
+              <a id="nko-modal-website" href="#" target="_blank" rel="noopener noreferrer" class="text-brand-green-dark hover:underline"></a>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      @keyframes fade-in-scale {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .animate-fade-in-scale {
+        animation: fade-in-scale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+    </style>
+  </div>
+</div>

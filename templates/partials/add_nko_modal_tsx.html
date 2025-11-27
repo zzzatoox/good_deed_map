@@ -1,0 +1,376 @@
+{# TSX-inspired Add/Edit NKO modal (client-side multi-step form) #}
+
+<!-- Ensure the add/edit modal sits above sidebars and other UI layers -->
+<div id="add-nko-overlay" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300" aria-hidden="true" style="z-index:100200;"></div>
+
+<div id="add-nko-modal" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm flex items-end sm:items-center sm:justify-center p-0 sm:p-4" role="dialog" aria-hidden="true" style="z-index:100201;">
+  <div id="add-nko-content" class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-2xl h-full sm:h-auto sm:max-h-[90vh] flex flex-col transform transition-transform duration-300 scale-95 opacity-0 animate-fade-in-scale" onclick="event.stopPropagation();" style="z-index:100202;">
+    <form id="add-nko-form" method="post" action="/nko/add/" enctype="multipart/form-data" class="w-full flex flex-col h-full">
+      {% csrf_token %}
+      <div class="p-6 border-b border-slate-200 flex justify-between items-start">
+        <div>
+          <h2 id="add-nko-title" class="text-2xl font-extrabold text-slate-800">Добавить НКО</h2>
+          <p id="add-nko-sub" class="text-sm text-slate-500">Заполните данные об организации</p>
+        </div>
+        <button id="add-nko-close" type="button" class="p-2 -m-2 text-slate-500 dark:text-slate-400 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">✕</button>
+      </div>
+
+      <!-- Progress indicator: step text + progress bar -->
+      <div class="px-6 pt-4">
+        <p id="add-nko-step-text" class="text-sm text-slate-500">Шаг 1 из 4: Основная информация</p>
+        <div class="w-full bg-slate-200 rounded-full h-2.5 mt-2">
+          <div id="add-nko-progress-bar" class="bg-brand-green h-2.5 rounded-full transition-all duration-300" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="p-6 overflow-y-auto flex-1">
+        <input type="hidden" name="nko_id" id="add-nko-id" value="" />
+        <div id="add-nko-steps" class="space-y-6">
+          <div data-step="0" class="add-nko-step">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Название *</label>
+            <input name="name" id="add-nko-name" class="w-full px-4 py-3 border rounded-lg" required />
+
+            <label class="block text-sm font-medium text-slate-700 mb-1 mt-4">Категория *</label>
+            <div class="relative">
+              <select name="categories" id="add-nko-category" class="w-full pl-4 pr-4 py-3 border rounded-lg" required>
+                {% for cat in categories %}
+                  <option value="{{ cat.id }}">{{ cat.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <label class="block text-sm font-medium text-slate-700 mb-1 mt-4">Город *</label>
+            <div class="relative">
+              <input 
+                type="text" 
+                name="city_name" 
+                id="add-nko-city" 
+                class="w-full px-4 py-3 border rounded-lg" 
+                placeholder="Начните вводить название города..."
+                autocomplete="off"
+                required 
+              />
+              <input type="hidden" name="city" id="add-nko-city-id" value="" />
+              <div id="city-suggestions" class="absolute z-10 w-full bg-white border border-slate-300 rounded-lg mt-1 max-h-48 overflow-y-auto hidden shadow-lg"></div>
+            </div>
+
+            <label class="block text-sm font-medium text-slate-700 mb-1 mt-4">Описание *</label>
+            <textarea name="description" id="add-nko-description" rows="4" class="w-full px-4 py-3 border rounded-lg" required></textarea>
+            
+            <label class="block text-sm font-medium text-slate-700 mb-1 mt-4">Функционал волонтёров</label>
+            <textarea name="volunteer_functions" id="add-nko-volunteer-functions" rows="3" class="w-full px-4 py-3 border rounded-lg" placeholder="Опишите, чем могут помочь волонтёры (необязательно)"></textarea>
+          </div>
+
+          <div data-step="1" class="add-nko-step hidden">
+              <label class="block text-sm font-medium text-slate-700 mb-1">Адрес *</label>
+              <input name="address" id="add-nko-address" class="w-full px-4 py-3 border rounded-lg" required />
+              <div class="mt-4">
+                <label class="block text-sm font-medium text-slate-700 mb-1">Отметьте точку на карте</label>
+                <div id="add-nko-mini-map" class="h-64 w-full bg-slate-200 rounded-lg relative border border-slate-300/80"></div>
+                <p class="text-xs text-slate-500 mt-2">Перетащите маркер, чтобы выбрать точное местоположение организации.</p>
+                <!-- Hidden fields receive coordinates selected on the mini-map -->
+                <input type="hidden" name="latitude" id="add-nko-lat" />
+                <input type="hidden" name="longitude" id="add-nko-lng" />
+              </div>
+          </div>
+
+          <div data-step="2" class="add-nko-step hidden">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Телефон (необязательно)</label>
+            <input name="phone" id="add-nko-phone" class="w-full px-4 py-3 border rounded-lg" placeholder="+7 (XXX) XXX-XX-XX" />
+
+            <label class="block text-sm font-medium text-slate-700 mb-1 mt-4">Сайт *</label>
+            <input type="url" name="website" id="add-nko-website" class="w-full px-4 py-3 border rounded-lg" placeholder="https://example.com" required />
+            
+            <label class="block text-sm font-medium text-slate-700 mb-1 mt-4">ВКонтакте</label>
+            <input type="url" name="vk_link" id="add-nko-vk" class="w-full px-4 py-3 border rounded-lg" placeholder="https://vk.com/..." />
+            
+            <label class="block text-sm font-medium text-slate-700 mb-1 mt-4">Telegram</label>
+            <input type="url" name="telegram_link" id="add-nko-telegram" class="w-full px-4 py-3 border rounded-lg" placeholder="https://t.me/..." />
+            
+            <label class="block text-sm font-medium text-slate-700 mb-1 mt-4">Другие соцсети</label>
+            <input type="url" name="other_social" id="add-nko-other-social" class="w-full px-4 py-3 border rounded-lg" placeholder="Ссылка на другую соцсеть" />
+          </div>
+
+          <div data-step="3" class="add-nko-step hidden">
+            <div class="space-y-4 animate-fade-in text-slate-700 dark:text-slate-300">
+              <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Проверьте перед отправкой</h3>
+              <div>
+                <strong class="text-slate-800 dark:text-slate-100">Название:</strong>
+                <p id="review-name" class="text-slate-800 dark:text-slate-200 mt-1"></p>
+              </div>
+              <div>
+                <strong class="text-slate-800 dark:text-slate-100">Категория:</strong>
+                <p id="review-category" class="text-slate-800 dark:text-slate-200 mt-1"></p>
+              </div>
+              <div>
+                <strong class="text-slate-800 dark:text-slate-100">Описание:</strong>
+                <p id="review-description" class="text-slate-800 dark:text-slate-200 text-sm leading-relaxed mt-1"></p>
+              </div>
+              <div>
+                <strong class="text-slate-800 dark:text-slate-100">Адрес:</strong>
+                <p id="review-address" class="text-slate-800 dark:text-slate-200 mt-1"></p>
+              </div>
+              <div>
+                <strong class="text-slate-800 dark:text-slate-100">Телефон:</strong>
+                <p id="review-phone" class="text-slate-800 dark:text-slate-200 mt-1"></p>
+              </div>
+              <div>
+                <strong class="text-slate-800 dark:text-slate-100">Сайт:</strong>
+                <p id="review-website" class="text-slate-800 dark:text-slate-200 mt-1"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6 border-t flex justify-between items-center bg-slate-50">
+        <div>
+          <button id="add-nko-back" type="button" class="px-6 py-2 rounded-lg font-semibold text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-slate-700/80 border border-slate-300/80 dark:border-slate-600/80 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-600 transition">Назад</button>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="add-nko-next" type="button" class="px-6 py-2 rounded-lg font-semibold text-white bg-brand-green shadow-md hover:bg-brand-green-dark transition">Далее</button>
+          <button id="add-nko-submit" type="button" class="px-6 py-2 rounded-lg font-semibold text-white bg-brand-green shadow-md hover:bg-brand-green-dark transition hidden">Отправить</button>
+          <script>
+            try{
+              (function(){
+                var btn = document.getElementById('add-nko-submit');
+                if(btn){
+                  btn.addEventListener('click', function(ev){ /* click handler */ }, {capture:true});
+                }
+              })();
+            }catch(e){ /* error handling */ }
+          </script>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .add-nko-step { animation: fade-in 0.18s ease-out forwards }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+
+  /* Readability / contrast fixes for the modal content */
+  /* Match React modal palette: use solid panel and input backgrounds in light theme (no transparency) */
+  #add-nko-content {
+    background-color: #ffffff;
+    color: #0f172a;
+    border: 1px solid rgba(226,232,240,0.80);
+  }
+  #add-nko-content h2, #add-nko-content p, #add-nko-content label, #add-nko-content .text-sm { color: inherit; }
+
+  /* Inputs/selects/textarea: solid white backgrounds in light mode, translucent dark in dark mode */
+  #add-nko-content input, #add-nko-content textarea, #add-nko-content select {
+    color: #0b1220;
+    background-color: #ffffff;
+    border: 1px solid rgba(203,213,225,0.80);
+    box-shadow: none;
+  }
+  #add-nko-content input::placeholder, #add-nko-content textarea::placeholder { color: rgba(15,23,42,0.45); }
+
+  /* Buttons inside modal: allow utility classes to set text color (don't force inherit) */
+
+  /* Overlay blur (keeps backdrop but improves contrast) */
+  #add-nko-overlay { background-color: rgba(0,0,0,0.36); backdrop-filter: blur(4px); }
+
+  /* Dark theme overrides: use solid dark panel and light text */
+  /* Fully dark modal theme (Variant 1) */
+  .dark #add-nko-content {
+    background-color: #0b1220 !important; /* deep navy */
+    color: #e6eef8 !important; /* light text */
+    border: 1px solid rgba(255,255,255,0.03) !important; /* subtle edge */
+    box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+  }
+
+  /* Improve input visibility in dark modal: slightly lighter field background, stronger border and subtle inset */
+  .dark #add-nko-content input, .dark #add-nko-content textarea, .dark #add-nko-content select {
+    color: #e6eef8;
+    background-color: rgba(26,33,45,0.92); /* slightly lighter than panel to separate */
+    border: 1px solid rgba(255,255,255,0.06); /* visible but subtle */
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  }
+  .dark #add-nko-content input::placeholder, .dark #add-nko-content textarea::placeholder { color: rgba(230,238,248,0.48); }
+
+  /* Focus styles for accessibility and visibility - match sidebar search green ring */
+  .dark #add-nko-content input:focus, .dark #add-nko-content textarea:focus, .dark #add-nko-content select:focus,
+  .dark #add-nko-content input:focus-visible, .dark #add-nko-content textarea:focus-visible, .dark #add-nko-content select:focus-visible {
+    outline: 2px solid #56C02B !important;
+    box-shadow: none !important;
+    border-color: rgba(86,192,43,0.9) !important;
+    outline-offset: 0;
+  }
+
+  /* Stronger header/footer treatment to match fully dark look */
+  .dark #add-nko-content > form > .p-6.border-b { border-bottom-color: rgba(255,255,255,0.03) !important; }
+  .dark #add-nko-content > form > .p-6.border-t { border-top-color: rgba(255,255,255,0.03) !important; background-color: transparent !important; }
+
+  /* Make footer actions (back/next/submit) clearly separated */
+  #add-nko-content > form > .p-6.border-t { background: transparent; }
+
+  /* Dark-mode header/footer border adjustments: use darker borders (not bright white) */
+  .dark #add-nko-content > form > .p-6.border-b { border-bottom-color: rgba(2,6,23,0.45) !important; }
+  .dark #add-nko-content > form > .p-6.border-t { border-top-color: rgba(2,6,23,0.45) !important; background-color: rgba(6,16,24,0.6) !important; }
+
+  /* Ensure focus outlines remain visible and match React app (brand green ring) */
+  #add-nko-content input:focus, #add-nko-content select:focus, #add-nko-content textarea:focus {
+     outline: 2px solid #56C02B;
+     box-shadow: none;
+     transition: outline-color 160ms ease;
+  }
+  /* Stronger ring when keyboard-focused (accessibility) */
+  #add-nko-content input:focus-visible, #add-nko-content select:focus-visible, #add-nko-content textarea:focus-visible {
+     outline: 2px solid #56C02B;
+     box-shadow: none;
+  }
+
+    /* Apply the exact sidebar search green ring to all modal fields (override any earlier rules) */
+    #add-nko-content input:focus, #add-nko-content textarea:focus, #add-nko-content select:focus,
+    #add-nko-content input:focus-visible, #add-nko-content textarea:focus-visible, #add-nko-content select:focus-visible {
+      /* Single solid outline like sidebar search — no outer glow/offset */
+      outline: 2px solid #56C02B !important;
+      box-shadow: none !important;
+      outline-offset: 0 !important;
+      border-color: transparent !important;
+    }
+
+    /* Final override to ensure no green halo from other selectors (very high specificity) */
+    #add-nko-modal #add-nko-content input:focus, #add-nko-modal #add-nko-content textarea:focus, #add-nko-modal #add-nko-content select:focus,
+    #add-nko-modal #add-nko-content input:focus-visible, #add-nko-modal #add-nko-content textarea:focus-visible, #add-nko-modal #add-nko-content select:focus-visible {
+      outline: 2px solid #56C02B !important;
+      box-shadow: none !important;
+      outline-offset: 0 !important;
+      border-color: transparent !important;
+    }
+
+  /* Ensure the close button hover background remains a perfect circle while keeping original markup */
+  #add-nko-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9999px;
+    line-height: 1;
+  }
+  #add-nko-close:hover { background-color: rgba(241,245,249,1); }
+  .dark #add-nko-close:hover { background-color: rgba(30,41,59,0.12); }
+    /* Stronger, high-specificity contrast for review-step fields (override other utilities) */
+    #add-nko-content .add-nko-step[data-step="3"] strong { color: #0b1220 !important; }
+    /* Category pill selected state (removed - using native select) */
+    #add-nko-content .add-nko-step[data-step="3"] p { color: #0b1220 !important; }
+    .dark #add-nko-content .add-nko-step[data-step="3"] strong { color: #ffffff !important; }
+    .dark #add-nko-content .add-nko-step[data-step="3"] p { color: #ffffff !important; }
+    /* Ensure the review-step heading is also high-contrast */
+    #add-nko-content .add-nko-step[data-step="3"] h3 { color: #0b1220 !important; }
+    .dark #add-nko-content .add-nko-step[data-step="3"] h3 { color: #ffffff !important; }
+  
+  /* City autocomplete suggestions styling */
+  #city-suggestions .city-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  #city-suggestions .city-item:last-child {
+    border-bottom: none;
+  }
+  #city-suggestions .city-item:hover {
+    background-color: #f1f5f9;
+  }
+  #city-suggestions .city-item.selected {
+    background-color: #e0f2fe;
+  }
+</style>
+<style>
+  @keyframes fade-in-scale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .animate-fade-in-scale { animation: fade-in-scale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+</style>
+
+<script>
+// City autocomplete functionality
+(function() {
+  let cities = {{ cities_json|safe }};
+  let selectedCityId = null;
+  
+  function formatCityName(name) {
+    // Trim and capitalize first letter of each word
+    return name.trim().split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
+  }
+  
+  function initCityAutocomplete() {
+    const cityInput = document.getElementById('add-nko-city');
+    const cityIdInput = document.getElementById('add-nko-city-id');
+    const suggestionsDiv = document.getElementById('city-suggestions');
+    
+    if (!cityInput || !suggestionsDiv) return;
+    
+    cityInput.addEventListener('input', function() {
+      const value = this.value.toLowerCase();
+      selectedCityId = null;
+      cityIdInput.value = '';
+      
+      if (value.length < 1) {
+        suggestionsDiv.classList.add('hidden');
+        return;
+      }
+      
+      const filtered = cities.filter(city => 
+        city.name.toLowerCase().includes(value)
+      ).slice(0, 10); // Limit to 10 suggestions
+      
+      if (filtered.length === 0) {
+        suggestionsDiv.classList.add('hidden');
+        return;
+      }
+      
+      suggestionsDiv.innerHTML = filtered.map(city => 
+        `<div class="city-item" data-id="${city.id}" data-name="${city.name}">
+          <div class="font-medium text-slate-800">${city.name}</div>
+          <div class="text-xs text-slate-500">${city.region}</div>
+        </div>`
+      ).join('');
+      
+      suggestionsDiv.classList.remove('hidden');
+      
+      // Add click handlers
+      suggestionsDiv.querySelectorAll('.city-item').forEach(item => {
+        item.addEventListener('click', function() {
+          cityInput.value = this.dataset.name;
+          cityIdInput.value = this.dataset.id;
+          selectedCityId = this.dataset.id;
+          suggestionsDiv.classList.add('hidden');
+        });
+      });
+    });
+    
+    // Close suggestions on outside click
+    document.addEventListener('click', function(e) {
+      if (!cityInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+        suggestionsDiv.classList.add('hidden');
+      }
+    });
+    
+    // Format city name before form submission
+    const form = document.getElementById('add-nko-form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        if (!selectedCityId && cityInput.value) {
+          const formatted = formatCityName(cityInput.value);
+          cityInput.value = formatted;
+        }
+      });
+    }
+  }
+  
+  // Initialize when modal opens
+  document.addEventListener('DOMContentLoaded', initCityAutocomplete);
+  
+  // Expose function globally so it can be called from openAddNgoModal
+  window.initCityAutocomplete = initCityAutocomplete;
+})();
+</script>
+

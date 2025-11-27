@@ -60,7 +60,7 @@ https://zzzatoox.pythonanywhere.com/admin/
 
 **Быстрый старт (Windows, PowerShell)**
 
-1. Убедитесь, что установлен Python 3.8+ и `pip`.
+1. Убедитесь, что установлен Python 3.8+, `pip` и Node.js с npm.
 2. (Опционально) создайте виртуальное окружение и активируйте его:
 
 ```powershell
@@ -68,32 +68,50 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-3. Установите зависимости:
+3. Установите Python-зависимости:
 
 ```powershell
 pip install -r requirements.txt
 ```
 
-4. Выполните миграции:
+4. Установите npm-зависимости для работы с Tailwind CSS:
+
+```powershell
+npm install
+```
+
+5. Соберите CSS-файлы:
+
+```powershell
+npm run build:css
+```
+
+   Для разработки с автоматической пересборкой можно использовать:
+
+```powershell
+npm run watch:css
+```
+
+6. Выполните миграции:
 
 ```powershell
 python manage.py makemigrations users nko
 python manage.py migrate
 ```
 
-5. (Опционально) создайте суперпользователя для доступа в админку:
+7. (Опционально) создайте суперпользователя для доступа в админку:
 
 ```powershell
 python manage.py createsuperuser
 ```
 
-6. Загрузите начальные данные (есть management-команда `load_initial_data`):
+8. Загрузите начальные данные (есть management-команда `load_initial_data`):
 
 ```powershell
 python manage.py load_initial_data
 ```
 
-7. Создайте файл `.env` в корне проекта со следующими переменными:
+9. Создайте файл `.env` в корне проекта со следующими переменными:
 
 ```text
 YANDEX_MAPS_API_KEY=
@@ -115,7 +133,7 @@ SECRET_KEY=
 ALLOWED_HOSTS=
 ```
 
-8. Запустите сервер разработки:
+10. Запустите сервер разработки:
 
 ```powershell
 python manage.py runserver
@@ -140,7 +158,8 @@ python manage.py runserver
 
 **Статические файлы и медиа**
 
-- Для продакшена выполните сбор статики:
+- Для разработки фронтенда используйте `npm run watch:css` для автоматической пересборки Tailwind CSS при изменениях.
+- Для продакшена соберите CSS командой `npm run build:css`, затем выполните сбор статики:
 
 ```powershell
 python manage.py collectstatic

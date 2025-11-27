@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        .info-block {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #4CAF50;
+            border-radius: 3px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #777;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>📝 Новая заявка: {{ application_type }}</h2>
+    </div>
+    <div class="content">
+        <p>Здравствуйте!</p>
+        
+        <p>Поступила новая заявка на <strong>{{ application_type }}</strong>.</p>
+        
+        <div class="info-block">
+            <p><span class="info-label">Название НКО:</span> {{ nko.name }}</p>
+            <p><span class="info-label">Автор заявки:</span> {{ author.get_full_name|default:author.username }} ({{ author.email }})</p>
+            {% if is_transfer %}
+            <p><span class="info-label">Текущий владелец:</span> {{ nko.owner.get_full_name|default:nko.owner.username }}</p>
+            <p><span class="info-label">Новый владелец:</span> {{ nko_version.new_owner.get_full_name|default:nko_version.new_owner.username }} ({{ nko_version.new_owner.email }})</p>
+            {% endif %}
+            {% if nko_version.city_name %}
+            <p><span class="info-label">Город:</span> {{ nko_version.city_name }}{% if nko_version.region_name %}, {{ nko_version.region_name }}{% endif %}</p>
+            {% endif %}
+            {% if nko_version.change_description %}
+            <p><span class="info-label">Описание изменений:</span><br>{{ nko_version.change_description }}</p>
+            {% endif %}
+        </div>
+        
+        <p>Для рассмотрения заявки перейдите в панель администратора:</p>
+        <a href="http://{{ admin_url }}" class="button">Перейти к заявке</a>
+        
+        <p style="margin-top: 20px; font-size: 14px; color: #666;">
+            Это автоматическое уведомление. Вы получили его, потому что включили получение уведомлений о новых заявках в своем профиле.
+        </p>
+    </div>
+    <div class="footer">
+        <p>&copy; 2025 Карта добрых дел. Все права защищены.</p>
+    </div>
+</body>
+</html>

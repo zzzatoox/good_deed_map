@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "captcha",
     "nko",
     "users",
 ]
@@ -148,6 +149,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
@@ -188,3 +190,16 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 )
 
 YANDEX_MAPS_API_KEY = os.environ.get("YANDEX_MAPS_API_KEY", "")
+
+# Site URL for email links (should be set in production)
+SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000")
+
+# Captcha settings
+CAPTCHA_IMAGE_SIZE = (150, 50)
+CAPTCHA_FONT_SIZE = 30
+CAPTCHA_LETTER_ROTATION = (-25, 25)
+CAPTCHA_BACKGROUND_COLOR = "#ffffff"
+CAPTCHA_FOREGROUND_COLOR = "#15256D"
+CAPTCHA_NOISE_FUNCTIONS = ("captcha.helpers.noise_dots",)
+CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.math_challenge"  # Математическая капча
+CAPTCHA_TIMEOUT = 5  # Время действия капчи в минутах

@@ -1,0 +1,127 @@
+{% load static %}
+
+<header class="bg-white dark:bg-gray-800 shadow-sm py-3 px-5 sticky top-0 z-50">
+  <div class="flex items-center justify-between">
+    {# Левая часть - логотип и навигация #}
+    <div class="flex items-center gap-8 md:gap-12">
+      {# Логотип #}
+      <div class="flex items-center gap-2">
+        <a href="{% url 'index' %}" class="flex">
+          <img
+            src="{% static 'images/LOGO_ROSATOM.svg' %}"
+            alt="Rosatom Logo"
+            class="h-8 md:h-9 dark:brightness-0 dark:invert transition-all"
+          />
+        </a>
+      </div>
+
+      {# Основная навигация #}
+      <nav class="hidden md:block">
+        <ul class="flex items-center gap-2">
+          <li>
+            <a
+              href="{% url 'index' %}"
+              class="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-[#025EA1] hover:underline p-2"
+            >
+              Карта добрых дел
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    {# Правая часть - кнопки и меню пользователя #}
+    <nav class="flex items-center gap-4">
+      {# Кнопка переключения темы #} {% block theme_toggle %}
+      <button
+        id="theme-toggle"
+        class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-yellow-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        aria-label="Переключить тему"
+      >
+        {# Иконка луны (светлая тема) #}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 block dark:hidden"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"
+          />
+        </svg>
+        {# Иконка солнца (тёмная тема) #}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 hidden dark:block"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
+      {% endblock %} {# Меню пользователя #} {% if not user.is_authenticated %}
+      {# Неавторизованный пользователь #}
+      <a
+        href="{% url 'login' %}"
+        class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
+      >
+        Войти
+      </a>
+      {% else %} {# Авторизованный пользователь #}
+      <span
+        class="hidden sm:inline-block text-sm text-gray-700 dark:text-gray-200 mr-3"
+      >
+        Привет, {{ user.first_name|default:user.username }}!
+      </span>
+
+      {# Проверка наличия НКО у пользователя #} 
+      {% if user_nko %}
+      {# Ссылка на мои заявки #}
+      <a
+        href="{% url 'my_requests' %}"
+        class="inline-block py-2 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        title="Просмотреть статус заявок"
+      >
+        📋 Мои заявки
+      </a>
+      {% endif %}
+      
+      {% if not user_nko %} 
+      {# Пользователь без НКО - показываем кнопку добавления #}
+      <a
+        href="{% url 'add_nko' %}"
+        class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
+      >
+        Добавить НКО
+      </a>
+      {% else %} {# Пользователь с НКО - проверяем статус модерации #} 
+      {% if user_nko.get_pending_version or not user_nko.is_approved %}
+      {# НКО на модерации - показываем статус #}
+      <span
+        class="inline-block py-2 px-4 rounded-md text-sm font-medium text-white bg-yellow-600"
+        title="Изменения ожидают модерации"
+      >
+        НКО на модерации
+      </span>
+      {% else %} {# НКО утверждено - можно редактировать #}
+      <a
+        href="{% url 'edit_nko' user_nko.pk %}"
+        class="relative overflow-hidden text-white font-medium py-2 px-6 rounded-md text-base bg-gradient-to-r from-[#15256D] to-[#4495D1] bg-[length:200%_100%] bg-left-top transition-all duration-500 ease-in-out hover:bg-right-top shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4495D1]"
+      >
+        Редактировать НКО
+      </a>
+      {% endif %} {% endif %} {# Кнопка выхода #}
+      <a
+        href="{% url 'logout' %}"
+        class="ml-3 inline-block py-2 px-4 bg-white dark:bg-gray-700 text-[#15256D] dark:text-gray-200 font-medium rounded-md shadow-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+      >
+        Выйти
+      </a>
+      {% endif %}
+    </nav>
+  </div>
+</header>

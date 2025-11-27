@@ -1,259 +1,69 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Авторизация</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- Добавляем конфигурацию Tailwind для темной темы -->
-    <script>
-      tailwind.config = {
-        darkMode: "class",
-      };
-    </script>
-    <link href="{% static 'css/index.css' %}" rel="stylesheet" />
-  </head>
-  <body class="bg-gray-100 font-sans dark:bg-gray-900">
-    <!-- Карусель фоновых изображений (фон страницы, под всеми элементами) -->
-    <div class="fixed inset-0 z-0">
-      <div id="background-carousel" class="relative w-full h-full">
-        <div
-          class="absolute inset-0 bg-cover bg-center bg-no-repeat blur opacity-70 transition-opacity duration-1000"
-          style="background-image: url('{% static 'images/background1.jpg' %}')"
-        ></div>
-        <div
-          class="absolute inset-0 bg-cover bg-center bg-no-repeat blur opacity-0 transition-opacity duration-1000"
-          style="background-image: url('{% static 'images/background2.jpg' %}')"
-        ></div>
-        <div
-          class="absolute inset-0 bg-cover bg-center bg-no-repeat blur opacity-0 transition-opacity duration-1000"
-          style="background-image: url('{% static 'images/background3.jpg' %}')"
-        ></div>
-        <div
-          class="absolute inset-0 bg-cover bg-center bg-no-repeat blur opacity-0 transition-opacity duration-1000"
-          style="background-image: url('{% static 'images/background4.jpg' %}')"
-        ></div>
-        <div
-          class="absolute inset-0 bg-cover bg-center bg-no-repeat blur opacity-0 transition-opacity duration-1000"
-          style="background-image: url('{% static 'images/background5.jpg' %}')"
-        ></div>
-      </div>
-      <div
-        class="absolute inset-0 bg-black bg-opacity-30 dark:bg-opacity-50"
-      ></div>
+{% extends 'registration/auth_base.html' %} {% load static %} 
+{# Заголовок страницы #} {% block title %}Авторизация - Карта добрых дел{% endblock %} 
+{# Alt для иконки #} {% block icon_alt %}Иконка входа{% endblock %} 
+{# Заголовок формы #} 
+{% block form_title %}Вход{% endblock %} {# Содержимое формы #} 
+{% block form_content %}
+<form method="post" class="w-full space-y-4">
+  {% csrf_token %}
+  
+  {# Ошибки формы #}
+  {% if form.non_field_errors %}
+  <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded dark:bg-red-900/30 dark:text-red-200">
+    {{ form.non_field_errors }}
+  </div>
+  {% endif %}
+  
+  {# Поле username #}
+  <div>
+    {{ form.username }}
+    {% if form.username.errors %}
+    <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+      {% for error in form.username.errors %}
+      <p>❌ {{ error }}</p>
+      {% endfor %}
     </div>
+    {% endif %}
+  </div>
 
-    <header
-      class="bg-white shadow-sm py-3 px-5 flex items-center justify-between z-50 sticky top-0 dark:bg-gray-800"
+  {# Поле password #}
+  <div>
+    {{ form.password }}
+    {% if form.password.errors %}
+    <div class="mt-1 text-red-200 text-sm bg-red-500/20 border border-red-400 rounded p-2">
+      {% for error in form.password.errors %}
+      <p>❌ {{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  {# Ссылка "Забыли пароль?" #}
+  <div class="flex justify-end">
+    <a
+      href="{% url 'password_reset' %}"
+      class="text-white text-sm mt-2 mb-6 self-end opacity-90 hover:opacity-100 hover:underline transition duration-200 dark:text-gray-200"
     >
-      <div class="flex items-center gap-8 md:gap-12">
-        <div class="flex items-center gap-2">
-          <a href="#" class="flex">
-            <!-- Light theme logo -->
-            <img
-              src="{% static 'images/LOGO_ROSATOM.svg' %}"
-              alt="Rosatom Logo"
-              class="logo-light h-6 md:h-7"
-            />
-            <!-- Dark theme logo -->
-            <img
-              src="{% static 'images/rosatom-logo.svg' %}"
-              alt="Rosatom Logo White"
-              class="logo-dark h-6 md:h-7"
-            />
-          </a>
-        </div>
-        <nav class="hidden md:block">
-          <ul class="flex items-center gap-2">
-            <li>
-              <a
-                href="{% url 'index' %}"
-                class="text-sm font-medium text-gray-800 hover:text-[#68b114] hover:underline p-2 dark:text-gray-200 dark:hover:text-[#68b114] nav-home-link"
-                >Карта добрых дел</a
-              >
-            </li>
-          </ul>
-        </nav>
-      </div>
-      <nav class="flex items-center gap-4">
-        <button
-          id="theme-toggle"
-          class="p-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-yellow-300 dark:hover:bg-gray-600"
-        >
-          <!-- Moon Icon for Dark Mode -->
-          <svg
-            id="moon-icon"
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"
-            />
-          </svg>
-          <!-- Sun Icon for Light Mode -->
-          <svg
-            id="sun-icon"
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5 hidden"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </button>
-      </nav>
-    </header>
+      Забыли пароль?
+    </a>
+  </div>
 
-    <!-- Main content area with reduced padding to eliminate scroll -->
-    <main
-      class="flex items-center justify-center min-h-[calc(100vh-80px)] py-4"
+  {# Кнопка входа #}
+  <button
+    type="submit"
+    class="w-full py-3 bg-white text-[#15256D] font-bold text-xl rounded-xl transition-all duration-300 shadow-lg mt-6 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 hover:scale-105 hover:shadow-xl active:scale-95"
+  >
+    Войти
+  </button>
+
+  {# Ссылка на регистрацию #}
+  <div class="text-center">
+    <a
+      href="{% url 'register' %}"
+      class="text-white text-base mt-4 opacity-90 hover:opacity-100 hover:underline transition duration-200 text-center dark:text-gray-200"
     >
-      <!-- Main authorization window container -->
-      <div
-        class="relative w-[450px] p-6 pt-[80px] pb-8 bg-gradient-to-r from-[#15256D] to-[#4495D1] rounded-3xl shadow-xl overflow-visible flex flex-col items-center dark:from-gray-800 dark:to-gray-700"
-      >
-        <!-- Icon (250x250 pixels) positioned absolutely to stick out from the top and be centered. -->
-        <div
-          class="absolute -top-[125px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center"
-        >
-          <img
-            src="{% static 'images/rosatom_icon.png' %}"
-            alt="Login Icon"
-            class="w-[250px] h-[250px] rounded-full object-cover"
-          />
-        </div>
-
-        <!-- Content within the card, positioned below the icon's visual space -->
-        <h2
-          class="text-3xl font-extrabold text-white mb-6 text-center drop-shadow-lg dark:text-gray-100"
-        >
-          Вход
-        </h2>
-
-        <form method="post" class="w-full space-y-4">
-          {% csrf_token %} {% if messages %}
-          <div class="space-y-2">
-            {% for message in messages %}
-            <div
-              class="px-3 py-2 rounded text-sm {% if message.tags %}text-{{ message.tags }}{% endif %}"
-            >
-              {{ message }}
-            </div>
-            {% endfor %}
-          </div>
-          {% endif %} {% if form.non_field_errors %}
-          <div class="text-red-500 text-sm">{{ form.non_field_errors }}</div>
-          {% endif %}
-
-          <div>{{ form.username.errors }} {{ form.username }}</div>
-
-          <div>{{ form.password.errors }} {{ form.password }}</div>
-
-          <div class="flex justify-end">
-            <a
-              href="{% url 'password_reset' %}"
-              class="text-white text-sm mt-2 mb-6 self-end opacity-90 hover:opacity-100 hover:underline transition duration-200 dark:text-gray-200"
-              >Забыли пароль?</a
-            >
-          </div>
-
-          <button
-            type="submit"
-            class="w-full py-3 bg-white text-[#15256D] font-bold text-xl rounded-xl transition-all duration-300 shadow-lg mt-6 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 hover:scale-105 hover:shadow-xl active:scale-95"
-          >
-            Войти
-          </button>
-
-          <div class="text-center">
-            <a
-              href="{% url 'register' %}"
-              class="text-white text-base mt-4 opacity-90 hover:opacity-100 hover:underline transition duration-200 text-center dark:text-gray-200"
-              >Ещё нет аккаунта?</a
-            >
-          </div>
-        </form>
-      </div>
-    </main>
-    <script>
-      // Background carousel rotation (matches register.html behavior)
-      (function () {
-        let currentBackground = 0;
-        const backgrounds = document.querySelectorAll(
-          "#background-carousel > div"
-        );
-        function changeBackground() {
-          if (!backgrounds || backgrounds.length === 0) return;
-          backgrounds[currentBackground].classList.remove("opacity-70");
-          backgrounds[currentBackground].classList.add("opacity-0");
-          currentBackground = (currentBackground + 1) % backgrounds.length;
-          backgrounds[currentBackground].classList.remove("opacity-0");
-          backgrounds[currentBackground].classList.add("opacity-70");
-        }
-        setInterval(changeBackground, 5000);
-      })();
-
-      const themeToggle = document.getElementById("theme-toggle");
-      const moonIcon = document.getElementById("moon-icon");
-      const sunIcon = document.getElementById("sun-icon");
-      const htmlElement = document.documentElement;
-
-      // Initialize theme
-      function initializeTheme() {
-        if (
-          localStorage.theme === "dark" ||
-          (!("theme" in localStorage) &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches)
-        ) {
-          enableDarkTheme();
-        } else {
-          enableLightTheme();
-        }
-      }
-
-      function enableDarkTheme() {
-        htmlElement.classList.add("dark");
-        localStorage.setItem("theme", "dark");
-        // Show sun icon, hide moon
-        if (moonIcon) moonIcon.classList.add("hidden");
-        if (sunIcon) sunIcon.classList.remove("hidden");
-      }
-
-      function enableLightTheme() {
-        htmlElement.classList.remove("dark");
-        localStorage.setItem("theme", "light");
-        // Show moon icon, hide sun
-        if (moonIcon) moonIcon.classList.remove("hidden");
-        if (sunIcon) sunIcon.classList.add("hidden");
-      }
-
-      // Toggle theme function
-      function toggleTheme() {
-        if (htmlElement.classList.contains("dark")) {
-          enableLightTheme();
-        } else {
-          enableDarkTheme();
-        }
-      }
-
-      // Initialize theme on page load
-      initializeTheme();
-
-      // Add event listener to theme toggle button
-      if (themeToggle) themeToggle.addEventListener("click", toggleTheme);
-    </script>
-  </body>
-</html>
+      Ещё нет аккаунта?
+    </a>
+  </div>
+</form>
+{% endblock %}

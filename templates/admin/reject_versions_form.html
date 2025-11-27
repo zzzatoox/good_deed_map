@@ -1,0 +1,172 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .rejection-form-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .versions-list {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .version-item {
+        padding: 8px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .version-item:last-child {
+        border-bottom: none;
+    }
+    
+    .form-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        color: white;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+    
+    .help-text {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .alert-warning {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        color: #856404;
+        padding: 12px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rejection-form-container">
+    <h1>{{ title }}</h1>
+    
+    <div class="alert-warning">
+        <strong>⚠️ Внимание!</strong> Вы собираетесь отклонить следующие заявки. 
+        Владельцы НКО смогут увидеть причину отказа.
+    </div>
+    
+    <div class="versions-list">
+        <h3>Выбранные заявки:</h3>
+        {% for version in versions %}
+        <div class="version-item">
+            <strong>{{ version.nko.name }}</strong>
+            <br>
+            <small>
+                Автор: {{ version.created_by.get_full_name|default:version.created_by.username }} | 
+                Дата: {{ version.created_at|date:"d.m.Y H:i" }}
+                {% if version.new_owner %}
+                | Передача прав → {{ version.new_owner.get_full_name|default:version.new_owner.username }}
+                {% endif %}
+            </small>
+            {% if version.change_description %}
+            <br>
+            <small style="color: #6c757d;">{{ version.change_description }}</small>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.rejection_reason.id_for_label }}">
+                {{ form.rejection_reason.label }}
+                {% if form.rejection_reason.field.required %}<span style="color: red;">*</span>{% endif %}
+            </label>
+            {{ form.rejection_reason }}
+            {% if form.rejection_reason.help_text %}
+            <div class="help-text">{{ form.rejection_reason.help_text }}</div>
+            {% endif %}
+            {% if form.rejection_reason.errors %}
+            <div style="color: #dc3545; margin-top: 5px;">
+                {{ form.rejection_reason.errors }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <input type="hidden" name="action" value="reject_versions_action">
+        <input type="hidden" name="post" value="yes">
+        {% for id in selected_ids %}
+        <input type="hidden" name="_selected_action" value="{{ id }}">
+        <input type="hidden" name="selected_ids" value="{{ id }}">
+        {% endfor %}
+        <input type="hidden" name="select_across" value="0">
+        <input type="hidden" name="index" value="0">
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">
+                ✗ Отклонить заявки
+            </button>
+            <a href="{% url 'admin:nko_nkoversion_changelist' %}" class="btn btn-secondary">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

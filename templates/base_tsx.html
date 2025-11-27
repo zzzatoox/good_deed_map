@@ -1,0 +1,268 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Карта добрых дел{% endblock %}</title>
+
+    {# Apply saved theme immediately to avoid flash; runs synchronously before CSS loads #}
+    <script>
+      (function(){
+        function applySavedTheme(){
+          try{
+            var __saved = localStorage.getItem('theme');
+            if(__saved && typeof __saved === 'string') __saved = __saved.trim().toLowerCase();
+
+            // Normalize legacy boolean-like values: some older code or extensions
+            // may have stored "true"/"false" or "1"/"0". Treat "true"/"1" as light.
+            if(__saved === 'true' || __saved === '1') __saved = 'light';
+            else if(__saved === 'false' || __saved === '0') __saved = 'dark';
+
+            if(__saved === 'dark'){
+              document.documentElement.classList.add('dark');
+              document.documentElement.removeAttribute('data-theme');
+            } else if(__saved === 'light'){
+              document.documentElement.classList.remove('dark');
+              document.documentElement.setAttribute('data-theme','light');
+              // Force core CSS variables for light theme inline so compiled media-based
+              // dark-mode rules do not make the UI appear dark when a user chose light.
+              try{
+                var r = document.documentElement.style;
+                r.setProperty('--bg', '#ffffff');
+                r.setProperty('--text', '#0f172a');
+                r.setProperty('--panel', 'rgba(255,255,255,0.60)');
+                r.setProperty('--panel-border', 'rgba(148,163,184,0.12)');
+                r.setProperty('--input-bg', 'rgba(255,255,255,0.70)');
+                r.setProperty('--input-border', 'rgba(148,163,184,0.12)');
+              }catch(e){}
+            } else {
+              // no explicit saved preference — follow OS
+              if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+                document.documentElement.classList.add('dark');
+                document.documentElement.removeAttribute('data-theme');
+                // Clear any inline overrides so the dark rules take effect
+                try{ document.documentElement.style.cssText = document.documentElement.style.cssText; }catch(e){}
+              } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.removeAttribute('data-theme');
+                try{
+                  var r2 = document.documentElement.style;
+                  r2.setProperty('--bg', '#ffffff');
+                  r2.setProperty('--text', '#0f172a');
+                  r2.setProperty('--panel', 'rgba(255,255,255,0.60)');
+                  r2.setProperty('--panel-border', 'rgba(148,163,184,0.12)');
+                  r2.setProperty('--input-bg', 'rgba(255,255,255,0.70)');
+                  r2.setProperty('--input-border', 'rgba(148,163,184,0.12)');
+                }catch(e){}
+              }
+            }
+          }catch(e){ /* ignore storage errors */ }
+        }
+
+        // Apply synchronously on initial parse
+        applySavedTheme();
+
+        /* If a user explicitly chose light theme, many compiled Tailwind
+           styles may still apply dark variants via media queries. Add a
+           small inline stylesheet that forces the main color tokens and
+           common utility classes to light values when `data-theme="light"`
+           is present on the root element. This avoids rebuilding tailwind. */
+        try{
+          var css = '\nhtml[data-theme="light"] body { background-color: var(--bg) !important; color: var(--text) !important; }\n'
+            + 'html[data-theme="light"] .themed-bg, html[data-theme="light"] .bg-white\\/60, html[data-theme="light"] .bg-white\\/80, html[data-theme="light"] .bg-white\\/70 { background-color: var(--panel) !important; color: var(--text) !important; }\n'
+            + 'html[data-theme="light"] .text-slate-800, html[data-theme="light"] .text-slate-700, html[data-theme="light"] .text-slate-600 { color: var(--text) !important; }\n'
+            + 'html[data-theme="light"] .border-slate-200\\/80, html[data-theme="light"] .border-slate-200\\/90, html[data-theme="light"] .border-slate-200\\/60 { border-color: var(--panel-border) !important; }\n'
+            + 'html[data-theme="light"] .bg-slate-900, html[data-theme="light"] .bg-slate-800, html[data-theme="light"] .dark\\:bg-slate-900, html[data-theme="light"] .dark\\:bg-slate-800 { background-color: initial !important; }\n'
+            + 'html[data-theme="light"] .dark\\:text-slate-100, html[data-theme="light"] .text-slate-500, html[data-theme="light"] .text-slate-400 { color: var(--text) !important; }\n';
+          var style = document.createElement('style');
+          style.setAttribute('id','theme-light-overrides');
+          style.appendChild(document.createTextNode(css));
+          document.head.appendChild(style);
+        }catch(e){}
+
+        // Re-apply when page is restored from bfcache (back/forward) to avoid stale DOM state
+        window.addEventListener('pageshow', function(evt){
+          // pageshow may fire with persisted=true when coming from bfcache
+          applySavedTheme();
+        }, {passive:true});
+      })();
+    </script>
+
+    {# Tailwind CSS - use locally built file instead of CDN in production #}
+    <link id="tailwind-local" href="{% static 'css/tailwind.css' %}" rel="stylesheet" />
+
+    {# Shared styles and fonts #}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <script>
+      if (typeof tailwind !== 'undefined') {
+        tailwind.config = {
+          darkMode: "class",
+          theme: { extend: { fontFamily: { inter: ["Inter", "sans-serif"] } } },
+        };
+      }
+    </script>
+
+    {# Small helpers used by TSX templates; keep extra_css hook #}
+    <style>
+      .logo-light, .logo-dark { display:inline-block; height:1.5rem; width:auto; vertical-align:middle; transition:all .2s; }
+      .logo-dark { display:none; }
+      .dark .logo-light { display:none; }
+      .dark .logo-dark { display:inline-block; }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+  </head>
+
+  <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-inter {% block body_class %}{% endblock %}">
+    {# Header block (TSX pages may override or include a TSX header) #}
+    {% comment %} {% block header %}{% include 'partials/header.html' %}{% endblock %} {% endcomment %}
+
+    {% if messages %}
+    <div class="fixed top-4 sm:top-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-full sm:max-w-md" id="messages-container" style="z-index: 2147483647 !important; position: fixed !important;">
+      {% for message in messages %}
+      <div class="mb-3 rounded-xl shadow-2xl border-2 overflow-hidden message-alert animate-slide-in-right
+                  {% if message.tags == 'error' %}bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-700
+                  {% elif message.tags == 'warning' %}bg-yellow-50 dark:bg-yellow-900 border-yellow-200 dark:border-yellow-700
+                  {% elif message.tags == 'success' %}bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700
+                  {% else %}bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-700{% endif %}" 
+           role="alert">
+        <div class="flex items-start gap-3 p-4">
+          <!-- Icon -->
+          <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xl
+                      {% if message.tags == 'error' %}bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-200
+                      {% elif message.tags == 'warning' %}bg-yellow-100 dark:bg-yellow-800 text-yellow-600 dark:text-yellow-200
+                      {% elif message.tags == 'success' %}bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-200
+                      {% else %}bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-200{% endif %}">
+            {% if message.tags == 'error' %}❌
+            {% elif message.tags == 'warning' %}⚠️
+            {% elif message.tags == 'success' %}✅
+            {% else %}ℹ️{% endif %}
+          </div>
+          
+          <!-- Content -->
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm sm:text-base mb-1
+                      {% if message.tags == 'error' %}text-red-900 dark:text-red-100
+                      {% elif message.tags == 'warning' %}text-yellow-900 dark:text-yellow-100
+                      {% elif message.tags == 'success' %}text-green-900 dark:text-green-100
+                      {% else %}text-blue-900 dark:text-blue-100{% endif %}">
+              {% if message.tags == 'error' %}Ошибка
+              {% elif message.tags == 'warning' %}Внимание
+              {% elif message.tags == 'success' %}Успешно
+              {% else %}Информация{% endif %}
+            </p>
+            <p class="text-xs sm:text-sm leading-relaxed
+                      {% if message.tags == 'error' %}text-red-800 dark:text-red-200
+                      {% elif message.tags == 'warning' %}text-yellow-800 dark:text-yellow-200
+                      {% elif message.tags == 'success' %}text-green-800 dark:text-green-200
+                      {% else %}text-blue-800 dark:text-blue-200{% endif %}">
+              {{ message }}
+            </p>
+          </div>
+          
+          <!-- Close button -->
+          <button onclick="this.closest('.message-alert').style.opacity='0'; setTimeout(() => this.closest('.message-alert').remove(), 300);" 
+                  class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200
+                         hover:scale-110 active:scale-95
+                         {% if message.tags == 'error' %}text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-800
+                         {% elif message.tags == 'warning' %}text-yellow-600 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-800
+                         {% elif message.tags == 'success' %}text-green-600 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-800
+                         {% else %}text-blue-600 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800{% endif %}"
+                  aria-label="Закрыть">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <style>
+      @keyframes slide-in-right {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out;
+      }
+      .message-alert {
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+      }
+    </style>
+    <script>
+      // Auto-dismiss after 8 seconds
+      setTimeout(() => {
+        const messages = document.querySelectorAll('.message-alert');
+        messages.forEach(msg => { 
+          msg.style.opacity = '0'; 
+          msg.style.transform = 'translateX(100%)';
+          setTimeout(() => msg.remove(), 300); 
+        });
+      }, 8000);
+    </script>
+    {% endif %}
+
+    <main class="{% block main_class %}{% endblock %}">
+      {% block content %}{% endblock %}
+    </main>
+{% comment %} 
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
+      <div class="container mx-auto px-4 py-6 text-center text-sm text-gray-600 dark:text-gray-400">
+        <p>&copy; 2024 Карта добрых дел. Все права защищены.</p>
+      </div>
+    </footer> {% endcomment %}
+
+    {% block scripts %}{% endblock %}
+
+    {# TSX-specific theme toggle script: also swaps sun/moon icons when present #}
+    {% block theme_script %}
+    <script>
+      const htmlElement = document.documentElement;
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        htmlElement.classList.add('dark');
+      } else {
+        htmlElement.classList.remove('dark');
+      }
+
+      function updateThemeIcons() {
+        const sun = document.querySelectorAll('.icon-sun');
+        const moon = document.querySelectorAll('.icon-moon');
+        if (htmlElement.classList.contains('dark')) {
+          sun.forEach(s => s.classList.add('hidden'));
+          moon.forEach(m => m.classList.remove('hidden'));
+        } else {
+          sun.forEach(s => s.classList.remove('hidden'));
+          moon.forEach(m => m.classList.add('hidden'));
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        updateThemeIcons();
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        if (themeToggleBtn) {
+          themeToggleBtn.addEventListener('click', () => {
+            if (htmlElement.classList.contains('dark')) {
+              htmlElement.classList.remove('dark');
+              localStorage.theme = 'light';
+            } else {
+              htmlElement.classList.add('dark');
+              localStorage.theme = 'dark';
+            }
+            updateThemeIcons();
+          });
+        }
+      });
+    </script>
+    {% endblock %}
+  </body>
+</html>

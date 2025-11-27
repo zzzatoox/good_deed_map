@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import existing project CSS so custom rules are preserved after Tailwind build */
+@import "../../static/css/index.css";
+@import "../../static/css/index_tsx.css";
+
+/* Add any project-specific utility overrides here */

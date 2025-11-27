@@ -1,15 +1,45 @@
-// Entry point for the index page. This file initializes the map and UI.
-// It was moved from inline <script> in templates/index.html
+/**
+ * main.js - Главный скрипт для страницы с картой НКО
+ *
+ * Отвечает за:
+ * - Инициализацию Яндекс.Карт
+ * - Загрузку данных об НКО через API
+ * - Отображение меток на карте
+ * - Фильтрацию по категориям и городам
+ * - Поиск НКО
+ * - Взаимодействие с модальным окном
+ *
+ * Основные функции:
+ * - fetchAndInit() - загружает данные и инициализирует карту
+ * - initMapAndUI() - создает карту и добавляет метки
+ * - attachUIHandlers() - подключает обработчики событий UI
+ * - filterPoints() - фильтрует НКО по выбранным критериям
+ * - showNkoModal() - отображает модальное окно с информацией об НКО
+ */
 
-let map;
-const INITIAL_MAP_CENTER = [61.524, 105.3188];
-const INITIAL_MAP_ZOOM = 3;
-let placemarks = [];
-let searchControl;
-let activeCategories = [];
-let selectedCity = "all";
-let rawNkoList = [];
+// ========================================
+// Глобальные переменные
+// ========================================
 
+let map; // Экземпляр Яндекс.Карты
+const INITIAL_MAP_CENTER = [61.524, 105.3188]; // Центр России
+const INITIAL_MAP_ZOOM = 3; // Начальный зум
+
+let placemarks = []; // Массив всех меток на карте
+let searchControl; // Контрол поиска
+let activeCategories = []; // Активные фильтры категорий
+let selectedCity = "all"; // Выбранный город
+let rawNkoList = []; // Исходный список НКО с сервера
+let categoriesMap = {}; // Словарь категорий: {slug: {id, name, icon, color}}
+
+// ========================================
+// Инициализация карты
+// ========================================
+
+/**
+ * Инициализирует Яндекс.Карту и UI элементы
+ * @param {Array} pointsData - Массив данных о точках НКО
+ */
 function initMapAndUI(pointsData) {
   if (typeof ymaps === "undefined") {
     console.error("Yandex Maps API not loaded");
@@ -17,45 +47,37 @@ function initMapAndUI(pointsData) {
   }
 
   ymaps.ready(() => {
+    // Создаем экземпляр карты
     map = new ymaps.Map("map", {
       center: INITIAL_MAP_CENTER,
       zoom: INITIAL_MAP_ZOOM,
     });
 
+    // Удаляем ненужные контролы
     map.controls.remove("geolocationControl");
     map.controls.remove("trafficControl");
     map.controls.remove("typeSelector");
     map.controls.remove("fullscreenControl");
     map.controls.remove("rulerControl");
     map.controls.remove("searchControl");
-    const iconLayouts = {
-      ecology: ymaps.templateLayoutFactory.createClass(
-        '<div class="rounded-full w-10 h-10 flex items-center justify-center text-white text-xl font-bold shadow-md" style="background-color: #56C02B;">🍃</div>'
-      ),
-      territory: ymaps.templateLayoutFactory.createClass(
-        '<div class="rounded-full w-10 h-10 flex items-center justify-center text-white text-xl font-bold shadow-md" style="background-color: #FCC30B;">🏕️</div>'
-      ),
-      animals: ymaps.templateLayoutFactory.createClass(
-        '<div class="rounded-full w-10 h-10 flex items-center justify-center text-white text-xl font-bold shadow-md" style="background-color: #259789;">🐶</div>'
-      ),
-      sport: ymaps.templateLayoutFactory.createClass(
-        '<div class="rounded-full w-10 h-10 flex items-center justify-center text-white text-xl font-bold shadow-md" style="background-color: #E20072;">🏋️</div>'
-      ),
-      social: ymaps.templateLayoutFactory.createClass(
-        '<div class="rounded-full w-10 h-10 flex items-center justify-center text-white text-xl font-bold shadow-md" style="background-color: #1D293D;">🛡️</div>'
-      ),
-      other: ymaps.templateLayoutFactory.createClass(
-        '<div class="rounded-full w-10 h-10 flex items-center justify-center text-white text-xl font-bold shadow-md" style="background-color: #6CACE4;">🎸</div>'
-      ),
-    };
 
-    // Add placemarks
+    // Создаем динамические иконки для категорий
+    const iconLayouts = {};
+    Object.keys(categoriesMap).forEach((slug) => {
+      const cat = categoriesMap[slug];
+      iconLayouts[slug] = ymaps.templateLayoutFactory.createClass(
+        `<div class="rounded-full w-10 h-10 flex items-center justify-center text-white text-xl font-bold shadow-md" style="background-color: ${cat.color};">${cat.icon || '❓'}</div>`
+      );
+    });
+
+    // Добавляем метки на карту
     pointsData.forEach((point) => {
       const placemark = new ymaps.Placemark(point.coords, point.properties, {
-        iconLayout: iconLayouts[point.properties.category] || iconLayouts.other,
-        iconShape: { type: "Circle", coordinates: [0, 0], radius: 20 },
+        iconLayout: iconLayouts[point.properties.category] || iconLayouts[Object.keys(iconLayouts)[0]],
+        iconShape: { type: "Circle", coordinates: [20, 20], radius: 20 },
       });
-      // open modal when placemark clicked
+
+      // Обработчик клика по метке - открываем модальное окно
       placemark.events.add("click", function () {
         try {
           showNkoModal(point.id);
@@ -63,60 +85,106 @@ function initMapAndUI(pointsData) {
           console.error("Error opening modal from placemark", e);
         }
       });
+
       map.geoObjects.add(placemark);
       placemarks.push({
         placemark,
         title: point.title,
         address: point.address,
-        categories: point.properties.category,
+        categories: point.categorySlugs,
         coords: point.coords,
         city: point.city,
         id: point.id,
       });
     });
 
-    // attach UI handlers that rely on map & placemarks
+    // Подключаем обработчики UI элементов
     attachUIHandlers(pointsData);
   });
 }
 
-// Fetch NKO list from API and initialize the map with real data
+// ========================================
+// Загрузка данных
+// ========================================
+
+/**
+ * Загружает список НКО из API и инициализирует карту
+ */
 async function fetchAndInit() {
   try {
+    // Загружаем категории
+    const categoriesResp = await fetch("/nko/api/categories/");
+    if (!categoriesResp.ok) throw new Error("Failed to fetch categories");
+    const categories = await categoriesResp.json();
+    
+    // Создаем словарь категорий по slug
+    categories.forEach(cat => {
+      // Используем slug из Django или создаем свой
+      const slug = cat.slug || slugify(cat.name);
+      categoriesMap[slug] = {
+        id: cat.id,
+        name: cat.name,
+        slug: slug,
+        icon: cat.icon || '❓',
+        color: cat.color || '#6CACE4'
+      };
+    });
+
+    // Загружаем НКО
     const resp = await fetch("/nko/api/nko-list/");
     if (!resp.ok) throw new Error("Failed to fetch NKO list");
     const list = await resp.json();
     rawNkoList = list;
+
+    // Преобразуем данные в формат для карты
     const pointsData = list
       .filter((nko) => nko.latitude && nko.longitude)
-      .map((nko) => ({
-        id: nko.id,
-        coords: [parseFloat(nko.latitude), parseFloat(nko.longitude)],
-        properties: {
-          hintContent: nko.name,
-          balloonContent: `${nko.address || ""}<br>${(
-            nko.categories || []
-          ).join(", ")}`,
-          category:
-            nko.primary_category ||
-            (nko.category_slugs && nko.category_slugs[0]) ||
-            "other",
-        },
-        title: nko.name,
-        address: nko.address,
-        city:
-          nko.city_id !== undefined && nko.city_id !== null
+      .map((nko) => {
+        const categorySlugs = (nko.categories || []).map(cat => cat.slug).filter(s => s);
+        const primaryCategorySlug = categorySlugs[0] || Object.keys(categoriesMap)[0] || 'other';
+        
+        if (categorySlugs.length === 0) {
+          console.warn(`NKO ${nko.id} (${nko.name}) has no categories`);
+        }
+        
+        return {
+          id: nko.id,
+          coords: [parseFloat(nko.latitude), parseFloat(nko.longitude)],
+          properties: {
+            hintContent: nko.name,
+            balloonContent: `${nko.address || ""}<br>${(nko.categories || []).map(c => c.name).join(", ")}`,
+            category: primaryCategorySlug,
+          },
+          title: nko.name,
+          address: nko.address,
+          categorySlugs: categorySlugs,
+          city: nko.city_id !== undefined && nko.city_id !== null
             ? String(nko.city_id)
-            : nko.city_slug ||
-              (nko.city || "").toString().toLowerCase().replace(/\s+/g, "-"),
-      }));
+            : nko.city_slug || (nko.city || "").toString().toLowerCase().replace(/\s+/g, "-"),
+        };
+      });
 
     renderPointsList(pointsData, list);
-
     initMapAndUI(pointsData);
   } catch (err) {
     console.error("Error initializing map from API:", err);
   }
+}
+
+// Вспомогательная функция для создания slug
+function slugify(text) {
+  const map = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'j', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch', 'ъ': '',
+    'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'ju', 'я': 'ja'
+  };
+  
+  return text.toString().toLowerCase()
+    .split('').map(char => map[char] || char).join('')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 function renderPointsList(pointsData, rawList) {
@@ -124,39 +192,14 @@ function renderPointsList(pointsData, rawList) {
   if (!container) return;
   container.innerHTML = "";
 
-  const categoryNames = {
-    ecology: "Экология",
-    territory: "Территория",
-    animals: "Животные",
-    sport: "Спорт",
-    social: "Соц. защита",
-    other: "Другое",
-  };
-
-  const badgeColors = {
-    ecology: "bg-[#56C02B]",
-    territory: "bg-[#FCC30B]",
-    animals: "bg-[#259789]",
-    sport: "bg-[#E20072]",
-    social: "bg-[#1D293D]",
-    other: "bg-[#6CACE4]",
-  };
-
   pointsData.forEach((p) => {
     const raw = rawList.find((r) => r.id === p.id) || {};
-    const keys =
-      raw.category_keys ||
-      (p.properties.category ? [p.properties.category] : ["other"]);
+    const categories = raw.categories || [];
     const addr = p.address || "";
 
-    const badgesHtml = keys
-      .map(
-        (k) =>
-          `<span class="${
-            badgeColors[k] || badgeColors.other
-          } text-white text-xs font-medium px-2 py-1 rounded-md">${
-            categoryNames[k] || k
-          }</span>`
+    const badgesHtml = categories
+      .map(cat => 
+        `<span class="text-white text-xs font-medium px-2 py-1 rounded-md whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] inline-block" style="background-color: ${cat.color};" title="${cat.name}">${cat.name}</span>`
       )
       .join(" ");
 
@@ -167,7 +210,7 @@ function renderPointsList(pointsData, rawList) {
     item.setAttribute("data-coords", JSON.stringify(p.coords));
     item.setAttribute("data-title", p.title || "");
     item.setAttribute("data-address", addr);
-    item.setAttribute("data-categories", keys.join(","));
+    item.setAttribute("data-categories", p.categorySlugs.join(","));
     item.setAttribute("data-city", p.city || "");
 
     item.innerHTML = `
@@ -187,6 +230,9 @@ function renderPointsList(pointsData, rawList) {
 
     container.appendChild(item);
   });
+
+  // Обновляем счётчик сразу после рендеринга
+  updatePointsCount(pointsData.length);
 }
 
 function attachUIHandlers(pointsData) {
@@ -205,23 +251,26 @@ function attachUIHandlers(pointsData) {
     });
   });
 
-  document
-    .getElementById("city-select")
-    .addEventListener("change", function () {
+  const citySelect = document.getElementById("city-select");
+  if (citySelect) {
+    citySelect.addEventListener("change", function () {
       selectedCity = this.value;
       filterPointsByCategoriesAndCity(activeCategories, selectedCity);
     });
+  }
 
-  document
-    .getElementById("clear-filters")
-    .addEventListener("click", function () {
+  const clearFiltersBtn = document.getElementById("clear-filters");
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener("click", function () {
       activeCategories = [];
       selectedCity = "all";
-      document.getElementById("city-select").value = "all";
+      const citySelectEl = document.getElementById("city-select");
+      if (citySelectEl) citySelectEl.value = "all";
       updateCategoryVisualState();
       filterPointsByCategoriesAndCity(activeCategories, selectedCity);
       this.classList.add("hidden");
     });
+  }
 
   document.querySelectorAll(".point-item").forEach((item) => {
     item.addEventListener("click", function () {
@@ -242,10 +291,10 @@ function attachUIHandlers(pointsData) {
 
   // search handlers
   function performSearch() {
-    const searchText = document
-      .getElementById("search-input")
-      .value.trim()
-      .toLowerCase();
+    const searchInputEl = document.getElementById("search-input");
+    if (!searchInputEl) return;
+    
+    const searchText = searchInputEl.value.trim().toLowerCase();
     if (!searchText) {
       filterPointsByCategoriesAndCity(activeCategories, selectedCity);
       return;
@@ -256,8 +305,9 @@ function attachUIHandlers(pointsData) {
       const title = item.getAttribute("data-title").toLowerCase();
       const address = item.getAttribute("data-address").toLowerCase();
       const itemCoords = JSON.parse(item.getAttribute("data-coords"));
-      const categories = item.getAttribute("data-categories").split(",");
+      const categories = item.getAttribute("data-categories").split(",").filter(c => c);
       const itemCity = item.getAttribute("data-city");
+      const itemId = item.getAttribute("data-id");
       const matchesSearch =
         title.includes(searchText) || address.includes(searchText);
       const matchesCategory =
@@ -269,26 +319,20 @@ function attachUIHandlers(pointsData) {
         foundCount++;
         foundCoords.push(itemCoords);
         placemarks.forEach((placemarkItem) => {
-          if (
-            placemarkItem.coords[0] === itemCoords[0] &&
-            placemarkItem.coords[1] === itemCoords[1]
-          )
+          if (placemarkItem.id == itemId) {
             placemarkItem.placemark.options.set("visible", true);
+          }
         });
       } else {
         item.style.display = "none";
         placemarks.forEach((placemarkItem) => {
-          if (
-            placemarkItem.coords[0] === itemCoords[0] &&
-            placemarkItem.coords[1] === itemCoords[1]
-          )
+          if (placemarkItem.id == itemId) {
             placemarkItem.placemark.options.set("visible", false);
+          }
         });
       }
     });
-    document.getElementById(
-      "points-count"
-    ).textContent = `Найдено ${foundCount} ${getPointsWord(foundCount)}`;
+    updatePointsCount(foundCount);
     if (foundCount === 1) map.setCenter(foundCoords[0], 14, { duration: 200 });
     else if (foundCount > 1) {
       const bounds = ymaps.util.bounds.fromPoints(foundCoords);
@@ -297,22 +341,22 @@ function attachUIHandlers(pointsData) {
     }
   }
 
-  document
-    .getElementById("search-input")
-    .addEventListener("input", performSearch);
-  document
-    .getElementById("search-input")
-    .addEventListener("keypress", function (e) {
+  const searchInput = document.getElementById("search-input");
+  const searchButton = document.getElementById("search-button");
+  
+  if (searchInput) {
+    searchInput.addEventListener("input", performSearch);
+    searchInput.addEventListener("keypress", function (e) {
       if (e.key === "Enter") performSearch();
     });
-  document
-    .getElementById("search-button")
-    .addEventListener("click", performSearch);
+  }
+  
+  if (searchButton) {
+    searchButton.addEventListener("click", performSearch);
+  }
 
-  // initial count
-  document.getElementById("points-count").textContent = `Найдено ${
-    pointsData.length
-  } ${getPointsWord(pointsData.length)}`;
+  // Обновляем начальный счётчик
+  updatePointsCount(pointsData.length);
 }
 
 function filterPointsByCategoriesAndCity(categories, city) {
@@ -320,7 +364,7 @@ function filterPointsByCategoriesAndCity(categories, city) {
   let visibleCount = 0;
   let visibleCoords = [];
   pointItems.forEach((item) => {
-    const itemCategories = item.getAttribute("data-categories").split(",");
+    const itemCategories = item.getAttribute("data-categories").split(",").filter(c => c);
     const itemCity = item.getAttribute("data-city");
     const matchesCategory =
       categories.length === 0 ||
@@ -328,31 +372,28 @@ function filterPointsByCategoriesAndCity(categories, city) {
     const matchesCity = city === "all" || itemCity === city;
     const shouldShow = matchesCategory && matchesCity;
     const coords = JSON.parse(item.getAttribute("data-coords"));
+    const itemId = item.getAttribute("data-id");
+    
     if (shouldShow) {
       item.style.display = "block";
       visibleCount++;
       visibleCoords.push(coords);
+      // Находим соответствующий плейсмарк по ID, а не по координатам
       placemarks.forEach((placemarkItem) => {
-        if (
-          placemarkItem.coords[0] === coords[0] &&
-          placemarkItem.coords[1] === coords[1]
-        )
+        if (placemarkItem.id == itemId) {
           placemarkItem.placemark.options.set("visible", true);
+        }
       });
     } else {
       item.style.display = "none";
       placemarks.forEach((placemarkItem) => {
-        if (
-          placemarkItem.coords[0] === coords[0] &&
-          placemarkItem.coords[1] === coords[1]
-        )
+        if (placemarkItem.id == itemId) {
           placemarkItem.placemark.options.set("visible", false);
+        }
       });
     }
   });
-  document.getElementById(
-    "points-count"
-  ).textContent = `Найдено ${visibleCount} ${getPointsWord(visibleCount)}`;
+  updatePointsCount(visibleCount);
   const clearFiltersBtn = document.getElementById("clear-filters");
   if (categories.length > 0 || city !== "all")
     clearFiltersBtn.classList.remove("hidden");
@@ -374,7 +415,11 @@ function filterPointsByCategoriesAndCity(categories, city) {
 
 function updateActiveFiltersDisplay() {
   const activeFiltersContainer = document.getElementById("active-filters");
+  if (!activeFiltersContainer) return; // Элемент может отсутствовать на странице
+  
   const filtersList = activeFiltersContainer.querySelector(".flex");
+  if (!filtersList) return;
+  
   filtersList.innerHTML = "";
   if (activeCategories.length > 0 || selectedCity !== "all") {
     activeFiltersContainer.classList.remove("hidden");
@@ -392,19 +437,13 @@ function updateActiveFiltersDisplay() {
       cityFilterChip.innerHTML = `<span>${cityDisplay}</span><button class="text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100" data-filter-type="city"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>`;
       filtersList.appendChild(cityFilterChip);
     }
-    activeCategories.forEach((category) => {
+    activeCategories.forEach((categorySlug) => {
       const filterChip = document.createElement("div");
       filterChip.className =
         "flex items-center gap-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-xs font-medium";
-      const categoryNames = {
-        ecology: "Экология",
-        territory: "Территория",
-        animals: "Животные",
-        sport: "Спорт",
-        social: "Соц. защита",
-        other: "Другое",
-      };
-      filterChip.innerHTML = `<span>${categoryNames[category]}</span><button class="text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100" data-category="${category}"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>`;
+      const categoryData = categoriesMap[categorySlug] || {};
+      const categoryName = categoryData.name || categorySlug;
+      filterChip.innerHTML = `<span>${categoryName}</span><button class="text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100" data-category="${categorySlug}"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>`;
       filtersList.appendChild(filterChip);
     });
   } else activeFiltersContainer.classList.add("hidden");
@@ -430,29 +469,30 @@ function updateCategoryVisualState() {
   document.querySelectorAll(".category-filter").forEach((category) => {
     const categoryType = category.getAttribute("data-category");
     const isActive = activeCategories.includes(categoryType);
-    category.classList.remove(
-      "ring-2",
-      "ring-offset-2",
-      "ring-[#56C02B]",
-      "ring-[#FCC30B]",
-      "ring-[#259789]",
-      "ring-[#E20072]",
-      "ring-[#1D293D]",
-      "ring-[#6CACE4]"
-    );
+    
+    // Находим цвет категории из data-атрибута
+    const categoryColor = category.getAttribute("data-color") || '#6CACE4';
+    
+    // Устанавливаем CSS переменную для цвета категории
+    category.style.setProperty('--category-color', categoryColor);
+    
     if (isActive) {
-      category.classList.add("ring-2", "ring-offset-2");
-      const ringColors = {
-        ecology: "ring-[#56C02B]",
-        territory: "ring-[#FCC30B]",
-        animals: "ring-[#259789]",
-        sport: "ring-[#E20072]",
-        social: "ring-[#1D293D]",
-        other: "ring-[#6CACE4]",
-      };
-      category.classList.add(ringColors[categoryType]);
+      category.classList.add("active");
+    } else {
+      category.classList.remove("active");
     }
   });
+}
+
+/**
+ * Обновляет счётчик найденных точек НКО
+ * @param {number} count - Количество точек
+ */
+function updatePointsCount(count) {
+  const pointsCountEl = document.getElementById("points-count");
+  if (pointsCountEl) {
+    pointsCountEl.textContent = `Найдено ${count} ${getPointsWord(count)}`;
+  }
 }
 
 function getPointsWord(count) {
@@ -506,29 +546,13 @@ function showNkoModal(id) {
   // badges
   if (badgesEl) {
     badgesEl.innerHTML = "";
-    const keys = nko.category_keys || [];
-    const categoryNames = {
-      ecology: "Экология",
-      territory: "Территория",
-      animals: "Животные",
-      sport: "Спорт",
-      social: "Соц. защита",
-      other: "Другое",
-    };
-    const badgeColors = {
-      ecology: "bg-[#56C02B]",
-      territory: "bg-[#FCC30B]",
-      animals: "bg-[#259789]",
-      sport: "bg-[#E20072]",
-      social: "bg-[#1D293D]",
-      other: "bg-[#6CACE4]",
-    };
-    (keys.length ? keys : ["other"]).forEach((k) => {
+    const categories = nko.categories || [];
+    categories.forEach((cat) => {
       const span = document.createElement("span");
-      span.className = `${
-        badgeColors[k] || badgeColors.other
-      } text-white text-xs font-medium px-2 py-1 rounded-md`;
-      span.textContent = categoryNames[k] || k;
+      span.className = "text-white text-xs font-medium px-2 py-1 rounded-md whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] inline-block";
+      span.style.backgroundColor = cat.color || '#6CACE4';
+      span.textContent = cat.name;
+      span.title = cat.name;
       badgesEl.appendChild(span);
     });
   }

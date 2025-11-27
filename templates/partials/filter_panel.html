@@ -1,0 +1,119 @@
+{# Компонент: Левая панель с фильтрами Включает: - Поиск по названию/адресу НКО - Фильтр по городу - Фильтр по категориям - Счётчик найденных НКО - Список НКО #}
+
+<div
+  class="left-panel flex flex-col min-h-0 bg-gradient-to-r from-[#15256D] to-[#4495D1] dark:from-gray-800 dark:to-gray-700"
+>
+  <div class="p-5 flex flex-col gap-5 h-full overflow-hidden">
+    {# Поиск по НКО #}
+    <div class="relative flex-none">
+      <input
+        id="search-input"
+        type="text"
+        placeholder="Искать по адресу или названию НКО"
+        class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:border-[#025EA1] text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition duration-150 ease-in-out"
+        aria-label="Поиск НКО"
+      />
+      {# Иконка поиска #}
+      <div
+        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+      >
+        <svg
+          class="h-5 w-5 text-gray-400 dark:text-gray-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </div>
+    </div>
+
+    {# Фильтр по городу #}
+    <div
+      class="w-full bg-white dark:bg-gray-700 rounded-lg shadow-md p-6 flex-none"
+    >
+      <div class="border-b border-gray-200 dark:border-gray-600 pb-5">
+        <h3
+          class="text-base font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="w-5 h-5 text-gray-500 dark:text-gray-400"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Город
+        </h3>
+        <div class="relative">
+          <select
+            id="city-select"
+            class="w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:border-[#025EA1] text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition duration-150 ease-in-out appearance-none"
+            aria-label="Выбор города"
+          >
+            <option value="all">Все города</option>
+            {% for city in cities %}
+            <option value="{{ city.id }}">{{ city.name }}</option>
+            {% endfor %}
+          </select>
+          {# Иконка стрелки вниз #}
+          <div
+            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Фильтр по категориям #} {% include 'partials/category_filters.html' %} 
+    {# Счётчик и кнопка сброса фильтров #}
+    <div class="flex justify-between items-center pb-2 flex-none">
+      <span
+        id="points-count"
+        class="text-sm font-medium text-white dark:text-gray-300 ml-4"
+      >
+        Найдено 0 точек НКО
+      </span>
+      <button
+        id="clear-filters"
+        class="text-sm font-medium text-white dark:text-gray-300 hover:underline hidden"
+        aria-label="Сбросить все фильтры"
+      >
+        Сбросить фильтры
+      </button>
+    </div>
+
+    {# Список НКО (заполняется динамически через JavaScript) #}
+    <div
+      id="points-list"
+      class="flex-1 overflow-y-auto pr-2 rounded-lg py-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
+      role="list"
+      aria-label="Список НКО"
+    >
+      {# Заполняется скриптом main.js #}
+    </div>
+  </div>
+</div>

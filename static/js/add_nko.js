@@ -1,8 +1,22 @@
-// Extracted JS from templates/nko/add_nko.html
-// Runs on module import (attach listeners on DOMContentLoaded)
+/**
+ * add_nko.js - Form enhancements for NKO add/edit pages
+ *
+ * Features:
+ * - City autocomplete with Russian cities
+ * - Logo file validation (PNG/JPG/JPEG only)
+ * - Form submission validation
+ *
+ * Note: Theme toggle functionality is handled in base.html
+ */
 
+/**
+ * Creates autocomplete functionality for an input field
+ * @param {HTMLInputElement} inp - The input element to attach autocomplete to
+ * @param {string[]} arr - Array of possible autocomplete values
+ */
 function autocomplete(inp, arr) {
   let currentFocus;
+
   inp.addEventListener("input", function () {
     let val = this.value;
     closeAllLists();
@@ -14,11 +28,12 @@ function autocomplete(inp, arr) {
     container.setAttribute("id", this.id + "autocomplete-list");
     container.setAttribute("class", "autocomplete-items");
     this.parentNode.appendChild(container);
+
     let count = 0;
     for (let i = 0; i < arr.length; i++) {
       if (arr[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) {
         count++;
-        if (count > 10) break;
+        if (count > 10) break; // Limit to 10 suggestions
         const item = document.createElement("DIV");
         item.innerHTML =
           "<strong>" + arr[i].substr(0, val.length) + "</strong>";
@@ -37,12 +52,15 @@ function autocomplete(inp, arr) {
     let x = document.getElementById(this.id + "autocomplete-list");
     if (x) x = x.getElementsByTagName("div");
     if (e.keyCode == 40) {
+      // Down arrow
       currentFocus++;
       addActive(x);
     } else if (e.keyCode == 38) {
+      // Up arrow
       currentFocus--;
       addActive(x);
     } else if (e.keyCode == 13) {
+      // Enter
       e.preventDefault();
       if (currentFocus > -1) {
         if (x) x[currentFocus].click();
@@ -59,14 +77,17 @@ function autocomplete(inp, arr) {
   }
 
   function removeActive(x) {
-    for (let i = 0; i < x.length; i++)
+    for (let i = 0; i < x.length; i++) {
       x[i].classList.remove("autocomplete-active");
+    }
   }
 
   function closeAllLists(elmnt) {
     const x = document.getElementsByClassName("autocomplete-items");
     for (let i = 0; i < x.length; i++) {
-      if (elmnt != x[i] && elmnt != inp) x[i].parentNode.removeChild(x[i]);
+      if (elmnt != x[i] && elmnt != inp) {
+        x[i].parentNode.removeChild(x[i]);
+      }
     }
   }
 
@@ -75,68 +96,52 @@ function autocomplete(inp, arr) {
   });
 }
 
+/**
+ * Validates logo file extension (PNG, JPG, JPEG only)
+ * Displays inline validation messages
+ * @param {HTMLInputElement} fileInput - File input element
+ * @returns {boolean} True if valid or empty, false otherwise
+ */
 function validateLogoFile(fileInput) {
   const validationMessage = document.getElementById("logo-validation");
+
   if (fileInput.files.length > 0) {
     const file = fileInput.files[0];
     const fileName = file.name;
     const fileExtension = fileName.split(".").pop().toLowerCase();
+
     if (["png", "jpg", "jpeg"].includes(fileExtension)) {
+      // Valid file
       validationMessage.textContent = "Файл принят: " + fileName;
       validationMessage.className =
         "file-validation-message file-validation-success";
       validationMessage.style.display = "block";
       return true;
     } else {
+      // Invalid file extension
       validationMessage.textContent =
         "Ошибка: допустимы только файлы с расширениями PNG, JPG, JPEG";
       validationMessage.className =
         "file-validation-message file-validation-error";
       validationMessage.style.display = "block";
-      fileInput.value = "";
+      fileInput.value = ""; // Clear invalid file
       return false;
     }
   } else {
+    // No file selected
     validationMessage.style.display = "none";
     return true;
   }
 }
 
-function initializeTheme(htmlElement, moonIcon, sunIcon) {
-  if (
-    localStorage.theme === "dark" ||
-    (!("theme" in localStorage) &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches)
-  ) {
-    enableDarkTheme(htmlElement, moonIcon, sunIcon);
-  } else {
-    enableLightTheme(htmlElement, moonIcon, sunIcon);
-  }
-}
-
-function enableDarkTheme(htmlElement, moonIcon, sunIcon) {
-  htmlElement.classList.add("dark");
-  localStorage.setItem("theme", "dark");
-  if (moonIcon) moonIcon.classList.add("hidden");
-  if (sunIcon) sunIcon.classList.remove("hidden");
-}
-
-function enableLightTheme(htmlElement, moonIcon, sunIcon) {
-  htmlElement.classList.remove("dark");
-  localStorage.setItem("theme", "light");
-  if (moonIcon) moonIcon.classList.remove("hidden");
-  if (sunIcon) sunIcon.classList.add("hidden");
-}
-
-function toggleTheme(htmlElement, moonIcon, sunIcon) {
-  if (htmlElement.classList.contains("dark"))
-    enableLightTheme(htmlElement, moonIcon, sunIcon);
-  else enableDarkTheme(htmlElement, moonIcon, sunIcon);
-}
-
-// Auto-run initialization on DOMContentLoaded
+/**
+ * Initialize form functionality on DOMContentLoaded
+ * - City autocomplete for Russian cities
+ * - Logo file validation on change
+ * - Form submit validation
+ */
 document.addEventListener("DOMContentLoaded", function () {
-  // Russian cities for autocomplete taken from template
+  // Russian cities for autocomplete (most populated)
   const russianCities = [
     "Москва",
     "Санкт-Петербург",
@@ -147,17 +152,29 @@ document.addEventListener("DOMContentLoaded", function () {
     "Челябинск",
     "Омск",
     "Самара",
+    "Ростов-на-Дону",
+    "Уфа",
+    "Красноярск",
+    "Воронеж",
+    "Пермь",
+    "Волгоград",
   ];
 
+  // Attach autocomplete to city input
   const cityInput = document.getElementById("city");
-  if (cityInput) autocomplete(cityInput, russianCities);
+  if (cityInput) {
+    autocomplete(cityInput, russianCities);
+  }
 
+  // Attach file validation to logo input
   const logoInput = document.getElementById("logo");
-  if (logoInput)
+  if (logoInput) {
     logoInput.addEventListener("change", function () {
       validateLogoFile(this);
     });
+  }
 
+  // Attach form submit validation
   const form = document.getElementById("ngo-form");
   if (form) {
     form.addEventListener("submit", function (e) {
@@ -170,19 +187,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
-
-  // Theme toggle
-  const themeToggle = document.getElementById("theme-toggle");
-  const moonIcon = document.getElementById("moon-icon");
-  const sunIcon = document.getElementById("sun-icon");
-  const htmlElement = document.documentElement;
-
-  initializeTheme(htmlElement, moonIcon, sunIcon);
-  if (themeToggle)
-    themeToggle.addEventListener("click", function () {
-      toggleTheme(htmlElement, moonIcon, sunIcon);
-    });
 });
 
-// Optionally export helpers (not required by template)
-export { autocomplete, validateLogoFile, initializeTheme };
+// Export helpers for potential reuse
+export { autocomplete, validateLogoFile };

@@ -1,87 +1,240 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Карта добрых дел{% endblock %}</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
+
+    {# Tailwind CSS - use locally built file instead of CDN in production #}
+    <link id="tailwind-local" href="{% static 'css/tailwind.css' %}" rel="stylesheet" />
+
+    {# CSS анимация для плавающих сообщений #}
     <style>
-      .navbar-brand {
-        font-weight: bold;
+      @keyframes slide-down {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
-      .footer {
-        margin-top: 50px;
-        padding: 20px 0;
-        background-color: #f8f9fa;
-      }
-      .map-container {
-        height: 600px;
-        background-color: #e9ecef;
+      .animate-slide-down {
+        animation: slide-down 0.3s ease-out;
       }
     </style>
-  </head>
-  <body>
-    <!-- Навигация -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-      <div class="container">
-        <a class="navbar-brand" href="{% url 'index' %}">Карта добрых дел</a>
 
-        <div class="navbar-nav ms-auto">
-          {% if user.is_authenticated %}
-          <span class="navbar-text me-3">
-            Привет, {{ user.get_full_name|default:user.username }}!
-          </span>
-          {% comment %} Show Add / Edit / disabled state depending on user's NKO and moderation status {% endcomment %}
-          {% if user_nko %}
-            {% comment %} Block editing only when there is an actual pending version or the NKO itself isn't approved yet. This matches `edit_nko` view logic and avoids stale `has_pending_changes` flags blocking users. {% endcomment %}
-            {% if user_nko.get_pending_version or not user_nko.is_approved %}
-              <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true" title="Нельзя редактировать — изменения ожидают модерации">Информация НКО (ожидает модерации)</a>
-            {% else %}
-              <a class="nav-link" href="{% url 'edit_nko' user_nko.pk %}">Редактировать НКО</a>
-            {% endif %}
-          {% else %}
-            <a class="nav-link" href="{% url 'add_nko' %}">Добавить НКО</a>
-          {% endif %}
-          <a class="nav-link" href="{% url 'logout' %}">Выйти</a>
-          {% else %}
-          <a class="nav-link" href="{% url 'login' %}">Войти</a>
-          <a class="nav-link" href="{% url 'register' %}">Регистрация</a>
-          {% endif %}
+    {# Google Fonts - Inter #}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      if (typeof tailwind !== 'undefined') {
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              fontFamily: {
+                inter: ["Inter", "sans-serif"],
+              },
+            },
+          },
+        };
+      }
+    </script>
+
+    {# Общие стили для всех страниц #}
+    <style>
+      /* Стили логотипа для темной темы */
+      .logo-light,
+      .logo-dark {
+        display: inline-block;
+        height: 1.5rem; /* 24px */
+        width: auto;
+        vertical-align: middle;
+        transition: all 0.2s ease-in-out;
+      }
+
+      /* Светлая тема - показываем темный логотип */
+      .logo-dark {
+        display: none;
+      }
+
+      /* Темная тема - показываем светлый логотип */
+      .dark .logo-light {
+        display: none;
+      }
+
+      .dark .logo-dark {
+        display: inline-block;
+      }
+
+      /* Увеличиваем размер на больших экранах */
+      @media (min-width: 768px) {
+        .logo-light,
+        .logo-dark {
+          height: 1.75rem; /* 28px */
+        }
+      }
+    </style>
+
+    {# Дополнительные стили страницы #} {% block extra_css %}{% endblock %}
+  </head>
+
+  <body
+    class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-inter {% block body_class %}{% endblock %}"
+  >
+    {# Навигация #} {% block header %} {% include 'partials/header.html' %} 
+    {% endblock %}
+    
+    {# Системные сообщения Django - современный стиль #}
+    {% if messages %}
+    <div class="fixed top-4 sm:top-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-full sm:max-w-md" id="messages-container" style="z-index: 2147483647 !important; position: fixed !important;">
+      {% for message in messages %}
+      <div class="mb-3 rounded-xl shadow-2xl border-2 overflow-hidden message-alert animate-slide-in-right
+                  {% if message.tags == 'error' %}bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-700
+                  {% elif message.tags == 'warning' %}bg-yellow-50 dark:bg-yellow-900 border-yellow-200 dark:border-yellow-700
+                  {% elif message.tags == 'success' %}bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700
+                  {% else %}bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-700{% endif %}" 
+           role="alert">
+        <div class="flex items-start gap-3 p-4">
+          <!-- Icon -->
+          <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xl
+                      {% if message.tags == 'error' %}bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-200
+                      {% elif message.tags == 'warning' %}bg-yellow-100 dark:bg-yellow-800 text-yellow-600 dark:text-yellow-200
+                      {% elif message.tags == 'success' %}bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-200
+                      {% else %}bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-200{% endif %}">
+            {% if message.tags == 'error' %}❌
+            {% elif message.tags == 'warning' %}⚠️
+            {% elif message.tags == 'success' %}✅
+            {% else %}ℹ️{% endif %}
+          </div>
+          
+          <!-- Content -->
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm sm:text-base mb-1
+                      {% if message.tags == 'error' %}text-red-900 dark:text-red-100
+                      {% elif message.tags == 'warning' %}text-yellow-900 dark:text-yellow-100
+                      {% elif message.tags == 'success' %}text-green-900 dark:text-green-100
+                      {% else %}text-blue-900 dark:text-blue-100{% endif %}">
+              {% if message.tags == 'error' %}Ошибка
+              {% elif message.tags == 'warning' %}Внимание
+              {% elif message.tags == 'success' %}Успешно
+              {% else %}Информация{% endif %}
+            </p>
+            <p class="text-xs sm:text-sm leading-relaxed
+                      {% if message.tags == 'error' %}text-red-800 dark:text-red-200
+                      {% elif message.tags == 'warning' %}text-yellow-800 dark:text-yellow-200
+                      {% elif message.tags == 'success' %}text-green-800 dark:text-green-200
+                      {% else %}text-blue-800 dark:text-blue-200{% endif %}">
+              {{ message }}
+            </p>
+          </div>
+          
+          <!-- Close button -->
+          <button onclick="this.closest('.message-alert').style.opacity='0'; setTimeout(() => this.closest('.message-alert').remove(), 300);" 
+                  class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200
+                         hover:scale-110 active:scale-95
+                         {% if message.tags == 'error' %}text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-800
+                         {% elif message.tags == 'warning' %}text-yellow-600 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-800
+                         {% elif message.tags == 'success' %}text-green-600 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-800
+                         {% else %}text-blue-600 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800{% endif %}"
+                  aria-label="Закрыть">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       </div>
-    </nav>
-
-    <!-- Сообщения -->
-    <div class="container mt-3">
-      {% if messages %} {% for message in messages %}
-      <div
-        class="alert alert-{{ message.tags }} alert-dismissible fade show"
-        role="alert"
-      >
-        {{ message }}
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-        ></button>
-      </div>
-      {% endfor %} {% endif %}
+      {% endfor %}
     </div>
+    <style>
+      @keyframes slide-in-right {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out;
+      }
+      .message-alert {
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+      }
+    </style>
+    <script>
+      // Auto-dismiss after 8 seconds
+      setTimeout(() => {
+        const messages = document.querySelectorAll('.message-alert');
+        messages.forEach(msg => { 
+          msg.style.opacity = '0'; 
+          msg.style.transform = 'translateX(100%)';
+          setTimeout(() => msg.remove(), 300); 
+        });
+      }, 8000);
+    </script>
+    {% endif %}
+    
+    {# Основной контент #}
+    <main class="{% block main_class %}{% endblock %}">
+      {% block content %}{% endblock %}
+    </main>
 
-    <!-- Основной контент -->
-    <main>{% block content %} {% endblock %}</main>
-
-    <!-- Футер -->
-    <footer class="footer mt-5">
-      <div class="container text-center">
+    {# Футер #} {% block footer %}
+    <footer
+      class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto"
+    >
+      <div
+        class="container mx-auto px-4 py-6 text-center text-sm text-gray-600 dark:text-gray-400"
+      >
         <p>&copy; 2024 Карта добрых дел. Все права защищены.</p>
       </div>
     </footer>
+    {% endblock %}
+    {# JavaScript #} {% block scripts %}{% endblock %} 
+    {# Theme Toggle Script - работает на всех страницах #} {% block theme_script %}
+    <script>
+      // Инициализация темной темы при загрузке страницы
+      const htmlElement = document.documentElement;
+      if (
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        htmlElement.classList.add("dark");
+      } else {
+        htmlElement.classList.remove("dark");
+      }
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    {% block scripts %}{% endblock %}
+      // Обработчик переключения темы
+      document.addEventListener("DOMContentLoaded", function () {
+        const themeToggleBtn = document.getElementById("theme-toggle");
+
+        if (themeToggleBtn) {
+          themeToggleBtn.addEventListener("click", () => {
+            if (htmlElement.classList.contains("dark")) {
+              htmlElement.classList.remove("dark");
+              localStorage.theme = "light";
+            } else {
+              htmlElement.classList.add("dark");
+              localStorage.theme = "dark";
+            }
+          });
+        }
+      });
+    </script>
+    {% endblock %}
+    {# Extra JS block for child templates #}
+    {% block extra_js %}{% endblock %}
   </body>
 </html>

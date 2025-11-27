@@ -1,0 +1,854 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{# Страница, повторяющая адаптивный дизайн из React app (map-of-good-deeds) #}
+{% block title %}Карта добрых дел{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/index_tsx.css' %}" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  .map-marker-pulse { animation: pulse 1.5s infinite cubic-bezier(0.4,0,0.6,1); }
+  @keyframes pulse { 0%,100%{ transform: scale(1.75); opacity: .7 } 50%{ transform: scale(2.5); opacity:1 } }
+  /* Small animations used by the template */
+  @keyframes fade-in-up-sm { from{ opacity:0; transform: translateY(8px) scale(.98)} to{opacity:1; transform:none} }
+  .animate-fade-in-up-sm{ animation: fade-in-up-sm .15s ease-out forwards }
+  .backdrop-blur-xl { backdrop-filter: blur(6px); }
+  .shadow-inner-sm { box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
+    /* Project brand colors (used as Tailwind-like utility classes in React app)
+      Define them here so the Django template shows the same green buttons even
+      without Tailwind preprocessing. */
+    .bg-brand-green { background-color: #56C02B !important; }
+    .bg-brand-green-dark { background-color: #4F8B3C !important; }
+    .text-brand-green-dark { color: #4F8B3C !important; }
+    .hover\:bg-brand-green-dark:hover { background-color: #4F8B3C !important; }
+    /* Stronger visible focus: solid green inner ring + softer outer glow */
+    .focus\:ring-brand-green:focus {
+      outline: 2px solid #56C02B;
+      box-shadow: none;
+      transition: outline-color 160ms ease;
+    }
+    .focus\:ring-offset-2 { outline-offset: 2px; }
+    /* Point item focus/hover: make outlines and subtle bg match React brand green */
+    .point-item:focus { outline: none; box-shadow: 0 0 0 4px rgba(86,192,43,0.12) !important; }
+    .point-item:hover { box-shadow: 0 8px 24px rgba(2,6,23,0.06); }
+    .point-item.active-like { background-color: rgba(86,192,43,0.08) !important; }
+    /* Theme variables and dark-mode helpers (simple, non-Tailwind fallback) */
+    :root{
+      --bg: #ffffff;
+      --text: #0f172a;
+      --panel: rgba(255,255,255,0.60);
+      --panel-border: rgba(148,163,184,0.12);
+      --input-bg: rgba(255,255,255,0.70);
+      --input-border: rgba(148,163,184,0.12);
+    }
+    .dark{
+      --bg: #07101a; /* dark page background */
+      --text: #e6eef8; /* light text */
+      --panel: rgba(6,10,15,0.62);
+      --panel-border: rgba(255,255,255,0.04);
+      --input-bg: rgba(10,14,20,0.6);
+      --input-border: rgba(255,255,255,0.06);
+    }
+    /* Apply variables to common areas used in this template */
+    body{ background-color: var(--bg); color: var(--text); }
+    .map-container{ background-color: var(--bg); }
+    /* Panels which should follow the theme - explicit helper class to avoid trying to override many utility classes */
+    .themed-bg{ background-color: var(--panel) !important; color: var(--text) !important; border-color: var(--panel-border) !important; }
+    .themed-input{ background-color: var(--input-bg) !important; color: var(--text) !important; border-color: var(--input-border) !important; }
+    /* Toggle helper to show/hide icons inside the button */
+    .theme-toggle .icon-moon{ display:none; }
+    .dark .theme-toggle .icon-moon{ display:inline-block; }
+    .dark .theme-toggle .icon-sun{ display:none; }
+    /* Broad overrides for commonly used utility classes so dark theme applies site-wide */
+    .dark .bg-white\/60 { background-color: var(--panel) !important; }
+    .dark .bg-white\/70 { background-color: var(--input-bg) !important; }
+    .dark .bg-white\/90 { background-color: rgba(6,10,15,0.72) !important; }
+    .dark .text-slate-800, .dark .text-slate-700, .dark .text-slate-600 { color: var(--text) !important; }
+    .dark .border-slate-200\/80, .dark .border-slate-200\/60, .dark .border-slate-200\/70 { border-color: var(--panel-border) !important; }
+    /* Avoid overriding backdrop/overlay backgrounds to preserve modal rounded corners and overlay contrast */
+    .dark input, .dark select, .dark textarea, .dark button { color: var(--text) !important; }
+    .dark .shadow-xl, .dark .shadow-lg, .dark .shadow-2xl { box-shadow: 0 8px 24px rgba(2,6,23,0.12) !important; }
+    .dark .text-white { color: #fff !important; }
+    /* Specific overrides for dynamically-created NKO cards and common utility variants */
+    .dark .bg-white\/80 { background-color: var(--panel) !important; }
+    .dark .border-slate-200\/90 { border-color: var(--panel-border) !important; }
+    .dark .text-slate-800 { color: var(--text) !important; }
+    .dark .text-slate-500, .dark .text-slate-400 { color: rgba(230,238,248,0.8) !important; }
+    .dark .point-item { background-color: var(--panel) !important; color: var(--text) !important; border-color: var(--panel-border) !important; }
+    .dark .point-item h3 { color: var(--text) !important; }
+    .dark .point-item p { color: rgba(230,238,248,0.85) !important; }
+    /* Ensure inner category icon blocks keep contrast */
+    .dark .point-item .flex-shrink-0 { box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important; }
+    /* Mobile sidebar: ensure drag-handle, headers and category labels are themed */
+    .dark .text-slate-900 { color: var(--text) !important; }
+    .dark .bg-slate-300 { background-color: rgba(255,255,255,0.06) !important; }
+    .dark .w-16.h-1\.5 { background-color: rgba(255,255,255,0.06) !important; }
+    /* Select / option text sometimes uses text-slate-900 - ensure it adjusts */
+    .dark select option, .dark .categories-grid button span { color: var(--text) !important; }
+    /* Modal and small utility backgrounds (exclude modal category icon so inline category colors remain) */
+    .dark .bg-slate-100:not(#nko-modal-category-icon) { background-color: var(--panel) !important; }
+    .dark .hover\:bg-slate-100:not(#nko-modal-category-icon):hover { background-color: var(--panel-border) !important; }
+     /* Make the NKO modal follow dark theme while keeping rounded corners
+       Use a nearly-opaque dark background so modal content is readable over page */
+    /* Use solid dark background for modal on desktop to avoid translucency */
+    .dark #nko-modal-content { background-color: #061018 !important; color: var(--text) !important; }
+      .dark #nko-modal-content .text-slate-800 { color: var(--text) !important; }
+      .dark #nko-modal-content .border-slate-200 { border-color: var(--panel-border) !important; }
+      /* Override small inner utility backgrounds to be solid in dark modal */
+      .dark #nko-modal-content .bg-slate-100:not(#nko-modal-category-icon) { background-color: #081218 !important; }
+    /* Ensure brand green links inside modal stay the brand color (readable on dark bg) */
+    .dark #nko-modal-content a.text-brand-green-dark,
+    .dark #nko-modal-content .text-brand-green-dark { color: #56C02B !important; }
+    .dark #nko-modal-content a.text-brand-green-dark:hover { color: #4F8B3C !important; }
+    /* Make top-right user menu less transparent for readability */
+    #user-menu { background-color: rgba(255,255,255,0.96) !important; }
+    .dark #user-menu { background-color: rgba(6,10,15,0.96) !important; color: var(--text) !important; border-color: var(--panel-border) !important; }
+
+    /* Ensure mobile sidebar header uses themed background when present */
+    .dark .mobile-sidebar .themed-bg, .dark .mobile-sidebar .p-4.themed-bg { background-color: var(--panel) !important; }
+
+    /* On small screens (mobile), make the modal content fully opaque for readability */
+    @media (max-width: 640px) {
+      /* Light theme: solid white background */
+      #nko-modal-content { background-color: #ffffff !important; }
+      /* Dark theme: use a solid dark panel (no transparency) */
+      .dark #nko-modal-content { background-color: #061018 !important; color: var(--text) !important; }
+      /* Ensure inner light-utility blocks don't force translucency on mobile */
+      #nko-modal-content .bg-slate-100 { background-color: #ffffff !important; }
+      .dark #nko-modal-content .bg-slate-100 { background-color: #0b1216 !important; }
+    }
+</style>
+{% endblock %}
+
+{% block body_class %}overflow-hidden{% endblock %}
+
+{% block main_class %}main-container flex flex-col md:flex-row h-screen p-0 m-0{% endblock %}
+
+{% block content %}
+
+{% include 'partials/nko_modal_tsx.html' %}
+{% include 'partials/add_nko_modal_tsx.html' %}
+{% include 'partials/my_applications_modal.html' %}
+
+<!-- Main app layout recreated from React components -->
+<div class="flex-1 flex flex-col md:flex-row h-full">
+
+<!-- React-style Sidebar (visuals from map-of-good-deeds) -->
+<div id="mobile-sidebar" class="w-full lg:w-[420px] lg:absolute lg:top-4 lg:bottom-4 lg:left-4 mobile-sidebar" style="z-index:99999;">
+  <div class="bg-white/60 backdrop-blur-xl border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden rounded-t-2xl lg:rounded-2xl h-full themed-bg">
+  <!-- Mobile Header / Drag Handle -->
+  <div class="p-4 border-b border-slate-200/80 flex items-center justify-between lg:hidden themed-bg">
+    <div class="w-12"></div>
+    <div class="w-16 h-1.5 bg-slate-300 rounded-full"></div>
+    <button id="sidebar-close-mobile" class="p-2 -m-2 text-slate-500">✕</button>
+  </div>
+
+  <div class="p-5 border-b border-slate-200/80 hidden lg:block themed-bg">
+      <div class="flex items-center gap-3 mb-6">
+      <div class="bg-brand-green p-3 rounded-lg shadow-inner-sm flex items-center justify-center">
+        <img src="{% static 'images/rosatom-logo.svg' %}" alt="Росатом" class="w-8 h-8" style="filter: brightness(0) invert(1);" />
+      </div>
+      <h1 class="text-xl font-bold text-slate-800">Карта добрых дел</h1>
+    </div>
+
+    <div class="relative mb-3">
+      <!-- Search icon on the left like in React app -->
+      <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500 pointer-events-none" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <input id="search-input" type="text" placeholder="По названию или адресу..." class="w-full pl-11 pr-4 py-3 bg-white/70 dark:bg-slate-800/70 text-slate-800 dark:text-slate-200 border border-slate-300/80 dark:border-slate-700/80 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green outline-none transition themed-input" />
+    </div>
+
+    <div class="relative">
+      <!-- Map icon on the left like in React app -->
+      <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500 pointer-events-none" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
+      <input 
+        type="text" 
+        id="city-filter-input" 
+        placeholder="Все города" 
+        class="w-full pl-11 pr-4 py-3 bg-white/70 dark:bg-slate-800/70 text-slate-800 dark:text-slate-200 border border-slate-300/80 dark:border-slate-700/80 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green outline-none transition themed-input"
+        autocomplete="off"
+      />
+      <input type="hidden" id="city-filter-id" value="all" />
+      <div id="city-filter-suggestions" class="absolute z-50 w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg mt-1 max-h-60 overflow-y-auto hidden shadow-xl"></div>
+    </div>
+  </div>
+
+  <div class="p-5 border-b border-slate-200/80 themed-bg">
+    <div class="flex items-center gap-2 mb-4"><h3 class="text-md font-semibold text-slate-600">Категории</h3></div>
+    <div class="categories-grid">
+      {% for cat in categories %}
+          <button title="{{ cat.name }}" aria-label="{{ cat.name }}" data-category="{{ cat.id }}" data-color="{{ cat.color }}" class="category-filter flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium text-slate-900 transition-all duration-200 transform hover:scale-105 shadow-sm">
+            <span class="w-3 h-3 rounded-full category-color-dot" style="background-color: {{ cat.color }}; display:inline-block;"></span>
+            <span>{{ cat.name }}</span>
+          </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="p-4 flex-shrink-0 backdrop-blur-sm border-b border-slate-200/60 themed-bg">
+    <p id="points-count" class="text-sm font-semibold text-slate-600">Найдено 0 организаций</p>
+  </div>
+
+  <div id="points-list" class="flex-1 overflow-y-auto p-4 pt-2 space-y-3"></div>
+  </div>
+</div>
+
+  <!-- Mobile open button: visible on small screens only -->
+  <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30 lg:hidden">
+    <button id="open-sidebar-mobile" class="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-slate-200/70 focus:outline-none focus:ring-2 focus:ring-brand-green themed-bg">Фильтры</button>
+  </div>
+
+  <!-- Overlay for mobile sidebar -->
+  <div id="mobile-sidebar-overlay" class="hidden fixed inset-0 bg-black/30 lg:hidden" style="z-index:99990;"></div>
+
+  <!-- Map container -->
+  <div id="map" class="map-container relative flex-1 min-h-[400px]">
+
+    <!-- Top-right actions (login / add/edit NGO / layout toggle) -->
+    <div class="absolute top-4 right-4 z-30">
+      <div class="bg-white/60 backdrop-blur-lg border border-slate-200/80 shadow-lg rounded-xl px-2 py-2 flex items-center justify-end gap-2 themed-bg">
+        {% if user.is_authenticated %}
+          
+          {% if not user_nko %}
+          <button id="add-edit-ngo" class="flex items-center gap-2 bg-brand-green text-white font-semibold px-3 py-2 rounded-lg shadow-sm hover:bg-brand-green-dark transition-transform transition-colors transform hover:scale-105 h-10 focus:outline-none focus:ring-2 focus:ring-brand-green focus:ring-offset-2">
+            <!-- Plus icon -->
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2h6z" fill="currentColor"/></svg>
+            <span class="hidden lg:inline">Добавить НКО</span>
+          </button>
+          {% else %}
+            {% if user_nko.get_pending_version or not user_nko.is_approved %}
+              <!-- Pending badge: match React Header.tsx styles -->
+              <div class="flex items-center gap-2 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 font-semibold px-3 py-2 rounded-lg border border-amber-200/80 dark:border-amber-700/80 h-10" title="Изменения ожидают модерации">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span class="hidden md:inline leading-none align-middle">В ожидании проверки</span>
+              </div>
+            {% else %}
+              <button id="add-edit-ngo" class="flex items-center gap-2 bg-brand-green text-white font-semibold px-3 py-2 rounded-lg shadow-sm hover:bg-brand-green-dark transition-transform transition-colors transform hover:scale-105 h-10 focus:outline-none focus:ring-2 focus:ring-brand-green focus:ring-offset-2">
+                <!-- Pencil icon -->
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 21h4l11-11-4-4L4 17v4z" fill="currentColor"/></svg>
+                <span class="hidden lg:inline">Редактировать НКО</span>
+              </button>
+            {% endif %}
+          {% endif %}
+          <div class="relative">
+            <button id="user-menu-toggle" class="w-10 h-10 flex items-center justify-center bg-white/60 hover:bg-white rounded-lg transition-transform transition-colors transform hover:scale-105 focus:outline-none themed-bg">
+              <!-- User icon -->
+              <svg class="w-5 h-5 text-slate-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-4 0-7 2-7 4v2h14v-2c0-2-3-4-7-4z" fill="currentColor"/></svg>
+            </button>
+            <div id="user-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200/80 py-2 animate-fade-in-up-sm themed-bg">
+              <a href="{% url 'my_requests_tsx' %}" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-slate-100 transition-colors">Мои заявки</a>
+              <a href="{% url 'logout' %}" id="logout-link" class="w-full text-left flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-slate-100 transition-colors">Выйти</a>
+            </div>
+          </div>
+          <!-- Theme toggle placed outside user-menu wrapper so dropdown doesn't overlap it -->
+          <button class="theme-toggle w-10 h-10 flex items-center justify-center bg-white/60 hover:bg-white rounded-lg transition-transform transform hover:scale-105 focus:outline-none themed-bg" aria-label="Toggle theme">
+            <!-- Sun icon (shown in light mode) -->
+            <svg class="icon-sun w-5 h-5 text-slate-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4V2m0 20v-2M4.22 4.22L2.81 2.81M21.19 21.19l-1.41-1.41M4 12H2m20 0h-2M4.22 19.78l-1.41 1.41M21.19 2.81l-1.41 1.41M12 8a4 4 0 100 8 4 4 0 000-8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <!-- Moon icon (shown in dark mode) -->
+            <svg class="icon-moon w-5 h-5 text-slate-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="currentColor"/></svg>
+          </button>
+        {% else %}
+          <button id="login-btn" class="flex items-center gap-2 bg-brand-green text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-brand-green-dark transition-transform transition-colors transform hover:scale-105 focus:outline-none">
+            <!-- Login icon -->
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 17l5-5-5-5v10zM4 20h12v-2H4V6h12V4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2z" fill="currentColor"/></svg>
+            <span>Войти</span>
+          </button>
+          <!-- Theme toggle for unauthenticated state -->
+          <button class="theme-toggle ml-2 w-10 h-10 flex items-center justify-center bg-white/60 hover:bg-white rounded-lg transition-transform transform hover:scale-105 focus:outline-none themed-bg" aria-label="Toggle theme">
+            <svg class="icon-sun w-5 h-5 text-slate-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4V2m0 20v-2M4.22 4.22L2.81 2.81M21.19 21.19l-1.41-1.41M4 12H2m20 0h-2M4.22 19.78l-1.41 1.41M21.19 2.81l-1.41 1.41M12 8a4 4 0 100 8 4 4 0 000-8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg class="icon-moon w-5 h-5 text-slate-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="currentColor"/></svg>
+          </button>
+        {% endif %}
+
+        
+      </div>
+    </div>
+
+    <!-- Markers are rendered on the Yandex map; no DOM marker layer here anymore -->
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Export server data as safe JSON for client-side usage -->
+{{ ngos|json_script:"ngos-data" }}
+{{ categories|json_script:"categories-data" }}
+{{ cities|json_script:"cities-data" }}
+{# Подключаем Яндекс.Карты API и основной модуль инициализации карты #}
+<script src="https://api-maps.yandex.ru/2.1/?apikey={{ YANDEX_MAPS_API_KEY }}&lang=ru_RU" type="text/javascript" defer></script>
+  <script src="{% static 'js/address_autocomplete.js' %}" defer></script>
+<script type="module">
+  import { fetchAndInit } from '{% static "js/main_tsx.js" %}';
+
+  function tryInit() {
+    if (typeof ymaps !== 'undefined') {
+      fetchAndInit();
+    } else {
+      setTimeout(tryInit, 200);
+    }
+  }
+  tryInit();
+</script>
+<script>
+  // Read JSON data produced by Django's json_script
+  window.APP_DATA = {
+    ngos: JSON.parse(document.getElementById('ngos-data')?.textContent || '[]'),
+    categories: JSON.parse(document.getElementById('categories-data')?.textContent || '[]'),
+    cities: JSON.parse(document.getElementById('cities-data')?.textContent || '[]'),
+    isAuthenticated: {{ user.is_authenticated|yesno:"true,false" }},
+    userHasNgo: {{ user_has_ngo|default_if_none:False|yesno:"true,false" }}
+  };
+</script>
+<!-- My Applications now opens as a full page; no modal loader script needed -->
+<script>
+  // Position markers inside #markers-root using data from sidebar cards
+  function latToY(lat){ return ((90 - parseFloat(lat)) / 180) * 100; }
+  function lngToX(lng){ return ((parseFloat(lng) + 180) / 360) * 100; }
+
+  function createMarkerElement(ngo){
+    const btn = document.createElement('button');
+    btn.className = 'absolute -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-brand-green rounded-full shadow-lg ring-2 ring-white transition-transform duration-200 ease-in-out hover:scale-150';
+    btn.setAttribute('aria-label', 'Показать информацию о ' + (ngo.name || 'НКО'));
+    btn.dataset.ngoId = ngo.id;
+    // Support both {lat,lng} and {latitude,longitude} shapes coming from different sources
+    const latVal = (typeof ngo.lat !== 'undefined') ? ngo.lat : ngo.latitude;
+    const lngVal = (typeof ngo.lng !== 'undefined') ? ngo.lng : ngo.longitude;
+    const latNum = parseFloat(latVal);
+    const lngNum = parseFloat(lngVal);
+    if (Number.isNaN(latNum) || Number.isNaN(lngNum)) return null;
+    btn.style.left = lngToX(lngNum) + '%';
+    btn.style.top = latToY(latNum) + '%';
+    btn.addEventListener('click', () => openNgoModal(ngo));
+    return btn;
+  }
+
+  function collectNgosFromSidebar(){
+    // Sidebar items may use either `data-id` or `data-ngo-id` and coordinates
+    const nodes = document.querySelectorAll('[data-ngo-id], [data-id]');
+    const list = [];
+    nodes.forEach(n => {
+      const id = n.dataset.ngoId || n.dataset.id || null;
+      const coords = n.dataset.coords ? JSON.parse(n.dataset.coords) : [];
+      const lat = (n.dataset.lat !== undefined) ? n.dataset.lat : (coords && coords[0] ? coords[0] : 0);
+      const lng = (n.dataset.lng !== undefined) ? n.dataset.lng : (coords && coords[1] ? coords[1] : 0);
+      list.push({ id: id, name: n.querySelector('h3')?.textContent?.trim(), address: n.querySelector('p')?.textContent?.trim(), lat: lat, lng: lng });
+    });
+    return list;
+  }
+
+  function renderMarkers(){
+    const root = document.getElementById('markers-root');
+    if(!root) return;
+    root.innerHTML = '';
+    // Prefer APP_DATA.ngos (provided by server) otherwise collect from DOM
+    const ngos = (window.APP_DATA && window.APP_DATA.ngos && window.APP_DATA.ngos.length) ? window.APP_DATA.ngos : collectNgosFromSidebar();
+    ngos.forEach(ngo => {
+      const el = createMarkerElement(ngo);
+      if (el) root.appendChild(el);
+    });
+  }
+
+  function openNgoModal(ngo){
+    const modal = document.getElementById('ngo-modal');
+    if(!modal) return;
+    document.getElementById('ngo-name').textContent = ngo.name || '';
+    document.getElementById('ngo-desc').textContent = ngo.description || '';
+    document.getElementById('ngo-address').textContent = ngo.address || '';
+    document.getElementById('ngo-phone').textContent = ngo.phone || '';
+    document.getElementById('ngo-website').textContent = ngo.website || '';
+    modal.classList.remove('hidden');
+  }
+
+  function closeNgoModal(){ document.getElementById('ngo-modal')?.classList.add('hidden'); }
+
+  // Export openNgoModal to window IMMEDIATELY (before module loads)
+  window.openNgoModal = openNgoModal;
+
+  document.addEventListener('DOMContentLoaded', function(){
+    // DOM marker layer removed; map placemarks are handled by Yandex map module
+    document.getElementById('ngo-close')?.addEventListener('click', closeNgoModal);
+    document.getElementById('sidebar-close-mobile')?.addEventListener('click', () => { document.querySelector('aside')?.classList.toggle('hidden'); });
+    document.querySelectorAll('[data-ngo-id]').forEach(card => {
+      card.addEventListener('click', () => {
+        const ngo = { id: card.dataset.ngoId, name: card.querySelector('h3')?.textContent, address: card.querySelector('p')?.textContent, lat: card.dataset.lat, lng: card.dataset.lng };
+        openNgoModal(ngo);
+      });
+    });
+
+    // Top-right user menu toggle
+    document.getElementById('user-menu-toggle')?.addEventListener('click', (e) => {
+      const menu = document.getElementById('user-menu');
+      if(menu) menu.classList.toggle('hidden');
+    });
+
+    // Login button - if present, redirect to login_tsx page
+    document.getElementById('login-btn')?.addEventListener('click', () => { window.location.href = '/accounts/login/'; });
+
+    // Add/edit NGO button - open the TSX-style add/edit modal instead of redirect
+    const addEditBtn = document.getElementById('add-edit-ngo');
+    function openAddNgoModal(editMode=false, ngoData=null){
+      const overlay = document.getElementById('add-nko-overlay');
+      const modal = document.getElementById('add-nko-modal');
+      const form = document.getElementById('add-nko-form');
+      const submitBtn = document.getElementById('add-nko-submit');
+      const nextBtn = document.getElementById('add-nko-next');
+      const backBtn = document.getElementById('add-nko-back');
+      let step = 0;
+      const steps = Array.from(document.querySelectorAll('.add-nko-step'));
+      const stepTitles = ['Основная информация','Расположение','Контакты','Проверка'];
+      // Mini-map state
+      let miniMap = null;
+      let miniPlacemark = null;
+      let miniMapInitialized = false;
+
+      function initMiniMap(lat = 55.751244, lng = 37.618423){
+        // Wait for ymaps until available
+        if(typeof ymaps === 'undefined'){
+          setTimeout(()=>initMiniMap(lat,lng), 200);
+          return;
+        }
+        try{
+          // avoid re-initializing
+          if(miniMapInitialized) return;
+          const container = document.getElementById('add-nko-mini-map');
+          if(!container) return;
+          // Defensive cleanup: sometimes when theme toggles or the modal is re-shown
+          // leftover Yandex DOM nodes remain in the container which can lead to
+          // visual duplicate panes. Remove any prior ymaps-generated nodes
+          // before creating a fresh map instance.
+          try{
+            const leftover = container.querySelectorAll('[class*="ymaps-"]');
+            if(leftover && leftover.length){ leftover.forEach(n => n.remove()); }
+          }catch(e){}
+          miniMap = new ymaps.Map(container, {
+            center: [parseFloat(lat), parseFloat(lng)],
+            zoom: 12,
+            controls: []
+          });
+          // Create a draggable placemark
+          miniPlacemark = new ymaps.Placemark([parseFloat(lat), parseFloat(lng)], {}, {
+            draggable: true,
+            preset: 'islands#greenDotIcon'
+          });
+          miniMap.geoObjects.add(miniPlacemark);
+          // Update hidden inputs on drag end
+          miniPlacemark.events.add('dragend', function(){
+            const coords = miniPlacemark.geometry.getCoordinates();
+            document.getElementById('add-nko-lat').value = coords[0];
+            document.getElementById('add-nko-lng').value = coords[1];
+          });
+          // When map is clicked, move placemark
+          miniMap.events.add('click', function(e){
+            const coords = e.get('coords');
+            miniPlacemark.geometry.setCoordinates(coords);
+            document.getElementById('add-nko-lat').value = coords[0];
+            document.getElementById('add-nko-lng').value = coords[1];
+          });
+          miniMapInitialized = true;
+        }catch(err){ /* miniMap init error */ }
+            // Attach a global listener so address autocomplete can update the mini-placemark
+            try{
+              coordsUpdateHandler = function(e){
+                const lat = e.detail && e.detail.lat; const lon = e.detail && e.detail.lon;
+                if(miniPlacemark && miniMap && typeof lat !== 'undefined' && typeof lon !== 'undefined'){
+                  miniPlacemark.geometry.setCoordinates([lat, lon]);
+                  miniMap.panTo([lat, lon]);
+                  document.getElementById('add-nko-lat').value = lat;
+                  document.getElementById('add-nko-lng').value = lon;
+                }
+              };
+              document.addEventListener('addressCoordsUpdated', coordsUpdateHandler);
+            }catch(e){ }
+            
+            // Ensure placemark reflects any existing hidden inputs (e.g. prefilled on edit)
+            try{
+              const latEl = document.getElementById('add-nko-lat');
+              const lngEl = document.getElementById('add-nko-lng');
+              const latVal = latEl && latEl.value ? parseFloat(latEl.value) : null;
+              const lngVal = lngEl && lngEl.value ? parseFloat(lngEl.value) : null;
+              if (miniPlacemark && miniMap) {
+                if (latVal && lngVal) {
+                  miniPlacemark.geometry.setCoordinates([latVal, lngVal]);
+                  miniMap.panTo([latVal, lngVal]);
+                } else {
+                  // If no coords but an address exists, try a best-effort geocode via global helper
+                  try{
+                    const addr = document.getElementById('add-nko-address') && document.getElementById('add-nko-address').value;
+                    if (addr && typeof geocodeAndFillCoords === 'function') {
+                      geocodeAndFillCoords(addr).catch(()=>{});
+                    }
+                  }catch(e){}
+                }
+              }
+            }catch(e){}
+      }
+
+      function showStep(i){
+        steps.forEach(s => s.classList.add('hidden'));
+        const el = steps[i]; if(el) el.classList.remove('hidden');
+        // Disable inputs in hidden steps so native validation won't try to focus them
+        try{
+          steps.forEach(s => {
+            const disabled = s.classList.contains('hidden');
+            s.querySelectorAll('input,select,textarea').forEach(inp => {
+              try{ inp.disabled = disabled; }catch(e){}
+            });
+          });
+        }catch(e){}
+        // toggle buttons
+        backBtn.disabled = (i === 0);
+        submitBtn.classList.toggle('hidden', i !== steps.length - 1);
+        nextBtn.classList.toggle('hidden', i === steps.length - 1);
+        // update review
+        document.getElementById('review-name').textContent = document.getElementById('add-nko-name').value || '';
+        // read category from single select
+        try{
+          const sel = document.getElementById('add-nko-category');
+          document.getElementById('review-category').textContent = sel ? (sel.options[sel.selectedIndex]?.text || '') : '';
+        }catch(e){ document.getElementById('review-category').textContent = ''; }
+        document.getElementById('review-description').textContent = document.getElementById('add-nko-description').value || '';
+        document.getElementById('review-address').textContent = document.getElementById('add-nko-address').value || '';
+        document.getElementById('review-phone').textContent = document.getElementById('add-nko-phone').value || '';
+        document.getElementById('review-website').textContent = document.getElementById('add-nko-website').value || '';
+        // update progress bar and step text (if elements exist)
+        try{
+          const total = steps.length || 1;
+          const pct = Math.round(((i + 1) / total) * 100);
+          const bar = document.getElementById('add-nko-progress-bar');
+          if(bar) bar.style.width = pct + '%';
+          const stepText = document.getElementById('add-nko-step-text');
+          if(stepText) stepText.textContent = `Шаг ${i+1} из ${total}: ${stepTitles[i] || ''}`;
+        }catch(e){}
+
+        // Initialize or update mini-map when entering location step (index 1)
+        try{
+          if(i === 1){
+            const latInput = document.getElementById('add-nko-lat');
+            const lngInput = document.getElementById('add-nko-lng');
+            const lat = latInput && latInput.value ? parseFloat(latInput.value) : null;
+            const lng = lngInput && lngInput.value ? parseFloat(lngInput.value) : null;
+            const defaultLat = 55.751244;
+            const defaultLng = 37.618423;
+            initMiniMap(lat || defaultLat, lng || defaultLng);
+            // if map already initialized, ensure center and placemark are correct
+            if(miniMapInitialized && miniMap && miniPlacemark){
+              const cLat = lat || parseFloat(miniPlacemark.geometry.getCoordinates()[0]) || defaultLat;
+              const cLng = lng || parseFloat(miniPlacemark.geometry.getCoordinates()[1]) || defaultLng;
+              miniMap.panTo([cLat, cLng]);
+              miniPlacemark.geometry.setCoordinates([cLat, cLng]);
+              // ensure inputs reflect coords
+              document.getElementById('add-nko-lat').value = cLat;
+              document.getElementById('add-nko-lng').value = cLng;
+              // redraw/resize map container to avoid broken rendering
+              setTimeout(()=>{ if(miniMap.container) miniMap.container.fitToViewport(); }, 200);
+            }
+          }
+        }catch(err){ /* mini-map show error */ }
+        // When entering phone step (index 2), ensure phone mask is initialized and value formatted
+        try{
+          if(i === 2){
+            const phoneEl = document.getElementById('add-nko-phone');
+            if(phoneEl){
+              try{ if(typeof initPhoneMask === 'function') initPhoneMask(phoneEl); }catch(e){}
+              try{
+                const mask = phoneEl._phoneMaskInstance;
+                if(mask){
+                  // Force mask to update and write masked value into the input
+                  mask.updateValue();
+                  phoneEl.value = mask.value;
+                  phoneEl.dispatchEvent(new Event('input', { bubbles: true }));
+                  phoneEl.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+              }catch(e){}
+            }
+          }
+        }catch(e){}
+      }
+
+      let coordsUpdateHandler = null;
+
+      function attachNav(){
+        nextBtn.onclick = () => { step = Math.min(step+1, steps.length-1); showStep(step); };
+        backBtn.onclick = () => { step = Math.max(step-1, 0); showStep(step); };
+        document.getElementById('add-nko-close').onclick = closeModal;
+        overlay.onclick = closeModal;
+        // Custom submit flow: show all steps, run validation, then submit programmatically
+        submitBtn.type = 'button';
+        submitBtn.onclick = function(e){
+          e.preventDefault();
+          
+          // Hide modal content immediately to prevent visual glitch when showing all steps
+          const modalContent = document.getElementById('add-nko-content');
+          if(modalContent){
+            modalContent.style.opacity = '0';
+            modalContent.style.pointerEvents = 'none';
+          }
+          
+          try{ steps.forEach(s => s.classList.remove('hidden')); }catch(e){}
+          // allow layout to update then validate; ensure coords present first
+          setTimeout(()=>{
+            // Helper to ensure latitude/longitude inputs are filled
+            const ensureCoords = () => new Promise((resolve) => {
+              try{
+                const latEl = document.getElementById('add-nko-lat');
+                const lngEl = document.getElementById('add-nko-lng');
+                const addrEl = document.getElementById('add-nko-address');
+                const addrVal = addrEl ? addrEl.value.trim() : '';
+                // If already present, resolve
+                if(latEl && latEl.value && lngEl && lngEl.value){ return resolve(); }
+                // If miniPlacemark exists, read its coords
+                try{
+                  if(typeof miniPlacemark !== 'undefined' && miniPlacemark && miniPlacemark.geometry){
+                    const c = miniPlacemark.geometry.getCoordinates();
+                    if(Array.isArray(c) && c.length >= 2){
+                      if(latEl) latEl.value = c[0];
+                      if(lngEl) lngEl.value = c[1];
+                      return resolve();
+                    }
+                  }
+                }catch(ie){}
+                // If geocode helper exists, try it (it may return a Promise)
+                try{
+                  if(addrVal && typeof geocodeAndFillCoords === 'function'){
+                    const maybePromise = geocodeAndFillCoords(addrVal);
+                    if(maybePromise && typeof maybePromise.then === 'function'){
+                      maybePromise.then(()=>{ resolve(); }).catch((err)=>{ resolve(); });
+                      return;
+                    }
+                    // otherwise, assume synchronous or handled internally
+                    return resolve();
+                  }
+                }catch(ge){ }
+                // nothing to do, resolve
+                resolve();
+              }catch(e){ resolve(); }
+            });
+
+            ensureCoords().then(()=>{
+              // Enable any controls that were disabled while navigating
+              try{ document.querySelectorAll('#add-nko-form [disabled]').forEach(el=>el.disabled=false); }catch(e){}
+              
+              // Custom validation: find first invalid field and navigate to its step
+              try{
+                // First, check validity without showing all steps
+                let firstInvalid = null;
+                let invalidStep = -1;
+                
+                // Check each required field
+                const requiredFields = form.querySelectorAll('[required]');
+                for(let field of requiredFields){
+                  if(!field.value || !field.validity.valid){
+                    firstInvalid = field;
+                    // Find which step this field belongs to
+                    let parent = field.closest('.add-nko-step');
+                    if(parent){
+                      invalidStep = Array.from(steps).indexOf(parent);
+                    }
+                    break;
+                  }
+                }
+                
+                if(firstInvalid && invalidStep >= 0){
+                  // Restore modal visibility
+                  const modalContent = document.getElementById('add-nko-content');
+                  if(modalContent){
+                    modalContent.style.opacity = '1';
+                    modalContent.style.pointerEvents = 'auto';
+                  }
+                  
+                  // Navigate to the step with invalid field
+                  step = invalidStep;
+                  showStep(step);
+                  
+                  // Show validation message
+                  setTimeout(() => {
+                    firstInvalid.reportValidity();
+                    firstInvalid.focus();
+                  }, 100);
+                  
+                  return;
+                }
+                
+                // If all fields valid, proceed with submission
+                
+                // Show all steps for form submission (hidden from user)
+                try{ steps.forEach(s => s.classList.remove('hidden')); }catch(e){}
+                
+                // Clean phone field if it contains only mask placeholder
+                try{
+                  const phoneInput = document.getElementById('add-nko-phone');
+                  if(phoneInput && phoneInput._phoneMaskInstance){
+                    const mask = phoneInput._phoneMaskInstance;
+                    const unmasked = mask.unmaskedValue || '';
+                    if(unmasked.length === 0 || unmasked === '7'){
+                      phoneInput.value = '';
+                    }
+                  }
+                }catch(phoneErr){
+                  /* Error cleaning phone field */
+                }
+                
+                try{
+                  form.submit();
+                }catch(subErr){
+                  try{ HTMLFormElement.prototype.submit.call(form); }catch(nativeErr){ /* native submit failed */ }
+                }
+              }catch(subErr){ 
+                // Restore modal visibility on error
+                const modalContent = document.getElementById('add-nko-content');
+                if(modalContent){
+                  modalContent.style.opacity = '1';
+                  modalContent.style.pointerEvents = 'auto';
+                }
+                try{ showStep(steps.length-1); }catch(e){} 
+              }
+            });
+          }, 40);
+        };
+      }
+
+      function closeModal(){
+        modal.classList.add('hidden'); overlay.classList.add('hidden');
+        // remove coords update listener if attached
+        try{ if(coordsUpdateHandler) document.removeEventListener('addressCoordsUpdated', coordsUpdateHandler); }catch(e){}
+      }
+
+      // Prefill if edit mode and data provided
+      if(editMode && ngoData){
+        document.getElementById('add-nko-title').textContent = 'Редактировать НКО';
+        document.getElementById('add-nko-id').value = ngoData.id || '';
+        document.getElementById('add-nko-name').value = ngoData.name || '';
+        document.getElementById('add-nko-description').value = ngoData.description || '';
+        document.getElementById('add-nko-volunteer-functions').value = ngoData.volunteer_functions || '';
+        document.getElementById('add-nko-address').value = ngoData.address || '';
+        document.getElementById('add-nko-lat').value = ngoData.lat || ngoData.latitude || '';
+        document.getElementById('add-nko-lng').value = ngoData.lng || ngoData.longitude || '';
+        document.getElementById('add-nko-phone').value = ngoData.phone || '';
+        document.getElementById('add-nko-website').value = ngoData.website || '';
+        
+        // Fill social media links
+        try{
+          const vkEl = document.getElementById('add-nko-vk');
+          const telegramEl = document.getElementById('add-nko-telegram');
+          const otherEl = document.getElementById('add-nko-other-social');
+          if(vkEl) vkEl.value = ngoData.vk_link || '';
+          if(telegramEl) telegramEl.value = ngoData.telegram_link || '';
+          if(otherEl) otherEl.value = ngoData.other_social || '';
+        }catch(e){}
+        // prefill city if provided
+        try{ 
+          if(ngoData.city){
+            const cityId = ngoData.city.id || ngoData.city_id;
+            const cityName = ngoData.city.name || ngoData.city_name;
+            
+            // Set city name in text input
+            const cityInput = document.getElementById('add-nko-city');
+            if(cityInput && cityName){
+              cityInput.value = cityName;
+            }
+            
+            // Set city id in hidden field
+            const cityIdInput = document.getElementById('add-nko-city-id');
+            if(cityIdInput && cityId){
+              cityIdInput.value = cityId;
+            }
+          }
+        }catch(e){
+          /* Error prefilling city */
+        }
+        // attempt to pick category if available (support various payload shapes)
+        try{
+          const catId = (ngoData.category && (ngoData.category.id || ngoData.category)) || ngoData.category_id || ngoData.categoryId || null;
+          if(catId){ const sel = document.getElementById('add-nko-category'); if(sel) sel.value = catId; }
+        }catch(e){}
+        // adjust form action to edit endpoint when id present
+        // URLs are defined as /nko/edit/<pk>/ in nko.urls, so build that path
+        if(ngoData.id){ form.action = '/nko/edit/' + ngoData.id + '/'; }
+        // initialize address autocomplete for modal address input
+        try{ if(typeof initAddressAutocomplete === 'function'){ const addrEl = document.getElementById('add-nko-address'); if(addrEl) initAddressAutocomplete(addrEl); } }catch(e){}
+      } else {
+        document.getElementById('add-nko-title').textContent = 'Добавить НКО';
+        form.action = '/nko/add/';
+        form.reset();
+        // initialize address autocomplete for modal address input (if script exposes initializer)
+        try{ if(typeof initAddressAutocomplete === 'function'){ const addrEl = document.getElementById('add-nko-address'); if(addrEl) initAddressAutocomplete(addrEl); } }catch(e){}
+      }
+
+      overlay.classList.remove('hidden'); modal.classList.remove('hidden');
+      
+      // Ensure modal content is visible
+      const modalContent = document.getElementById('add-nko-content');
+      if(modalContent){
+        modalContent.style.opacity = '1';
+        modalContent.style.pointerEvents = 'auto';
+      }
+      
+      // Initialize city autocomplete after modal is visible
+      try{
+        if(typeof window.initCityAutocomplete === 'function'){
+          window.initCityAutocomplete();
+        }
+      }catch(e){
+        /* Error calling initCityAutocomplete */
+      }
+      
+      attachNav();
+      // No category pills in this modal; categories are managed with a native <select>.
+      showStep(step);
+      // Ensure phone mask is applied to modal phone input immediately (after step is shown)
+      try{ if(typeof initPhoneMask === 'function'){ const phoneEl = document.getElementById('add-nko-phone'); if(phoneEl) initPhoneMask(phoneEl); } }catch(e){}
+    }
+
+    if(addEditBtn){
+      addEditBtn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        // if server told us the user already has an NKO, try to find it in APP_DATA
+        if(window.APP_DATA && window.APP_DATA.userHasNgo){
+          const myNgo = (window.APP_DATA.ngos || []).find(n => n.is_owner || n.owned_by_current_user || n.owner === 'me' || n.owner === true) || (window.APP_DATA.ngos || [])[0] || null;
+          if(myNgo){ openAddNgoModal(true, myNgo); return; }
+          // fallback: open modal in edit mode but without prefill
+          openAddNgoModal(true, null);
+          return;
+        }
+        openAddNgoModal(false, null);
+      });
+    }
+
+    // Layout toggle - simply toggles a data attribute for future use
+    document.getElementById('layout-toggle')?.addEventListener('click', () => {
+      const aside = document.querySelector('aside');
+      if(aside) aside.classList.toggle('hidden');
+    });
+
+    // Theme initialization and toggle
+    function applyTheme(isDark){
+      if(isDark) document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+      try{ localStorage.setItem('theme', isDark ? 'dark' : 'light'); }catch(e){}
+      document.querySelectorAll('.theme-toggle').forEach(btn => {
+        const sun = btn.querySelector('.icon-sun');
+        const moon = btn.querySelector('.icon-moon');
+        if(sun) sun.style.display = isDark ? 'none' : '';
+        if(moon) moon.style.display = isDark ? '' : 'none';
+      });
+      // If category visuals are managed by the map module, refresh them so inline styles
+      // reflect the newly applied theme instead of persisting previous theme state.
+      try { if (window.updateCategoryVisualState) window.updateCategoryVisualState(); } catch(e){}
+    }
+    const savedTheme = (()=>{ try{ return localStorage.getItem('theme'); }catch(e){ return null; }})();
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const startDark = (savedTheme === 'dark') || (savedTheme === null && prefersDark);
+    applyTheme(startDark);
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+      btn.addEventListener('click', () => { applyTheme(!document.documentElement.classList.contains('dark')); });
+    });
+  });
+</script>
+<!-- Include IMask and phone mask for modal phone input -->
+<script src="https://unpkg.com/imask" defer></script>
+<script src="{% static 'js/phone-mask.js' %}" defer></script>
+{% endblock %}
