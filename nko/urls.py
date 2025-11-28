@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .suggest_proxy import suggest_proxy
+from .suggest_proxy import suggest_proxy, geocode_proxy
 
 urlpatterns = [
     path("add/", views.add_nko, name="add_nko"),
@@ -12,4 +12,5 @@ urlpatterns = [
     path("api/nko-list/", views.nko_list_api, name="nko_list_api"),
     path("api/categories/", views.categories_api, name="categories_api"),
     path("api/suggest/", suggest_proxy, name="suggest_proxy"),
+    path("api/geocode/", geocode_proxy, name="geocode_proxy"),
 ]

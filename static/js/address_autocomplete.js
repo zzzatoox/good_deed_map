@@ -389,13 +389,8 @@ function geocodeAndFillCoords(address) {
 
 function httpGeocode(address) {
     return new Promise((resolve, reject) => {
-        // Используем YANDEX_MAPS_API_KEY (первый ключ) для Geocoder API
-        const apiKey = window.YANDEX_MAPS_API_KEY || '';
-        if (!apiKey) {
-            reject(new Error('No API key for HTTP geocode'));
-            return;
-        }
-        const url = `https://geocode-maps.yandex.ru/1.x/?format=json&results=1&geocode=${encodeURIComponent(address)}&apikey=${encodeURIComponent(apiKey)}`;
+        // Используем наш серверный прокси для Geocoder API
+        const url = `/nko/api/geocode/?geocode=${encodeURIComponent(address)}`;
         fetch(url).then(r => {
             if (!r.ok) throw new Error('HTTP geocode failed: ' + r.status);
             return r.json();
@@ -427,9 +422,9 @@ function setLatLonValues(lat, lon) {
 }
 
 function findLatEl() {
-    return document.getElementById('id_lat') || document.getElementById('id_latitude') || document.querySelector('input[name="latitude"]');
+    return document.getElementById('add-nko-lat') || document.getElementById('id_lat') || document.getElementById('id_latitude') || document.querySelector('input[name="latitude"]');
 }
 
 function findLonEl() {
-    return document.getElementById('id_lon') || document.getElementById('id_longitude') || document.querySelector('input[name="longitude"]');
+    return document.getElementById('add-nko-lng') || document.getElementById('id_lon') || document.getElementById('id_longitude') || document.querySelector('input[name="longitude"]');
 }
