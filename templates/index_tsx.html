@@ -340,6 +340,9 @@
     isAuthenticated: {{ user.is_authenticated|yesno:"true,false" }},
     userHasNgo: {{ user_has_ngo|default_if_none:False|yesno:"true,false" }}
   };
+  // Добавляем API ключи для Яндекс.Карт
+  window.YANDEX_MAPS_API_KEY = "{{ YANDEX_MAPS_API_KEY|escapejs }}";
+  window.YANDEX_MAPS_GEO_API_KEY = "{{ YANDEX_MAPS_GEO_API_KEY|escapejs }}";
 </script>
 <!-- My Applications now opens as a full page; no modal loader script needed -->
 <script>
