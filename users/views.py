@@ -179,6 +179,9 @@ def confirm_email(request, token):
     # Обновляем профиль
     if hasattr(user, "profile"):
         user.profile.email_confirmed = True
+        user.profile.receive_nko_notifications = (
+            True  # Автоматически включаем уведомления после подтверждения email
+        )
         user.profile.save()
 
     # Удаляем использованный токен
