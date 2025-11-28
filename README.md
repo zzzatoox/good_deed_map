@@ -3,9 +3,14 @@
 Проект "Good Deed Map" — веб-приложение, реализованное на Django. Оно создано для учёта и отображения всех НКО (некоммерческих организаций) на интерактивной карте, быстрого поиска необходимых организаций, а также быстрого создания новых профилей организаций.
 
 Сайт:
-https://zzzatoox.pythonanywhere.com/
+https://it-hackathon-team03.mephi.ru/
 Админпанель:
-https://zzzatoox.pythonanywhere.com/admin/
+https://it-hackathon-team03.mephi.ru/admin
+
+Данные от админ аккаунта:
+zzzatoox@mail.ru
+guzeevaTop123
+
 
 Вход на сайт/админпанель направил Виолетте.
 
