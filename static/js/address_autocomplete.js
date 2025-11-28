@@ -208,20 +208,12 @@ function initAddressAutocomplete(addressField) {
         geocodeAndFillCoords(query).catch(() => {});
     });
     
-    // Используем Yandex Suggest API для автодополнения адресов
+    // Используем Yandex Suggest API для автодополнения адресов через наш серверный прокси
     function fetchSuggestions(query) {
         console.log('Fetching suggestions for:', query);
         
-        // Используем YANDEX_MAPS_GEO_API_KEY для Suggest API
-        const apiKey = window.YANDEX_MAPS_GEO_API_KEY || '';
-        if (!apiKey) {
-            console.error('YANDEX_MAPS_GEO_API_KEY not found');
-            suggestContainer.style.display = 'none';
-            return;
-        }
-
-        // Yandex Suggest API URL
-        const url = `https://suggest-maps.yandex.ru/v1/suggest?apikey=${encodeURIComponent(apiKey)}&text=${encodeURIComponent(query)}&results=7`;
+        // Используем наш серверный прокси для избежания CORS проблем
+        const url = `/nko/api/suggest/?text=${encodeURIComponent(query)}`;
         
         fetch(url)
             .then(response => {
