@@ -16,13 +16,22 @@ def send_new_application_notification(nko_version):
     Args:
         nko_version: объект NKOVersion - новая заявка на создание/изменение НКО
     """
+    print(
+        f"[DEBUG send_new_application_notification] Called for NKO: {nko_version.nko.name}"
+    )
+
     # Получаем всех администраторов, которые хотят получать уведомления
     admin_users = User.objects.filter(
         is_staff=True, is_active=True, profile__receive_nko_notifications=True
     ).exclude(email="")
 
-    if not admin_users.exists():
-        return
+    print(
+        f"[DEBUG send_new_application_notification] Found {admin_users.count()} admin users with notifications enabled"
+    )
+    for admin in admin_users:
+        print(
+            f"  - {admin.username} ({admin.email}), is_staff={admin.is_staff}, receive_nko_notifications={admin.profile.receive_nko_notifications}"
+        )
 
     # Определяем тип заявки
     is_new_nko = not nko_version.nko.is_approved
@@ -57,6 +66,7 @@ def send_new_application_notification(nko_version):
     # Формируем список получателей. Если нет админов с включёнными уведомлениями,
     # пытаемся отправить суперюзерам или использовать settings.ADMINS как запасной вариант.
     recipient_list = [user.email for user in admin_users]
+
     if not recipient_list:
         # Попробуем суперпользователей
         super_users = User.objects.filter(is_superuser=True, is_active=True).exclude(
@@ -94,9 +104,15 @@ def send_new_application_notification(nko_version):
             html_message=html_message,
             fail_silently=False,
         )
+        print(
+            f"send_new_application_notification: email sent successfully to {len(recipient_list)} recipients"
+        )
     except Exception as e:
         # Логируем ошибку, но не прерываем выполнение
         print(f"Ошибка отправки email администраторам: {e}")
+        import traceback
+
+        print(f"Traceback: {traceback.format_exc()}")
 
 
 def send_application_decision_notification(nko_version, approved=True):
