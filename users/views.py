@@ -34,6 +34,9 @@ def register(request):
 
             # Отправляем письмо
             try:
+                print(f"[DEBUG register] Attempting to send email to: {user.email}")
+                print(f"[DEBUG register] FROM: {settings.DEFAULT_FROM_EMAIL}")
+                print(f"[DEBUG register] EMAIL_BACKEND: {settings.EMAIL_BACKEND}")
                 send_mail(
                     subject="Подтверждение регистрации на Карте добрых дел",
                     message=f"""Здравствуйте, {user.get_full_name() or user.username}!
@@ -54,6 +57,7 @@ def register(request):
                     recipient_list=[user.email],
                     fail_silently=False,
                 )
+                print(f"[DEBUG register] Email sent successfully to {user.email}")
                 messages.success(
                     request,
                     f"На адрес {user.email} отправлено письмо с подтверждением. "
@@ -101,6 +105,9 @@ def register_tsx(request):
 
             # Отправляем письмо
             try:
+                print(f"[DEBUG register_tsx] Attempting to send email to: {user.email}")
+                print(f"[DEBUG register_tsx] FROM: {settings.DEFAULT_FROM_EMAIL}")
+                print(f"[DEBUG register_tsx] EMAIL_BACKEND: {settings.EMAIL_BACKEND}")
                 send_mail(
                     subject="Подтверждение регистрации на Карте добрых дел",
                     message=f"""Здравствуйте!
@@ -121,6 +128,7 @@ def register_tsx(request):
                     recipient_list=[user.email],
                     fail_silently=False,
                 )
+                print(f"[DEBUG register_tsx] Email sent successfully to {user.email}")
                 messages.success(
                     request,
                     f"На адрес {user.email} отправлено письмо с подтверждением. "
@@ -178,11 +186,19 @@ def confirm_email(request, token):
 
     # Обновляем профиль
     if hasattr(user, "profile"):
+        print(
+            f"[DEBUG confirm_email] Setting email_confirmed and receive_nko_notifications for user: {user.username}"
+        )
         user.profile.email_confirmed = True
         user.profile.receive_nko_notifications = (
             True  # Автоматически включаем уведомления после подтверждения email
         )
         user.profile.save()
+        print(
+            f"[DEBUG confirm_email] Profile updated. email_confirmed={user.profile.email_confirmed}, receive_nko_notifications={user.profile.receive_nko_notifications}"
+        )
+    else:
+        print(f"[DEBUG confirm_email] WARNING: User {user.username} has no profile!")
 
     # Удаляем использованный токен
     token_obj.delete()
