@@ -387,41 +387,18 @@ function escapeHtml(text) {
 }
 
 // Helper: try to geocode address and fill latitude/longitude inputs
+// Используем только HTTP Geocoder API, так как ymaps.geocode требует другой тип ключа
 function geocodeAndFillCoords(address) {
     return new Promise((resolve, reject) => {
-        // Prefer ymaps.geocode when available, otherwise fall back to HTTP geocode
-        if (typeof ymaps !== 'undefined' && ymaps.geocode) {
-            ymaps.geocode(address, { results: 1 }).then(function(res) {
-                const first = res.geoObjects.get(0);
-                if (!first) {
-                    reject(new Error('No geocode results'));
-                    return;
-                }
-                const coords = first.geometry.getCoordinates(); // [lat, lon]
-                if (!coords || coords.length < 2) {
-                    reject(new Error('Invalid coordinates'));
-                    return;
-                }
-                const lat = coords[0];
-                const lon = coords[1];
-                setLatLonValues(lat, lon);
-                try{ document.dispatchEvent(new CustomEvent('addressCoordsUpdated', { detail: { lat: lat, lon: lon } })); }catch(e){}
-                resolve({ lat, lon });
-            }).catch(err => {
-                // fallback to HTTP geocode on error
-                httpGeocode(address).then(resolve).catch(reject);
-            });
-            return;
-        }
-
-        // HTTP fallback (use Yandex Geocoder REST)
+        // Используем HTTP Geocoder API напрямую
         httpGeocode(address).then(resolve).catch(reject);
     });
 }
 
 function httpGeocode(address) {
     return new Promise((resolve, reject) => {
-        const apiKey = window.YANDEX_MAPS_GEO_API_KEY || window.YANDEX_MAPS_API_KEY || '';
+        // Используем YANDEX_MAPS_API_KEY (первый ключ) для Geocoder API
+        const apiKey = window.YANDEX_MAPS_API_KEY || '';
         if (!apiKey) {
             reject(new Error('No API key for HTTP geocode'));
             return;
