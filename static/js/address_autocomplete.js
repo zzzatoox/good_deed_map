@@ -208,47 +208,58 @@ function initAddressAutocomplete(addressField) {
         geocodeAndFillCoords(query).catch(() => {});
     });
     
-    // Используем ymaps.geocode для поиска адресов
+    // Используем Yandex Suggest API для автодополнения адресов
     function fetchSuggestions(query) {
         console.log('Fetching suggestions for:', query);
         
-        // Diagnostic: log current ymaps presence and configured API key (masked last 6 chars)
-        try{
-            console.debug('address_autocomplete: ymaps present?', typeof ymaps !== 'undefined');
-            const key = (window.YANDEX_MAPS_API_KEY || window.YANDEX_MAPS_APIKEY || window.YANDEX_API_KEY || '');
-            if(key) console.debug('address_autocomplete: YANDEX key (masked) =', key.slice(0, Math.max(0,key.length-6)) + '******');
-        }catch(e){}
-
-        ymaps.geocode(query, {
-            results: 7,
-            boundedBy: [[55.142220, 36.803260], [56.021340, 37.967800]], // Примерно Москва и область
-            strictBounds: false
-        }).then(function(res) {
-            const geoObjects = res.geoObjects;
-            const results = [];
-            
-            geoObjects.each(function(obj) {
-                const address = obj.getAddressLine();
-                const name = obj.properties.get('name');
-                const description = obj.properties.get('description');
-                
-                results.push({
-                    address: address,
-                    name: name || address,
-                    description: description || ''
-                });
-            });
-            
-            console.log('Suggestions:', results);
-            displaySuggestions(results);
-        }).catch(function(error) {
-            console.error('Error fetching suggestions:', error);
-            try{
-                const existingScript = Array.from(document.getElementsByTagName('script')).find(s => s.src && s.src.indexOf('api-maps.yandex.ru/2.1') !== -1);
-                if(existingScript) console.warn('address_autocomplete: existing Yandex script src =', existingScript.src);
-            }catch(e){}
+        // Используем YANDEX_MAPS_GEO_API_KEY для Suggest API
+        const apiKey = window.YANDEX_MAPS_GEO_API_KEY || '';
+        if (!apiKey) {
+            console.error('YANDEX_MAPS_GEO_API_KEY not found');
             suggestContainer.style.display = 'none';
-        });
+            return;
+        }
+
+        // Yandex Suggest API URL
+        const url = `https://suggest-maps.yandex.ru/v1/suggest?apikey=${encodeURIComponent(apiKey)}&text=${encodeURIComponent(query)}&results=7`;
+        
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Suggest API failed: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const results = [];
+                
+                if (data.results && Array.isArray(data.results)) {
+                    data.results.forEach(item => {
+                        // Формируем адрес из title и subtitle
+                        const name = item.title && item.title.text ? item.title.text : '';
+                        const description = item.subtitle && item.subtitle.text ? item.subtitle.text : '';
+                        
+                        // Полный адрес - объединяем название и описание
+                        let address = name;
+                        if (description && description !== name) {
+                            address = name + ', ' + description;
+                        }
+                        
+                        results.push({
+                            address: address,
+                            name: name,
+                            description: description
+                        });
+                    });
+                }
+                
+                console.log('Suggestions:', results);
+                displaySuggestions(results);
+            })
+            .catch(error => {
+                console.error('Error fetching suggestions:', error);
+                suggestContainer.style.display = 'none';
+            });
     }
     
     // Отображение подсказок

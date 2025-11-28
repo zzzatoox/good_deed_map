@@ -190,6 +190,7 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 )
 
 YANDEX_MAPS_API_KEY = os.environ.get("YANDEX_MAPS_API_KEY", "")
+YANDEX_MAPS_GEO_API_KEY = os.environ.get("YANDEX_MAPS_GEO_API_KEY", "")
 
 # Site URL for email links (should be set in production)
 SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000")
