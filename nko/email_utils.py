@@ -54,8 +54,36 @@ def send_new_application_notification(nko_version):
 
     subject = f"Новая заявка: {application_type} - {nko_version.nko.name}"
 
-    # Отправляем письма всем администраторам
+    # Формируем список получателей. Если нет админов с включёнными уведомлениями,
+    # пытаемся отправить суперюзерам или использовать settings.ADMINS как запасной вариант.
     recipient_list = [user.email for user in admin_users]
+    if not recipient_list:
+        # Попробуем суперпользователей
+        super_users = User.objects.filter(is_superuser=True, is_active=True).exclude(
+            email=""
+        )
+        recipient_list = [u.email for u in super_users]
+
+    if not recipient_list and getattr(settings, "ADMINS", None):
+        try:
+            recipient_list = [
+                a[1] for a in settings.ADMINS if a and len(a) > 1 and a[1]
+            ]
+        except Exception:
+            recipient_list = []
+
+    if not recipient_list:
+        # Нечего отправлять — логируем и выходим
+        print(
+            "send_new_application_notification: no recipients found for new application notification"
+        )
+        return
+
+    # Логируем получателей для диагностики
+    try:
+        print(f"send_new_application_notification: sending to: {recipient_list}")
+    except Exception:
+        pass
 
     try:
         send_mail(
